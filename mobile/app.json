@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "dsocial",
+    "slug": "dsocial",
+    "platforms": ["ios", "android"],
+    "version": "1.0.0",
+    "sdkVersion": "52.0.0",
+    "orientation": "portrait",
+    "scheme": "tech.berty.dsocial",
+    "icon": "./assets/images/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/images/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "tech.berty.dsocial.ios",
+      "infoPlist": {
+        "CFBundleAllowMixedLocalizations": true,
+        "NSAppTransportSecurity": {
+          "NSExceptionDomains": {
+            "exp.direct": {
+              "NSIncludesSubdomains": true,
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
+        }
+      },
+      "buildNumber": "12",
+      "config": {
+        "usesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "tech.berty.dsocial.android",
+      "versionCode": "12"
+    },
+    "web": {
+      "favicon": "./assets/images/favicon.png"
+    },
+    "experiments": {
+      "tsconfigPaths": true
+    },
+    "plugins": ["expo-router", [
+      "expo-image-picker",
+      {
+        "photosPermission": "The app accesses your photos to upload an avatar.",
+        "cameraPermission": "The app accesses your camera to create an avatar."
+      }
+    ]],
+    "extra": {
+      "router": {
+        "origin": false
+      },
+      "eas": {
+        "projectId": "90cf25eb-7332-4489-83b4-65a9e1d9f9a2"
+      }
+    },
+    "owner": "bertytechnologies"
+  }
+}

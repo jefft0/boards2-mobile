@@ -1,0 +1,43 @@
+{
+  "cli": {
+    "version": ">= 7.8.2"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "ios-simulator": {
+      "extends": "development",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "env": {
+        "MY_ENVIRONMENT": "production"
+      }
+    },
+    "local-production": {
+      "env": {
+        "MY_ENVIRONMENT": "production",
+        "GOOGLESERVICES_INFO_PLIST": "./GoogleService-Info.plist",
+        "GOOGLE_SERVICES_JSON": "./google-services.json"
+      }
+    },
+    "production": {
+      "env": {
+        "MY_ENVIRONMENT": "production"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "android": {
+        "serviceAccountKeyPath": "./dsocial-fed6b-firebase-adminsdk-7sjg7-b2b5c052c3.json",
+        "track": "internal"
+      }
+    }
+  }
+}
