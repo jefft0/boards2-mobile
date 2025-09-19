@@ -1,0 +1,14 @@
+{
+  "extends": "expo/tsconfig.base",
+  "compilerOptions": {
+    "strict": true,
+    "baseUrl": ".",
+    "paths": {
+      "@gno/*": ["src/*"],
+      "@gno/styles/*": ["assets/styles/*"],
+      "@gno/components/*": ["components/*"],
+      "@gno/types": ["types.ts"],
+      "@gno/redux": ["redux"],
+    }
+  }
+}
