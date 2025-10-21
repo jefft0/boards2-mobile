@@ -26,6 +26,7 @@ export const useSearch = () => {
 
   async function searchUser(q: string, accountToExclude?: User) {
 
+    /*
     const result = await gnonative.qEval("gno.land/r/berty/social", `ListJsonUsersByPrefix("${q}", ${MAX_RESULT})`);
     const usernames = await convertToJson(result);
     if (accountToExclude) {
@@ -37,6 +38,8 @@ export const useSearch = () => {
     }
 
     return usernames;
+    */
+    return [];
   }
 
   async function convertToJson(result: string | undefined) {
