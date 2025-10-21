@@ -2,12 +2,14 @@ import { KeyInfo } from "@gnolang/gnonative";
 
 type PostInterface = {
   user: User;
+  title: string;
   post: string;
   date: string;
   id: string;
   n_replies: number;
   n_gnods: number;
   n_replies_all: number;
+  thread_id: number;
   parent_id: number;
 }
 export type ParentPost = PostInterface

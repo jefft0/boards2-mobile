@@ -18,24 +18,25 @@ const initialState: State = {
 
 export const requestLoginForGnokeyMobile = createAsyncThunk<boolean>("tx/requestLoginForGnokeyMobile", async () => {
     const url = new URL('land.gno.gnokey://tosignin');
-    url.searchParams.append('callback', 'tech.berty.dsocial://signin-callback');
-    url.searchParams.append('client_name', 'dSocial');
+    url.searchParams.append('callback', 'land.gno.boards2://signin-callback');
+    url.searchParams.append('client_name', 'boards2');
     console.log("redirecting to: ", url);
     return await Linking.openURL(url.toString());
 })
 
 type MakeTxAndRedirectParams = {
+    threadTitle: string,
     postContent: string,
     callerAddressBech32: string,
 };
 
 export const postTxAndRedirectToSign = createAsyncThunk<void, MakeTxAndRedirectParams, ThunkExtra>("tx/makeCallTxAndRedirectToSign", async (props, thunkAPI) => {
-    const { callerAddressBech32, postContent } = props;
+    const { callerAddressBech32, threadTitle, postContent } = props;
 
-    const fnc = "PostMessage";
-    const args: Array<string> = [postContent];
+    const fnc = "CreateThread";
+    const args: Array<string> = ["1", threadTitle, postContent];
     const gasFee = "1000000ugnot";
-    const gasWanted = BigInt(10000000);
+    const gasWanted = BigInt(50000000);
     const reason = "Post a message";
     const callbackPath = "/post";
     // const session = (thunkAPI.getState() as RootState).linking.session;
@@ -58,7 +59,7 @@ type MakeCallTxParams = {
 };
 
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
-    const { fnc, callerAddressBech32, gasFee, gasWanted, args, packagePath = "gno.land/r/berty/social", reason, callbackPath } = props;
+    const { fnc, callerAddressBech32, gasFee, gasWanted, args, packagePath = "gno.land/r/gnoland/boards2/v1", reason, callbackPath } = props;
 
     console.log("making a tx for: ", callerAddressBech32);
     const address = await gnonative.addressFromBech32(callerAddressBech32);
@@ -71,9 +72,9 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
     url.searchParams.append('tx', res.txJson);
     url.searchParams.append("update_tx", "true");
     url.searchParams.append('address', callerAddressBech32);
-    url.searchParams.append('client_name', 'dSocial');
+    url.searchParams.append('client_name', 'boards2');
     url.searchParams.append('reason', reason);
-    url.searchParams.append('callback', 'tech.berty.dsocial:/' + callbackPath);
+    url.searchParams.append('callback', 'land.gno.boards2:/' + callbackPath);
     // if (session) {
     //     // Avoid edge case when the session is about to expire
     //     const sessionInfo = JSON.parse(decodeURIComponent(session))

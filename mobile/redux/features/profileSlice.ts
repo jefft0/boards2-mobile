@@ -3,7 +3,7 @@ import { makeCallTx } from "./linkingSlice";
 import { Following } from "@gno/types";
 import { RootState, ThunkExtra } from "redux/redux-provider";
 
-const CLIENT_NAME_PARAM = 'client_name=dSocial';
+const CLIENT_NAME_PARAM = 'client_name=boards2';
 
 export interface ProfileState {
   following: Following[];

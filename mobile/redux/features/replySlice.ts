@@ -43,10 +43,10 @@ type ReplytTxAndRedirectParams = {
 export const replyTxAndRedirectToSign = createAsyncThunk<void, ReplytTxAndRedirectParams, ThunkExtra>("tx/replyTxAndRedirectToSign", async (props, thunkAPI) => {
   const { post, replyContent, callerAddressBech32, callbackPath } = props;
 
-  const fnc = "PostReply";
+  const fnc = "CreateReply";
   const gasFee = "1000000ugnot";
-  const gasWanted = BigInt(10000000);
-  const args: Array<string> = [String(post.user.address), String(post.id), String(post.id), replyContent];
+  const gasWanted = BigInt(50000000);
+  const args: Array<string> = ["1", String(post.id), "0", replyContent];
   const reason = "Reply a message";
   // const session = (thunkAPI.getState() as RootState).linking.session;
 

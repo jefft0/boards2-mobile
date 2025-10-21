@@ -61,7 +61,7 @@ export const useSearch = () => {
   async function convertToJson(result: string | undefined) {
     if (result === '("" string)') return undefined;
 
-    if (!result || !(result.startsWith("(") && result.endsWith(" string)"))) throw new Error("Malformed GetThreadPosts response");
+    if (!result || !(result.startsWith("(") && result.endsWith(" string)"))) throw new Error("Malformed GetPosts response");
     const quoted = result.substring(1, result.length - " string)".length);
     const json = JSON.parse(quoted);
     const jsonPosts = JSON.parse(json);

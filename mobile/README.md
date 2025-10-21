@@ -1,15 +1,15 @@
-# dSocial Mobile APP
+# Boards2 Mobile App
 
 ## Requirements
 
-The dSocial mobile app uses Expo. You can review the general expo requirements:
+The Boards2 mobile app uses Expo. You can review the general expo requirements:
 
 - Expo Requiments: <https://docs.expo.dev/get-started/installation/>
 - Configure buff registry: `$ npm config set @buf:registry  https://buf.build/gen/npm/v1/`
 
 Here are specific steps to install the requirements on your platform.
 
-### Install requirements for macOS 13 and macOS 14
+### Install requirements for macOS 14 and macOS 15
 
 (If you are on Ubuntu, see the next section to install requirements.)
 
@@ -126,23 +126,6 @@ make android
 # to start Metro Bundler:
 make start
 ```
-
-## Manual release to Google Play Store and Apple App Store
-
-The manual release process uses the [`eas`](https://docs.expo.dev/build/setup/#install-the-latest-eas-cli) CLI to submit the app to the stores.
-
-### Apple App Store
-
-1. Download the `GoogleService-Info.plist` file from the Firebase Console.
-2. Run `make ios.release_production` to build the app.
-3. After the build is complete, submit it to the App Store running `eas submit --platform ios`
-
-### Google Play Store
-
-1. Download the `google-services.json` file from the Firebase Console.
-2. Run `make android.release_production` to build the app.
-3. After the build is complete, submit it to the Play Store running `eas submit --platform android`
-You'll need to have a [service account json file](https://developers.google.com/android/management/service-account) to authenticate with Google Play Store.
 
 ## Opening the App using Links
 
