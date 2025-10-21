@@ -1,34 +1,10 @@
-import { GetJsonFollowersResult, GetJsonFollowingResult, User } from "@gno/types";
+import { User } from "@gno/types";
 import { useGnoNativeContext } from "@gnolang/gnonative";
 
 const MAX_RESULT = 10;
 
 export const useSearch = () => {
   const { gnonative } = useGnoNativeContext();
-
-  async function GetJsonFollowersCount(address: string) {
-
-    const { n_followers } = await GetJsonFollowers(address);
-    const { n_following } = await GetJsonFollowing(address);
-
-    return { n_followers, n_following };
-  }
-
-  async function GetJsonFollowers(address: string) {
-
-    const result = await gnonative.qEval("gno.land/r/berty/social", `GetJsonFollowers("${address}", 0, 1000)`);
-    const json = (await convertToJson(result)) as GetJsonFollowersResult;
-
-    return json;
-  }
-
-  async function GetJsonFollowing(address: string) {
-
-    const result = await gnonative.qEval("gno.land/r/berty/social", `GetJsonFollowing("${address}", 0, 1000)`);
-    const json = (await convertToJson(result)) as GetJsonFollowingResult;
-
-    return json;
-  }
 
   async function getJsonUserByName(username: string) : Promise<User | undefined> {
 
@@ -72,9 +48,6 @@ export const useSearch = () => {
   return {
     searchUser,
     getJsonUserByName,
-    GetJsonFollowersCount,
-    GetJsonFollowing,
-    GetJsonFollowers,
   };
 };
 

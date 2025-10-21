@@ -23,21 +23,6 @@ export interface User extends Pick<KeyInfo, "address" | "name"> {
   avatar?: string;
 }
 
-export interface Following {
-  address: string;
-  started_following_at: string;
-  user?: User;
-}
-
-export interface GetJsonFollowersResult {
-  followers: Following[];
-  n_followers: number;
-}
-export interface GetJsonFollowingResult {
-  following: Following[];
-  n_following: number;
-}
-
 export type GnoConfig = {
   Remote: string;
   ChainID: string;

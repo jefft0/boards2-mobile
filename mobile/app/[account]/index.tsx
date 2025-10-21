@@ -3,9 +3,9 @@ import { useDispatch } from "react-redux";
 import { router, useNavigation, usePathname } from "expo-router";
 import { AccountView } from "@gno/components/view";
 import { useSearch } from "@gno/hooks/use-search";
-import { Following, Post, User } from "@gno/types";
+import { Post, User } from "@gno/types";
 import { broadcastTxCommit, clearLinking, selectQueryParamsTxJsonSigned, setPostToReply, useAppSelector, selectAccount, gnodTxAndRedirectToSign } from "@gno/redux";
-import { followTxAndRedirectToSign, selectProfileAccountName, setFollows, unfollowTxAndRedirectToSign } from "redux/features/profileSlice";
+import { selectProfileAccountName } from "redux/features/profileSlice";
 import { useFeed } from "@gno/hooks/use-feed";
 import { useUserCache } from "@gno/hooks/use-user-cache";
 import ErrorView from "@gno/components/view/account/no-account-view";
@@ -18,8 +18,6 @@ export default function Page() {
   const [loading, setLoading] = useState<string | undefined>(undefined);
   const [error, setError] = useState<string | undefined>(undefined);
   const [user, setUser] = useState<User | undefined>(undefined);
-  const [following, setFollowing] = useState<Following[]>([]);
-  const [followers, setFollowers] = useState<Following[]>([]);
   const [totalPosts, setTotalPosts] = useState<number>(0);
 
   const navigation = useNavigation();
@@ -80,12 +78,6 @@ export default function Page() {
         setUser(response);
       }
 
-      const { followers } = await search.GetJsonFollowers(response.bech32);
-      setFollowers(followers);
-
-      const { following } = await search.GetJsonFollowing(response.bech32);
-      setFollowing(following);
-
       const isUserFeed = response.address === currentUser?.address;
       if (isUserFeed) {
         const total = await feed.fetchCount(response.bech32);
@@ -95,39 +87,12 @@ export default function Page() {
         const r = await feed.fetchThreadPosts(response.bech32, 0, 0);
         setTotalPosts(r.n_posts);
       }
-
-      const enrichFollows = async (follows: Following[]) => {
-        for await (const item of follows) {
-          item.user = await userCache.getUser(item.address);
-        }
-      };
-
-      await enrichFollows(following);
-      await enrichFollows(followers);
-
-      dispatch(setFollows({ followers, following }));
     } catch (error: unknown | Error) {
       console.log(error);
     } finally {
       setLoading(undefined);
     }
   }, [accountName]);
-
-  const onPressFollowing = () => {
-    router.navigate({ pathname: "account/following" });
-  };
-
-  const onPressFollowers = async () => {
-    router.navigate({ pathname: "account/followers" });
-  };
-
-  const onPressFollow = async (address: string, callerAddress: Uint8Array) => {
-    await dispatch(followTxAndRedirectToSign({ address, callerAddress })).unwrap();
-  };
-
-  const onPressUnfollow = async (address: string, callerAddress: Uint8Array) => {
-    await dispatch(unfollowTxAndRedirectToSign({ address, callerAddress })).unwrap();
-  };
 
   const onGnod = async (post: Post) => {
     console.log("gnodding post: ", post);
@@ -155,14 +120,8 @@ export default function Page() {
           user={user}
           currentUser={currentUser}
           totalPosts={totalPosts}
-          following={following}
-          followers={followers}
           onGnod={onGnod}
           onPressPost={onPressPost}
-          onPressFollowing={onPressFollowing}
-          onPressFollowers={onPressFollowers}
-          onPressFollow={onPressFollow}
-          onPressUnfollow={onPressUnfollow}
         />
       )}
     </Layout.Container>
