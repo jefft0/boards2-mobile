@@ -8,13 +8,18 @@ export const useSearch = () => {
 
   async function getJsonUserByName(username: string) : Promise<User | undefined> {
 
-    const result = await gnonative.qEval("gno.land/r/berty/social", `GetJsonUserByName("${username}")`);
-    const json = (await convertToJson(result));
-    if (!json) return undefined;
-    // GetJsonUserByName returns an address as bech32 hex.
-    // To keep consistency with the rest of the app, we'll convert it to a ui8int string.
-    json.bech32 = json.address as string;
-    json.address = await gnonative.addressFromBech32(json.address as string);
+    let result = "";
+    try {
+       result = await gnonative.qEval("gno.land/r/sys/users", `(func(data *UserData, _ bool) string { return data.Addr().String() }(ResolveName("${username}")))`);
+    } catch(error) {
+      console.error("Error in ResolveName", error);
+      return undefined;
+    }
+    if (!(result.startsWith("(") && result.endsWith(" string)"))) throw new Error("Malformed ResolveName response");
+    const quoted = result.substring(1, result.length - " string)".length);
+    const bech32 = JSON.parse(quoted);
+    // To keep consistency with the rest of the app, we'll convert the bech32 to a ui8int string.
+    const json = {bech32, address: await gnonative.addressFromBech32(bech32)};
 
     return json as User;
   }
