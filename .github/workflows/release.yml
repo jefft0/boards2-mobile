@@ -45,11 +45,6 @@ jobs:
             semantic-release-expo
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Debug semantic release output
-        run: |
-          echo ${{ steps.semantic.outputs }}
 
       - name: Build on EAS
         working-directory: mobile

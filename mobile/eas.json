@@ -14,30 +14,8 @@
       }
     },
     "preview": {
-      "distribution": "internal",
-      "env": {
-        "MY_ENVIRONMENT": "production"
-      }
+      "distribution": "internal"
     },
-    "local-production": {
-      "env": {
-        "MY_ENVIRONMENT": "production",
-        "GOOGLESERVICES_INFO_PLIST": "./GoogleService-Info.plist",
-        "GOOGLE_SERVICES_JSON": "./google-services.json"
-      }
-    },
-    "production": {
-      "env": {
-        "MY_ENVIRONMENT": "production"
-      }
-    }
-  },
-  "submit": {
-    "production": {
-      "android": {
-        "serviceAccountKeyPath": "./dsocial-fed6b-firebase-adminsdk-7sjg7-b2b5c052c3.json",
-        "track": "internal"
-      }
-    }
+    "production": {}
   }
 }
