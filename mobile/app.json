@@ -1,12 +1,12 @@
 {
   "expo": {
-    "name": "dsocial",
-    "slug": "dsocial",
+    "name": "boards2-mobile",
+    "slug": "boards2-mobile",
     "platforms": ["ios", "android"],
     "version": "1.0.0",
     "sdkVersion": "52.0.0",
     "orientation": "portrait",
-    "scheme": "tech.berty.dsocial",
+    "scheme": "land.gno.boards2mobile",
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
     "splash": {
@@ -17,7 +17,7 @@
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "tech.berty.dsocial.ios",
+      "bundleIdentifier": "land.gno.boards2mobile.ios",
       "infoPlist": {
         "CFBundleAllowMixedLocalizations": true,
         "NSAppTransportSecurity": {
@@ -29,7 +29,7 @@
           }
         }
       },
-      "buildNumber": "12",
+      "buildNumber": "1",
       "config": {
         "usesNonExemptEncryption": false
       }
@@ -39,8 +39,8 @@
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "tech.berty.dsocial.android",
-      "versionCode": "12"
+      "package": "land.gno.boards2mobile.android",
+      "versionCode": "1"
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
@@ -60,7 +60,7 @@
         "origin": false
       },
       "eas": {
-        "projectId": "90cf25eb-7332-4489-83b4-65a9e1d9f9a2"
+        "projectId": "3a624e70-9938-49e7-9582-f8dc70f67cfb"
       }
     },
     "owner": "bertytechnologies"
