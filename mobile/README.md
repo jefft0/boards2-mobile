@@ -46,7 +46,7 @@ Start a new terminal to get the changes to the environment .
 
 (optional) To install Android Studio, download and install the latest
 android-studio-{version}-mac.dmg from <https://developer.android.com/studio> .
-(Tested with Jellyfish 2023.3.1 .)
+(Tested with Narwhal 2025.1.1 .)
 
 ### Install requirements for Ubuntu 20.04, 22.04 and 24.04
 
@@ -65,7 +65,7 @@ Start a new terminal to get the changes to the environment .
 
 To install Android Studio, download the latest
 android-studio-{version}-linux.tar.gz from
-<https://developer.android.com/studio> . (Tested with Jellyfish 2023.3.1 .)
+<https://developer.android.com/studio> . (Tested with Narwhal 2025.1.1 .)
 In a terminal, enter the following with the correct {version}:
 
 ```sh
