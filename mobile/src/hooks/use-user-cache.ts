@@ -9,7 +9,7 @@ export const useUserCache = () => {
   const { gnonative } = useGnoNativeContext();
 
   async function getUser(bech32: string): Promise<User> {
-    bech32 = "g1juz2yxmdsa6audkp6ep9vfv80c8p5u76e03vvh" // debug until we detect if bech32 is a username
+    //bech32 = "g1juz2yxmdsa6audkp6ep9vfv80c8p5u76e03vvh" // debug until we detect if bech32 is a username
     if (usersCache.has(bech32)) {
       // Cached user
       return usersCache.get(bech32) as User;
