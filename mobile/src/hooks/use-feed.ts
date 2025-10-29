@@ -16,17 +16,55 @@ export const useFeed = () => {
   const parser = useGnoJsonParser();
   const indexer = useIndexerContext();
 
-  async function fetchThreadPosts(address: string, startIndex: number, endIndex: number): Promise<ThreadPosts> {
+  async function getThreadPosts(address: string, threadId: number, postId: number, startIndex: number, endIndex: number) : Promise<string> {
+    const postInfos = await gnonative.qEval("gno.land/r/gnoland/boards2/v1", `GetPosts(1,${threadId},${postId},${startIndex},${endIndex})`);
+    const totalRegex = /^\((\d+) int\)/g;
+    const totalMatch = totalRegex.exec(postInfos);
+    if (!totalMatch)
+      throw new Error("Can't find total in GetPosts response");
+    const total = Number(totalMatch![1]);
 
-    const result = await gnonative.qEval("gno.land/r/berty/social", `GetThreadPosts("${address}",0, 0, ${startIndex}, ${endIndex})`);
+    const postRegex = /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.PostID\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("(\w+)" .uverse.address\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.PostID\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.PostID\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.PostInfo\)/g;
+    let posts = [];
+    let index = 0;
+    let match;
+    while ((match = postRegex.exec(postInfos)) !== null) {
+      const postId = Number(match[1]);
+      const boardId = Number(match[2]);
+      const createdAt = match[14];
+      const creator = match[3];
+      const n_replies = Number(match[11]);
+      const n_replies_all = Number(match[12]);
+      const thread_id = Number(match[8]);
+      const parent_id = Number(match[9]);
+      const hidden = (match[6] == "true");
+      let title = match[4];
+      let body = match[5];
+      if (hidden) {
+        if (parent_id == 0)
+          // Don't show hidden threads
+          continue;
+        else
+          title = "⚠ Reply is hidden as it has been flagged as inappropriate";
+        body = title;
+      }
+      posts.push({index, post:{id: postId, boardId, createdAt, creator, n_gnods: 0, n_replies, n_replies_all, thread_id, parent_id, title, body}});
+      ++index;
+    }
+
+    let data = {n_threads: total, posts: posts}
+    return "(" + JSON.stringify(JSON.stringify(data)) + " string)";
+  }
+
+  async function fetchThreadPosts(address: string, startIndex: number, endIndex: number): Promise<ThreadPosts> {
+    const result = await getThreadPosts(address, 0, 0, startIndex, endIndex);
     const json = await enrichData(result);
 
     return json;
   }
 
-  async function fetchThread(address: string, postId: number): Promise<ThreadPosts> {
-
-    const result = await gnonative.qEval("gno.land/r/berty/social", `GetThreadPosts("${address}",${postId},0, 0, 100)`);
+  async function fetchThread(address: string, threadId: number, postId: number): Promise<ThreadPosts> {
+    const result = await getThreadPosts(address, threadId, postId, 0, 100);
     const json = await enrichData(result);
 
     return json;
@@ -45,7 +83,7 @@ export const useFeed = () => {
 
   async function enrichData(result: string, nHomePosts?: number) {
     const jsonResult = parser.toJson(result);
-    // If isThread then jsonResult is {n_threads: number, posts: array<{index: number, post: Post}>} from GetThreadPosts.
+    // If isThread then jsonResult is {n_threads: number, posts: array<{index: number, post: Post}>} from GetPosts.
     const isThread = "n_threads" in jsonResult;
     const jsonPosts = isThread ? jsonResult.posts : jsonResult;
     const n_posts = isThread ? jsonResult.n_threads : nHomePosts;
@@ -82,11 +120,13 @@ export const useFeed = () => {
         bech32: ''
       },
       id: jsonPost.id,
+      title: jsonPost.title,
       post: jsonPost.body,
       date: jsonPost.createdAt,
       n_replies: jsonPost.n_replies,
       n_gnods: jsonPost.n_gnods,
       n_replies_all: jsonPost.n_replies_all,
+      thread_id: jsonPost.thread_id,
       parent_id: jsonPost.parent_id,
       repost_parent,
     }
@@ -102,9 +142,9 @@ export const useFeed = () => {
   }
 
   async function fetchCount(address: string) {
-    // Use a range of 0,0 to just get nHomePosts.
-    const [nHomePosts, _] = await indexer.getHomePosts(address, BigInt(0), BigInt(0));
-    return nHomePosts;
+    // Set startIndex and endIndex to 0 to just get the n_posts.
+    const r = await fetchThreadPosts(address, 0, 0);
+    return r.n_posts;
   }
 
   return { fetchFeed, fetchCount, fetchThread, fetchThreadPosts };

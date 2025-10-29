@@ -43,8 +43,8 @@ export default function Root() {
       <Layout.Container>
         <Layout.BodyAlignedBotton>
           <View style={{ alignItems: "center" }}>
-            <Text.Title>dSocial</Text.Title>
-            <Text.Body>Decentralized Social Network</Text.Body>
+            <Text.Title>Boards2</Text.Title>
+            <Text.Body>Decentralized Boards2 Network</Text.Body>
             <Text.Body>Powered by GnoNative</Text.Body>
             <Text.Caption1>v{appVersion}</Text.Caption1>
           </View>
