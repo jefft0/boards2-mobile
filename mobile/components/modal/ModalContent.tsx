@@ -1,6 +1,6 @@
-import { colors } from "@gno/styles/colors";
-import { ViewProps } from "react-native";
-import styled from "styled-components/native";
+import { colors } from '@gno/styles/colors'
+import { ViewProps } from 'react-native'
+import styled from 'styled-components/native'
 
 const ModalContainer = styled.View`
   flex: 1;
@@ -8,7 +8,7 @@ const ModalContainer = styled.View`
   justify-content: flex-end;
   background-color: gray;
   opacity: 0.8;
-`;
+`
 
 const ModalView = styled.View`
   background-color: ${colors.modal.background};
@@ -21,12 +21,12 @@ const ModalView = styled.View`
   elevation: 5;
   shadom-offset: 0px 2px;
   shadow-radius: 4px;
-`;
+`
 
 const ModalContent: React.FC<ViewProps> = (props: ViewProps) => (
   <ModalContainer style={props.style}>
     <ModalView>{props.children}</ModalView>
   </ModalContainer>
-);
+)
 
-export default ModalContent;
+export default ModalContent

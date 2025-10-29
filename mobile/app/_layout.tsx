@@ -1,29 +1,29 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router'
 
-import { DefaultTheme, ThemeProvider } from "@react-navigation/native";
-import { Guard } from "@gno/components/auth/guard";
-import { GnoNativeProvider } from "@gnolang/gnonative";
-import { IndexerProvider } from "@gno/provider/indexer-provider";
-import { NotificationProvider } from "@gno/provider/notification-provider";
-import { ReduxProvider } from "redux/redux-provider";
-import { LinkingProvider } from "@gno/provider/linking-provider";
+import { DefaultTheme, ThemeProvider } from '@react-navigation/native'
+import { Guard } from '@gno/components/auth/guard'
+import { GnoNativeProvider } from '@gnolang/gnonative'
+import { IndexerProvider } from '@gno/provider/indexer-provider'
+import { NotificationProvider } from '@gno/provider/notification-provider'
+import { ReduxProvider } from 'redux/redux-provider'
+import { LinkingProvider } from '@gno/provider/linking-provider'
 
 const gnoDefaultConfig = {
   // @ts-ignore
   remote: process.env.EXPO_PUBLIC_GNO_REMOTE!,
   // @ts-ignore
-  chain_id: process.env.EXPO_PUBLIC_GNO_CHAIN_ID!,
-};
+  chain_id: process.env.EXPO_PUBLIC_GNO_CHAIN_ID!
+}
 
 const indexerDefaultConfig = {
   // @ts-ignore
-  remote: process.env.EXPO_PUBLIC_INDEXER_REMOTE!,
-};
+  remote: process.env.EXPO_PUBLIC_INDEXER_REMOTE!
+}
 
 const notificationDefaultConfig = {
   // @ts-ignore
-  remote: process.env.EXPO_PUBLIC_NOTIFICATION_REMOTE!,
-};
+  remote: process.env.EXPO_PUBLIC_NOTIFICATION_REMOTE!
+}
 
 export default function AppLayout() {
   return (
@@ -38,7 +38,7 @@ export default function AppLayout() {
                     screenOptions={{
                       headerShown: false,
                       headerLargeTitle: true,
-                      headerBackVisible: false,
+                      headerBackVisible: false
                     }}
                   />
                 </Guard>
@@ -48,5 +48,5 @@ export default function AppLayout() {
         </IndexerProvider>
       </NotificationProvider>
     </GnoNativeProvider>
-  );
+  )
 }

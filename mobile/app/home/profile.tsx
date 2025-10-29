@@ -1,133 +1,147 @@
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
-import { router, useNavigation, usePathname } from "expo-router";
-import { useEffect, useState } from "react";
-import { useGnoNativeContext } from "@gnolang/gnonative";
-import { avatarTxAndRedirectToSign, broadcastTxCommit, clearLinking, logedOut, reloadAvatar, selectAccount, selectQueryParamsTxJsonSigned, useAppDispatch, useAppSelector } from "@gno/redux";
-import Button from "@gno/components/button";
-import Layout from "@gno/components/layout";
-import { LoadingModal } from "@gno/components/loading";
-import { AccountBalance } from "@gno/components/settings";
-import Text from "@gno/components/text";
-import { useSearch } from "@gno/hooks/use-search";
-import { useNotificationContext } from "@gno/provider/notification-provider";
-import AvatarPicker from "@gno/components/avatar/avatar-picker";
-import { ProgressViewModal } from "@gno/components/view/progress";
-import { compressImage } from '@gno/utils/file-utils';
-import { useUserCache } from "@gno/hooks/use-user-cache";
+import { Alert, ScrollView, StyleSheet, View } from 'react-native'
+import { router, useNavigation, usePathname } from 'expo-router'
+import { useEffect, useState } from 'react'
+import { useGnoNativeContext } from '@gnolang/gnonative'
+import {
+  avatarTxAndRedirectToSign,
+  broadcastTxCommit,
+  clearLinking,
+  logedOut,
+  reloadAvatar,
+  selectAccount,
+  selectQueryParamsTxJsonSigned,
+  useAppDispatch,
+  useAppSelector
+} from '@gno/redux'
+import Button from '@gno/components/button'
+import Layout from '@gno/components/layout'
+import { LoadingModal } from '@gno/components/loading'
+import { AccountBalance } from '@gno/components/settings'
+import Text from '@gno/components/text'
+import { useNotificationContext } from '@gno/provider/notification-provider'
+import AvatarPicker from '@gno/components/avatar/avatar-picker'
+import { ProgressViewModal } from '@gno/components/view/progress'
+import { compressImage } from '@gno/utils/file-utils'
+import { useUserCache } from '@gno/hooks/use-user-cache'
 
 export default function Page() {
-  const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [chainID, setChainID] = useState("");
-  const [remote, setRemote] = useState("");
-  const pathName = usePathname();
+  const [loading, setLoading] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [chainID, setChainID] = useState('')
+  const [remote, setRemote] = useState('')
+  const pathName = usePathname()
 
-  const account = useAppSelector(selectAccount);
-  const { gnonative } = useGnoNativeContext();
-  const search = useSearch();
-  const navigation = useNavigation();
-  const dispatch = useAppDispatch();
-  const push = useNotificationContext();
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned);
+  const account = useAppSelector(selectAccount)
+  const { gnonative } = useGnoNativeContext()
+  const navigation = useNavigation()
+  const dispatch = useAppDispatch()
+  const push = useNotificationContext()
+  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
 
-  const userCache = useUserCache();
+  const userCache = useUserCache()
 
   useEffect(() => {
-    const unsubscribe = navigation.addListener("focus", async () => {
+    const unsubscribe = navigation.addListener('focus', async () => {
       try {
-        fetchAccountData();
+        fetchAccountData()
       } catch (error: unknown | Error) {
-        console.log(error);
+        console.log(error)
       }
-    });
-    return unsubscribe;
-  }, [navigation]);
+    })
+    return unsubscribe
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [navigation])
 
   const onPressNotification = async () => {
     if (!account) {
-      throw new Error("No active account");
+      throw new Error('No active account')
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
-      const address_bech32 = await gnonative.addressToBech32(account.address);
-      await push.registerDevice(address_bech32);
-      Alert.alert("Push notification", "You have successfully registered for push notification!");
+      const address_bech32 = await gnonative.addressToBech32(account.address)
+      await push.registerDevice(address_bech32)
+      Alert.alert('Push notification', 'You have successfully registered for push notification!')
     } catch (error) {
-      console.log("Error on onPressNotification", JSON.stringify(error));
+      console.log('Error on onPressNotification', JSON.stringify(error))
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const fetchAccountData = async () => {
-    const chainId = await gnonative.getChainID();
-    const remote = await gnonative.getRemote();
-    setChainID(chainId);
-    setRemote(remote);
+    const chainId = await gnonative.getChainID()
+    const remote = await gnonative.getRemote()
+    setChainID(chainId)
+    setRemote(remote)
 
     if (!account) {
-      throw new Error("No active account");
+      throw new Error('No active account')
     }
 
     try {
-      console.log("remote: %s chainId %s " + remote, chainId);
+      console.log('remote: %s chainId %s ' + remote, chainId)
     } catch (error: unknown | Error) {
-      console.log(error);
+      console.log(error)
     }
-  };
+  }
 
   const onRemoveAccount = async () => {
-    router.navigate({ pathname: "account/remove" });
-  };
+    router.navigate({ pathname: 'account/remove' })
+  }
 
   const onPressLogout = async () => {
-    dispatch(clearLinking());
-    dispatch(logedOut());
-  };
+    dispatch(clearLinking())
+    dispatch(logedOut())
+  }
 
   const onAvatarChanged = async (imagePath: string, mimeType?: string) => {
     const imageCompressed = await compressImage(imagePath)
     if (!imageCompressed || !mimeType || !imageCompressed.base64) {
-      console.log("Error compressing image or missing data");
-      return;
+      console.log('Error compressing image or missing data')
+      return
     }
 
-    if (!account) throw new Error("No account found");
-    await dispatch(avatarTxAndRedirectToSign({ mimeType, base64: imageCompressed.base64, callerAddressBech32: account.bech32, callbackPath: pathName })).unwrap();
+    if (!account) throw new Error('No account found')
+    await dispatch(
+      avatarTxAndRedirectToSign({
+        mimeType,
+        base64: imageCompressed.base64,
+        callerAddressBech32: account.bech32,
+        callbackPath: pathName
+      })
+    ).unwrap()
   }
 
   useEffect(() => {
-
-    (async () => {
+    ;(async () => {
       if (txJsonSigned) {
-
-        console.log("txJsonSigned: ", txJsonSigned);
+        console.log('txJsonSigned: ', txJsonSigned)
 
         const signedTx = decodeURIComponent(txJsonSigned as string)
         try {
-          await dispatch(broadcastTxCommit(signedTx)).unwrap();
+          await dispatch(broadcastTxCommit(signedTx)).unwrap()
         } catch (error) {
-          console.error("on broadcastTxCommit", error);
+          console.error('on broadcastTxCommit', error)
         }
 
-        dispatch(clearLinking());
-        userCache.invalidateCache();
-        
-        setTimeout(() => {
-          console.log("reloading avatar");
-          dispatch(reloadAvatar());
-        }, 500);
-      }
-    })();
+        dispatch(clearLinking())
+        userCache.invalidateCache()
 
-  }, [txJsonSigned]);
+        setTimeout(() => {
+          console.log('reloading avatar')
+          dispatch(reloadAvatar())
+        }, 500)
+      }
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [txJsonSigned])
 
   return (
     <>
       <Layout.Container>
         <Layout.Body>
-          <ScrollView >
+          <ScrollView>
             <View style={{ paddingBottom: 20 }}>
               <AvatarPicker onChanged={onAvatarChanged} />
             </View>
@@ -160,25 +174,25 @@ export default function Page() {
       </Layout.Container>
       <LoadingModal visible={loading} />
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
-    padding: 24,
+    alignItems: 'center',
+    padding: 24
   },
   main: {
     flex: 1,
-    justifyContent: "center",
+    justifyContent: 'center',
     maxWidth: 960,
-    marginHorizontal: "auto",
+    marginHorizontal: 'auto'
   },
   logout: {
-    color: "#007AFF",
+    color: '#007AFF',
     marginTop: 10,
-    fontWeight: "bold",
-    textAlign: "center",
-  },
-});
+    fontWeight: 'bold',
+    textAlign: 'center'
+  }
+})

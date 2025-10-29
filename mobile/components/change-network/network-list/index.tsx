@@ -1,17 +1,17 @@
-import NetworkListItem from "../network-list-item";
-import styled from "styled-components/native";
-import Text from "components/text";
-import { NetworkMetainfo } from "@gno/types";
+import NetworkListItem from '../network-list-item'
+import styled from 'styled-components/native'
+import Text from 'components/text'
+import { NetworkMetainfo } from '@gno/types'
 
 interface Props {
-  currentChainId: string | undefined;
-  networkMetainfos: NetworkMetainfo[];
-  onNetworkChange: (networkMetainfo: NetworkMetainfo) => void;
+  currentChainId: string | undefined
+  networkMetainfos: NetworkMetainfo[]
+  onNetworkChange: (networkMetainfo: NetworkMetainfo) => void
 }
 
 const NetworkList: React.FC<Props> = ({ currentChainId, networkMetainfos = [], onNetworkChange }: Props) => {
   if (networkMetainfos.length === 0) {
-    return <Text.Body>No network found.</Text.Body>;
+    return <Text.Body>No network found.</Text.Body>
   }
 
   return (
@@ -25,11 +25,11 @@ const NetworkList: React.FC<Props> = ({ currentChainId, networkMetainfos = [], o
         />
       ))}
     </NetworkListWrapper>
-  );
-};
+  )
+}
 
 const NetworkListWrapper = styled.View`
   margin-top: 16px;
-`;
+`
 
-export default NetworkList;
+export default NetworkList

@@ -1,13 +1,13 @@
-import Icons from '@gno/components/icons';
-import Text from '@gno/components/text';
-import { colors } from '@gno/styles/colors';
-import { NetworkMetainfo } from "@gno/types";
-import styled from 'styled-components/native';
+import Icons from '@gno/components/icons'
+import Text from '@gno/components/text'
+import { colors } from '@gno/styles/colors'
+import { NetworkMetainfo } from '@gno/types'
+import styled from 'styled-components/native'
 
 export interface Props {
-  currentChainId: string | undefined;
-  networkMetainfo: NetworkMetainfo;
-  onPress: (item: NetworkMetainfo) => void;
+  currentChainId: string | undefined
+  networkMetainfo: NetworkMetainfo
+  onPress: (item: NetworkMetainfo) => void
 }
 
 const NetworkListItem: React.FC<Props> = ({ networkMetainfo, currentChainId, onPress }: Props) => (
@@ -19,14 +19,14 @@ const NetworkListItem: React.FC<Props> = ({ networkMetainfo, currentChainId, onP
 
     <RightItens>{currentChainId === networkMetainfo.chainId && <InUse />}</RightItens>
   </Row>
-);
+)
 
 const InUse = () => (
   <>
     <Icons.CheckMark color={colors.white} />
     <Text.Caption1 style={{ paddingLeft: 8, color: colors.white }}>in use</Text.Caption1>
   </>
-);
+)
 
 const Row = styled.TouchableOpacity`
   display: flex;
@@ -38,18 +38,18 @@ const Row = styled.TouchableOpacity`
   padding: 9px 16px;
   border-radius: 18px;
   transition: 0.2s;
-`;
+`
 
 const LeftItens = styled.View`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-`;
+`
 
 const RightItens = styled.View`
   display: flex;
   flex-direction: row;
   align-items: center;
-`;
+`
 
-export default NetworkListItem;
+export default NetworkListItem

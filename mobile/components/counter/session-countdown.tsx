@@ -1,17 +1,19 @@
-import { View } from "react-native";
-import Text from "../text";
-import { useEffect, useState } from "react";
+import { View } from 'react-native'
+import Text from '../text'
+import { useEffect, useState } from 'react'
 
-interface Props { time?: number }
+interface Props {
+  time?: number
+}
 
 function calculateTimeLeft(time: number): string {
-  const difference = time - new Date().getTime();
+  const difference = time - new Date().getTime()
   let timeLeft = {
     days: 0,
     hours: 0,
     minutes: 0,
     seconds: 0
-  };
+  }
 
   if (difference > 0) {
     timeLeft = {
@@ -19,38 +21,35 @@ function calculateTimeLeft(time: number): string {
       hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
       minutes: Math.floor((difference / 1000 / 60) % 60),
       seconds: Math.floor((difference / 1000) % 60)
-    };
+    }
   }
 
-  return `${timeLeft.days === 0 ? "" : timeLeft.days + "d"} ${timeLeft.hours === 0 ? "" : timeLeft.hours + "h"} ${timeLeft.minutes === 0 ? "" : timeLeft.minutes + "m"} ${timeLeft.seconds}s`
+  return `${timeLeft.days === 0 ? '' : timeLeft.days + 'd'} ${timeLeft.hours === 0 ? '' : timeLeft.hours + 'h'} ${timeLeft.minutes === 0 ? '' : timeLeft.minutes + 'm'} ${timeLeft.seconds}s`
 }
 
-
 export function SessionCountDown({ time }: Props) {
-
-  if (!time) return <View>
-    <Text.Body>
-      {/* No active session */}
-    </Text.Body>
-  </View>
-
-  const [remainingTimeStr, setRemainingTimeStr] = useState('');
+  const [remainingTimeStr, setRemainingTimeStr] = useState<string | undefined>(undefined)
 
   useEffect(() => {
-    setRemainingTimeStr(calculateTimeLeft(time));
+    setRemainingTimeStr(calculateTimeLeft(time ? time : 0))
 
     const interval = setInterval(() => {
-      setRemainingTimeStr(calculateTimeLeft(time));
-    }, 1000);
-    return () => clearInterval(interval);
-  }, [time]);
+      setRemainingTimeStr(calculateTimeLeft(time ? time : 0))
+    }, 1000)
+    return () => clearInterval(interval)
+  }, [time])
 
-  return <View>
-    <Text.Body>
-      Session valid until {new Date(time).toISOString()}
-    </Text.Body>
-    <Text.Body>
-      {remainingTimeStr}
-    </Text.Body>
-  </View>
+  if (!time)
+    return (
+      <View>
+        <Text.Body>{/* No active session */}</Text.Body>
+      </View>
+    )
+
+  return (
+    <View>
+      <Text.Body>Session valid until {new Date(time).toISOString()}</Text.Body>
+      <Text.Body>{remainingTimeStr}</Text.Body>
+    </View>
+  )
 }

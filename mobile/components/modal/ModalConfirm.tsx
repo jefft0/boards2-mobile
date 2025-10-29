@@ -1,18 +1,18 @@
-import { Modal as NativeModal } from "react-native";
-import ModalHeader from "./ModalHeader";
-import ModalContent from "./ModalContent";
-import Button from "components/button";
-import Ruller from "components/row/Ruller";
-import Spacer from "components/spacer";
-import Text from "components/text";
+import { Modal as NativeModal } from 'react-native'
+import ModalHeader from './ModalHeader'
+import ModalContent from './ModalContent'
+import Button from 'components/button'
+import Ruller from 'components/row/Ruller'
+import Spacer from 'components/spacer'
+import Text from 'components/text'
 
 export type Props = {
-  title: string;
-  message: string;
-  visible: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-};
+  title: string
+  message: string
+  visible: boolean
+  onClose: () => void
+  onConfirm: () => void
+}
 
 const ModalConfirm = ({ visible, onClose, onConfirm, title, message }: Props) => {
   return (
@@ -26,7 +26,7 @@ const ModalConfirm = ({ visible, onClose, onConfirm, title, message }: Props) =>
         <Button.TouchableOpacity title="Close" onPress={onClose} variant="secondary" />
       </ModalContent>
     </NativeModal>
-  );
-};
+  )
+}
 
-export default ModalConfirm;
+export default ModalConfirm

@@ -1,13 +1,13 @@
-import Layout from "@gno/components/layout";
-import Text from "@gno/components/text";
-import React from "react";
-import styled from "styled-components/native";
+import Layout from '@gno/components/layout'
+import Text from '@gno/components/text'
+import React from 'react'
+import styled from 'styled-components/native'
 
 type Props = {
-  message?: string;
-};
+  message?: string
+}
 
-export const ErrorView: React.FC<Props> = ({ message = "Loading" }) => {
+export const ErrorView: React.FC<Props> = ({ message = 'Loading' }) => {
   return (
     <Layout.Container>
       <Layout.Body>
@@ -16,13 +16,13 @@ export const ErrorView: React.FC<Props> = ({ message = "Loading" }) => {
         </ViewCenter>
       </Layout.Body>
     </Layout.Container>
-  );
-};
+  )
+}
 
 const ViewCenter = styled.View`
   height: 100%;
   justify-content: center;
   align-items: center;
-`;
+`
 
-export default ErrorView;
+export default ErrorView

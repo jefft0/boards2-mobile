@@ -1,30 +1,26 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { makeCallTx } from "./linkingSlice";
-import { RootState, ThunkExtra } from "redux/redux-provider";
-
-const CLIENT_NAME_PARAM = 'client_name=boards2';
+import { createSlice } from '@reduxjs/toolkit'
 
 export interface ProfileState {
-  accountName: string;
+  accountName: string
 }
 
 const initialState: ProfileState = {
-  accountName: "",
-};
+  accountName: ''
+}
 
 export const profileSlice = createSlice({
-  name: "profile",
+  name: 'profile',
   initialState,
   reducers: {
     setProfileAccountName: (state, action) => {
-      state.accountName = action.payload;
+      state.accountName = action.payload
     }
   },
   selectors: {
-    selectProfileAccountName: (state) => state.accountName,
-  },
-});
+    selectProfileAccountName: (state) => state.accountName
+  }
+})
 
-export const { setProfileAccountName } = profileSlice.actions;
+export const { setProfileAccountName } = profileSlice.actions
 
-export const { selectProfileAccountName } = profileSlice.selectors;
+export const { selectProfileAccountName } = profileSlice.selectors

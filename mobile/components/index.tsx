@@ -1,2 +1,2 @@
-export * from "./view";
-export * from "./avatar";
+export * from './view'
+export * from './avatar'

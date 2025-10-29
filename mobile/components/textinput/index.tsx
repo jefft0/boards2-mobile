@@ -1,24 +1,24 @@
-import React from "react";
-import { TextInput as RNTextInput, TextInputProps } from "react-native";
-import styled from "styled-components/native";
-import FontAwesome from "@expo/vector-icons/FontAwesome";
+import React from 'react'
+import { TextInput as RNTextInput, TextInputProps } from 'react-native'
+import styled from 'styled-components/native'
+import FontAwesome from '@expo/vector-icons/FontAwesome'
 
 export interface Props extends TextInputProps {
-  error?: boolean | string | undefined;
+  error?: boolean | string | undefined
 }
 
 const Container = styled.View<Props>`
   flex-direction: row;
   align-items: center;
   border-width: 1px;
-  border-color: ${(props) => (props.error ? "red" : "black")};
+  border-color: ${(props) => (props.error ? 'red' : 'black')};
   border-radius: 4px;
   padding: 2px;
   margin: 10px 0;
-`;
+`
 
 const TextInputBase = styled.TextInput.attrs<Props>({
-  multiline: false,
+  multiline: false
 })`
   flex: 1;
   padding: 8px;
@@ -26,14 +26,15 @@ const TextInputBase = styled.TextInput.attrs<Props>({
   color: black;
   height: 48px;
   border-width: 0;
-`;
+`
 
 const ToggleIcon = styled.TouchableOpacity`
   padding: 2px;
-`;
+`
 
+// eslint-disable-next-line react/display-name
 export const TextInput = React.forwardRef<RNTextInput, Props>((props, ref) => {
-  const [isSecureText, setShowSecureText] = React.useState(props.secureTextEntry);
+  const [isSecureText, setShowSecureText] = React.useState(props.secureTextEntry)
 
   return (
     <Container>
@@ -41,11 +42,11 @@ export const TextInput = React.forwardRef<RNTextInput, Props>((props, ref) => {
 
       {props.secureTextEntry ? (
         <ToggleIcon>
-          <FontAwesome size={28} name={isSecureText ? "eye-slash" : "eye"} onPress={() => setShowSecureText((prev) => !prev)} />
+          <FontAwesome size={28} name={isSecureText ? 'eye-slash' : 'eye'} onPress={() => setShowSecureText((prev) => !prev)} />
         </ToggleIcon>
       ) : null}
     </Container>
-  );
-});
+  )
+})
 
-export default TextInput;
+export default TextInput
