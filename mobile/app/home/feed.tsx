@@ -90,8 +90,8 @@ export default function Page() {
   return (
     <SafeAreaView style={{ flex: 1, paddingTop: Platform.select({ ios: 0, default: 20 }) }}>
       <View style={styles.container}>
-        <FeedView totalPosts={totalPosts} onPress={onPress} onGnod={onGnod} bech32={account.bech32} type="userFeed" />
-        <Button.TouchableOpacity title="Post" onPress={onPressPost} style={styles.post} variant="primary" />
+        <FeedView totalPosts={totalPosts} onPress={onPress} onGnod={onGnod} bech32={account.bech32} type="userPosts" />
+        <Button.TouchableOpacity title="New Thread" onPress={onPressPost} style={styles.post} variant="primary" />
       </View>
     </SafeAreaView>
   )
@@ -112,8 +112,8 @@ const styles = StyleSheet.create({
   },
   post: {
     position: 'absolute',
-    width: 60,
-    height: 60,
+    width: 70,
+    height: 70,
     bottom: 40,
     right: 20
   }

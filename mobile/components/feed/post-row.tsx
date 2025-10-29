@@ -9,7 +9,6 @@ import { setPostToReply, useAppDispatch, setProfileAccountName } from '@gno/redu
 import { useRouter } from 'expo-router'
 import RepostLabel from './repost-label'
 import { RepostRow } from './repost-row'
-import GnodLabel from './gnod-label'
 import PostContentLabel from './post-content-label'
 
 interface FeedProps {
@@ -40,6 +39,15 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
     return null
   }
 
+  let content = post.post
+  let nReplies = post.n_replies
+  // showFooter is false when displaying the parent post for replies
+  if (post.parent_id === 0 && showFooter) {
+    // For the top-level post, show the title
+    content = post.title
+    // For the top-level post, show all replies
+    nReplies = post.n_replies_all
+  }
   return (
     <Pressable onPress={() => onPress(post)} style={styles.container}>
       <RepostLabel post={post} />
@@ -53,15 +61,14 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
             </Pressable>
           </View>
 
-          <PostContentLabel onMentionPress={(value) => nativgateToAccount(value)}>{post.post}</PostContentLabel>
+          <PostContentLabel onMentionPress={(value) => nativgateToAccount(value)}>{content}</PostContentLabel>
           {isRepost ? <RepostRow post={post.repost_parent} onPress={onPress} showFooter={false} /> : null}
         </View>
       </View>
       {showFooter ? (
         <View style={[styles.footer]}>
-          <GnodLabel style={styles.reply} post={post} onGnod={onGnod} />
           <RepostButton style={styles.reply} post={post} onPressRepost={onPressRepost} />
-          <RepliesLabel replyCount={post.n_replies} style={styles.reply} />
+          <RepliesLabel replyCount={nReplies} style={styles.reply} />
         </View>
       ) : null}
     </Pressable>

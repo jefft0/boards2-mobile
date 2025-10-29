@@ -9,28 +9,31 @@ export const useUserCache = () => {
   const { gnonative } = useGnoNativeContext()
 
   async function getUser(bech32: string): Promise<User> {
+    //bech32 = "g1juz2yxmdsa6audkp6ep9vfv80c8p5u76e03vvh" // debug until we detect if bech32 is a username
     if (usersCache.has(bech32)) {
       // Cached user
       return usersCache.get(bech32) as User
     }
 
-    const result = await gnonative.qEval('gno.land/r/berty/social', `GetJsonUserByAddress("${bech32}")`)
-
-    if (!result || !(result.startsWith('(') && result.endsWith(' string)')))
-      throw new Error('Malformed GetJsonUserByAddress response')
-
-    const quoted = result.substring(1, result.length - ' string)'.length)
-    const jsonString = JSON.parse(quoted)
-    const userJson = JSON.parse(jsonString)
+    let name = bech32
+    try {
+      const result = await gnonative.qEval('gno.land/r/sys/users', `ResolveAddress("${bech32}").Name()`)
+      const match = result.match(/\("(\w+)"/)
+      if (match) {
+        name = match[1]
+      }
+    } catch (error) {
+      console.error('Error in ResolveAddress', error)
+    }
 
     const response = await gnonative.qEval('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
     const bech32Image = response.substring(2, response.length - '" string)'.length)
 
     const user = {
-      name: userJson.name,
+      name: name,
       password: '',
       pubKey: '',
-      address: userJson.address,
+      address: await gnonative.addressFromBech32(bech32),
       avatar: bech32Image,
       bech32: ''
     }

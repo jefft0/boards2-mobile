@@ -4,7 +4,7 @@ import Text from '../text'
 function EmptyFeedList() {
   return (
     <View style={styles.container}>
-      <Text.Subheadline style={styles.text}>No posts yet</Text.Subheadline>
+      <Text.Subheadline style={styles.text}>No threads yet</Text.Subheadline>
     </View>
   )
 }

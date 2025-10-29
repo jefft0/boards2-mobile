@@ -18,7 +18,6 @@ import Layout from '@gno/components/layout'
 import { LoadingModal } from '@gno/components/loading'
 import { AccountBalance } from '@gno/components/settings'
 import Text from '@gno/components/text'
-import { useSearch } from '@gno/hooks/use-search'
 import { useNotificationContext } from '@gno/provider/notification-provider'
 import AvatarPicker from '@gno/components/avatar/avatar-picker'
 import { ProgressViewModal } from '@gno/components/view/progress'
@@ -30,12 +29,10 @@ export default function Page() {
   const [modalVisible, setModalVisible] = useState(false)
   const [chainID, setChainID] = useState('')
   const [remote, setRemote] = useState('')
-  const [followersCount, setFollowersCount] = useState({ n_followers: 0, n_following: 0 })
   const pathName = usePathname()
 
   const account = useAppSelector(selectAccount)
   const { gnonative } = useGnoNativeContext()
-  const search = useSearch()
   const navigation = useNavigation()
   const dispatch = useAppDispatch()
   const push = useNotificationContext()
@@ -83,10 +80,6 @@ export default function Page() {
     }
 
     try {
-      const followersCount = await search.GetJsonFollowersCount(account.bech32)
-      console.log('followersCount', followersCount)
-      setFollowersCount(followersCount)
-
       console.log('remote: %s chainId %s ' + remote, chainId)
     } catch (error: unknown | Error) {
       console.log(error)
@@ -158,10 +151,6 @@ export default function Page() {
               <Text.Body>{chainID}</Text.Body>
               <Text.Subheadline>Remote:</Text.Subheadline>
               <Text.Body>{remote}</Text.Body>
-              <Text.Subheadline>Followers:</Text.Subheadline>
-              <Text.Body>{followersCount.n_followers}</Text.Body>
-              <Text.Subheadline>Following:</Text.Subheadline>
-              <Text.Body>{followersCount.n_following}</Text.Body>
               <View></View>
             </>
             <Layout.Footer>

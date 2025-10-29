@@ -11,18 +11,6 @@ export default function DynamicLayout() {
       <Stack.Screen name="index" />
 
       <Stack.Screen
-        name="following"
-        options={{
-          presentation: 'modal'
-        }}
-      />
-      <Stack.Screen
-        name="followers"
-        options={{
-          presentation: 'modal'
-        }}
-      />
-      <Stack.Screen
         name="remove"
         options={{
           presentation: 'modal'

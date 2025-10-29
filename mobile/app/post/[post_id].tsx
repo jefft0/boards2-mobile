@@ -20,6 +20,7 @@ import Alert from '@gno/components/alert'
 import { PostRow } from '@gno/components/feed/post-row'
 import { FlatList, KeyboardAvoidingView, View } from 'react-native'
 import { Post } from '@gno/types'
+import { setPostToReply } from '@gno/redux'
 import { useFeed } from '@gno/hooks/use-feed'
 
 function Page() {
@@ -78,7 +79,13 @@ function Page() {
     console.log('fetching post: ', post.user.address)
     setLoading('Loading post...')
     try {
-      const thread = await feed.fetchThread(String(post.user.address), Number(post.id))
+      let threadId = Number(post.id)
+      let replyId = 0
+      if (post.parent_id !== 0) {
+        threadId = post.thread_id
+        replyId = Number(post.id)
+      }
+      const thread = await feed.fetchThread(String(post.user.address), threadId, replyId)
       setThread(thread.data)
     } catch (error) {
       console.error('failed on [post_id].tsx screen', error)
@@ -111,8 +118,9 @@ function Page() {
     }
   }
 
-  const onPressPost = (post: Post) => {
-    // TODO: on press a post inside the reply thread
+  const onPressPost = async (p: Post) => {
+    await dispatch(setPostToReply(p))
+    router.navigate({ pathname: '/post/[post_id]' })
   }
 
   const onGnod = async (post: Post) => {
@@ -131,9 +139,10 @@ function Page() {
     )
   }
 
+  const title = post.title ? post.title : 'Post'
   return (
     <Layout.Container>
-      <Layout.Header title="Post" iconType="back" />
+      <Layout.Header title={title} iconType="back" />
       <Layout.Body>
         <PostRow post={post} showFooter={false} />
 
