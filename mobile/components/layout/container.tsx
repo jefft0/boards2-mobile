@@ -1,12 +1,12 @@
-import React, { ReactNode } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import React, { ReactNode } from 'react'
+import { SafeAreaView } from 'react-native-safe-area-context'
 
 interface Props {
-  children: ReactNode;
+  children: ReactNode
 }
 
 const Container: React.FC<Props> = ({ children }) => {
-  return <SafeAreaView style={{ flex: 1 }}>{children}</SafeAreaView>;
-};
+  return <SafeAreaView style={{ flex: 1 }}>{children}</SafeAreaView>
+}
 
-export default Container;
+export default Container

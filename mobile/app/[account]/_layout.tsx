@@ -1,11 +1,11 @@
-import { Stack } from "expo-router";
+import { Stack } from 'expo-router'
 
 export default function DynamicLayout() {
   return (
     <Stack
       screenOptions={{
         headerLargeTitle: false,
-        headerShown: false,
+        headerShown: false
       }}
     >
       <Stack.Screen name="index" />
@@ -13,21 +13,21 @@ export default function DynamicLayout() {
       <Stack.Screen
         name="following"
         options={{
-          presentation: "modal",
+          presentation: 'modal'
         }}
       />
       <Stack.Screen
         name="followers"
         options={{
-          presentation: "modal",
+          presentation: 'modal'
         }}
       />
-			<Stack.Screen
-				name="remove"
-				options={{
-					presentation: "modal",
-				}}
-			/>
+      <Stack.Screen
+        name="remove"
+        options={{
+          presentation: 'modal'
+        }}
+      />
     </Stack>
-  );
+  )
 }

@@ -1,25 +1,25 @@
-import { useMemo } from "react";
-import { StyleSheet, TouchableOpacity, View } from "react-native";
-import Text from "@gno/components/text";
-import { colors } from "@gno/styles/colors";
-import Button from "@gno/components/button";
-import { Following, Post, User } from "@gno/types";
-import FeedView from "../feed/feed-view";
-import Avatar from "@gno/components/avatar/avatar";
+import { useMemo } from 'react'
+import { StyleSheet, TouchableOpacity, View } from 'react-native'
+import Text from '@gno/components/text'
+import { colors } from '@gno/styles/colors'
+import Button from '@gno/components/button'
+import { Following, Post, User } from '@gno/types'
+import FeedView from '../feed/feed-view'
+import Avatar from '@gno/components/avatar/avatar'
 
 interface Props {
-  onPressFollowing: () => void;
-  onPressFollowers: () => void;
-  onPressFollow: (address: string, callerAddress: Uint8Array) => void;
-  onPressUnfollow: (address: string, callerAddress: Uint8Array) => void;
-  onPressPost: (post: Post) => void;
-  onGnod: (post: Post) => void;
-  user: User;
-  currentUser: User;
-  followers: Following[];
-  following: Following[];
-  totalPosts: number;
-  callerAddress: Uint8Array;
+  onPressFollowing: () => void
+  onPressFollowers: () => void
+  onPressFollow: (address: string, callerAddress: Uint8Array) => void
+  onPressUnfollow: (address: string, callerAddress: Uint8Array) => void
+  onPressPost: (post: Post) => void
+  onGnod: (post: Post) => void
+  user: User
+  currentUser: User
+  followers: Following[]
+  following: Following[]
+  totalPosts: number
+  callerAddress: Uint8Array
 }
 
 function AccountView(props: Props) {
@@ -35,14 +35,16 @@ function AccountView(props: Props) {
     followers,
     currentUser,
     totalPosts,
-    callerAddress,
+    callerAddress
+  } = props
+  const accountName = user.name
 
-  } = props;
-  const accountName = user.name;
+  const isFollowed = useMemo(
+    () => followers.find((f) => f.address.toString() === currentUser.bech32) != null,
+    [followers, currentUser]
+  )
 
-  const isFollowed = useMemo(() => followers.find((f) => f.address.toString() === currentUser.bech32) != null, [user, followers]);
-
-  const avarUri = user.avatar ? user.avatar : "https://www.gravatar.com/avatar/tmp";
+  const avarUri = user.avatar ? user.avatar : 'https://www.gravatar.com/avatar/tmp'
 
   return (
     <>
@@ -69,27 +71,27 @@ function AccountView(props: Props) {
           )}
         </View>
 
-        <View style={{ width: "100%", marginHorizontal: 16, gap: 8 }}>
+        <View style={{ width: '100%', marginHorizontal: 16, gap: 8 }}>
           <Text.Title>{accountName}</Text.Title>
-          <View style={{ flexDirection: "row", gap: 4 }}>
-            <TouchableOpacity onPress={onPressFollowers} style={{ flexDirection: "row", gap: 4 }}>
-              <Text.Body style={{ fontWeight: "bold" }}>{followers.length}</Text.Body>
+          <View style={{ flexDirection: 'row', gap: 4 }}>
+            <TouchableOpacity onPress={onPressFollowers} style={{ flexDirection: 'row', gap: 4 }}>
+              <Text.Body style={{ fontWeight: 'bold' }}>{followers.length}</Text.Body>
               <Text.Body>Followers</Text.Body>
             </TouchableOpacity>
-            <TouchableOpacity onPress={onPressFollowing} style={{ flexDirection: "row", gap: 4, paddingLeft: 8 }}>
+            <TouchableOpacity onPress={onPressFollowing} style={{ flexDirection: 'row', gap: 4, paddingLeft: 8 }}>
               <Text.Body>Following</Text.Body>
-              <Text.Body style={{ fontWeight: "bold" }}>{following.length}</Text.Body>
+              <Text.Body style={{ fontWeight: 'bold' }}>{following.length}</Text.Body>
             </TouchableOpacity>
           </View>
         </View>
-        <View style={{ flex: 1, width: "100%", paddingHorizontal: 16, paddingTop: 8 }}>
+        <View style={{ flex: 1, width: '100%', paddingHorizontal: 16, paddingTop: 8 }}>
           <Text.Body>Posts</Text.Body>
           <View style={{ height: 1, backgroundColor: colors.grayscale[200] }} />
           <FeedView totalPosts={totalPosts} onPress={onPressPost} onGnod={onGnod} bech32={user.bech32} type="userPosts" />
         </View>
       </View>
     </>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
@@ -97,16 +99,16 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 60,
-    marginLeft: 16,
+    marginLeft: 16
   },
   container: {
-    height: "100%",
-    flexDirection: "column",
-    alignItems: "flex-start",
-    backgroundColor: colors.grayscale[100],
+    height: '100%',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    backgroundColor: colors.grayscale[100]
   },
-  banner: { width: "100%", height: 100, backgroundColor: colors.grayscale[200] },
-  followButtonRow: { width: "100%", alignItems: "flex-end", paddingTop: 16, paddingRight: 16 },
-});
+  banner: { width: '100%', height: 100, backgroundColor: colors.grayscale[200] },
+  followButtonRow: { width: '100%', alignItems: 'flex-end', paddingTop: 16, paddingRight: 16 }
+})
 
-export default AccountView;
+export default AccountView

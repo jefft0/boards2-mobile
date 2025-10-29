@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from 'react'
 import {
   KeyboardAvoidingView,
   StyleSheet,
@@ -6,62 +6,62 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Modal,
-  TextInput as RNTextInput,
-} from "react-native";
-import { GRPCError } from "@gnolang/gnonative/src/grpc/error";
-import Alert from "@gno/components/alert";
-import { useGnoNativeContext, ErrCode } from "@gnolang/gnonative";
-import { ModalView } from ".";
-import TextInput from "../textinput";
-import Text from "../text";
-import Button from "../button";
-import Spacer from "../spacer";
+  TextInput as RNTextInput
+} from 'react-native'
+import { GRPCError } from '@gnolang/gnonative/src/grpc/error'
+import Alert from '@gno/components/alert'
+import { useGnoNativeContext, ErrCode } from '@gnolang/gnonative'
+import { ModalView } from '.'
+import TextInput from '../textinput'
+import Text from '../text'
+import Button from '../button'
+import Spacer from '../spacer'
 
 export type Props = {
-  visible: boolean;
-  accountName: string;
-  accountAddress: Uint8Array;
-  onClose: (sucess: boolean) => void;
-};
+  visible: boolean
+  accountName: string
+  accountAddress: Uint8Array
+  onClose: (sucess: boolean) => void
+}
 
 const ReenterPassword = ({ visible, accountName, onClose, accountAddress }: Props) => {
-  const { gnonative } = useGnoNativeContext();
-  const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | undefined>(undefined);
+  const { gnonative } = useGnoNativeContext()
+  const [password, setPassword] = useState('')
+  const [error, setError] = useState<string | undefined>(undefined)
 
-  const inputRef = useRef<RNTextInput>(null);
+  const inputRef = useRef<RNTextInput>(null)
 
   useEffect(() => {
     if (visible) {
       setTimeout(() => {
-        inputRef.current?.focus();
-      }, 200);
+        inputRef.current?.focus()
+      }, 200)
     }
-  }, [visible]);
+  }, [visible])
 
   const onConfirm = async () => {
-    if (!password) return;
+    if (!password) return
 
     try {
-      setError(undefined);
-      await gnonative.setPassword(password, accountAddress);
-      onClose(true);
+      setError(undefined)
+      await gnonative.setPassword(password, accountAddress)
+      onClose(true)
     } catch (error: any) {
-      const err = new GRPCError(error);
+      const err = new GRPCError(error)
       if (err.errCode() === ErrCode.ErrDecryptionFailed) {
-        setError("Wrong password, please try again.");
+        setError('Wrong password, please try again.')
       } else {
-        setError(JSON.stringify(error));
+        setError(JSON.stringify(error))
       }
     }
-  };
+  }
 
-  if (!visible) return null;
+  if (!visible) return null
 
   return (
     <Modal>
-      <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={styles.container}>
-        <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ height: "100%" }}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.container}>
+        <TouchableWithoutFeedback onPress={Keyboard.dismiss} style={{ height: '100%' }}>
           <ModalView.Content>
             <ModalView.Header title="Re-enter your password" onClose={() => onClose(false)} />
             <Text.BodyMedium>Please, reenter the password for the selected account.</Text.BodyMedium>
@@ -80,32 +80,32 @@ const ReenterPassword = ({ visible, accountName, onClose, accountAddress }: Prop
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
     </Modal>
-  );
-};
+  )
+}
 
-export default ReenterPassword;
+export default ReenterPassword
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1
   },
   inner: {
     padding: 24,
     flex: 1,
-    justifyContent: "space-around",
+    justifyContent: 'space-around'
   },
   header: {
     fontSize: 36,
-    marginBottom: 48,
+    marginBottom: 48
   },
   textInput: {
     height: 40,
-    borderColor: "#000000",
+    borderColor: '#000000',
     borderBottomWidth: 1,
-    marginBottom: 36,
+    marginBottom: 36
   },
   btnContainer: {
-    backgroundColor: "white",
-    marginTop: 12,
-  },
-});
+    backgroundColor: 'white',
+    marginTop: 12
+  }
+})

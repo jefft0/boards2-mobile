@@ -1,56 +1,57 @@
-import { useEffect, useState } from "react";
-import { View } from "react-native";
-import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useSearch } from "@gno/hooks/use-search";
-import SearchResults from "@gno/components/list/search/search-result-list";
-import { colors } from "@gno/styles/colors";
-import {  selectAccount, useAppDispatch, useAppSelector, setProfileAccountName } from "@gno/redux";
+import { useEffect, useState } from 'react'
+import { View } from 'react-native'
+import { Stack, useLocalSearchParams, useRouter } from 'expo-router'
+import { useSearch } from '@gno/hooks/use-search'
+import SearchResults from '@gno/components/list/search/search-result-list'
+import { colors } from '@gno/styles/colors'
+import { selectAccount, useAppDispatch, useAppSelector, setProfileAccountName } from '@gno/redux'
 
 export default function Search() {
-  const router = useRouter();
-  const params = useLocalSearchParams<{ q?: string }>();
-  const search = useSearch();
-  const [data, setData] = useState<string[]>([]);
-  const account = useAppSelector(selectAccount);
-  const dispatch = useAppDispatch();
+  const router = useRouter()
+  const params = useLocalSearchParams<{ q?: string }>()
+  const search = useSearch()
+  const [data, setData] = useState<string[]>([])
+  const account = useAppSelector(selectAccount)
+  const dispatch = useAppDispatch()
 
   useEffect(() => {
-    (async function () {
+    ;(async function () {
       if (params.q) {
-        const result = await search.searchUser(params.q, account);
-        setData(result);
+        const result = await search.searchUser(params.q, account)
+        setData(result)
       } else {
-        setData([]);
+        setData([])
       }
-    })();
-  }, [params.q]);
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [params.q])
 
   const onPress = async (accountName: string) => {
-    await dispatch(setProfileAccountName(accountName)); 
-    router.navigate({ pathname: "account" });
-  };
+    await dispatch(setProfileAccountName(accountName))
+    router.navigate({ pathname: 'account' })
+  }
 
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+    <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
       <Stack.Screen
         options={{
-          title: "Search",
-					headerStyle: {
-						backgroundColor: colors.grayscale[50],
-					},
+          title: 'Search',
+          headerStyle: {
+            backgroundColor: colors.grayscale[50]
+          },
           headerSearchBarOptions: {
-            autoCapitalize: "none",
-            inputType: "text",
-						textColor: "black",
+            autoCapitalize: 'none',
+            inputType: 'text',
+            textColor: 'black',
             onChangeText: (event) => {
               router.setParams({
-                q: event.nativeEvent.text,
-              });
-            },
-          },
+                q: event.nativeEvent.text
+              })
+            }
+          }
         }}
       />
       <SearchResults data={data} onPress={onPress} />
     </View>
-  );
+  )
 }

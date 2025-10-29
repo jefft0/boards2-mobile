@@ -1,4 +1,4 @@
-import AccountView from "./account";
-import FeedView from "./feed/feed-view";
+import AccountView from './account'
+import FeedView from './feed/feed-view'
 
-export { AccountView, FeedView };
+export { AccountView, FeedView }

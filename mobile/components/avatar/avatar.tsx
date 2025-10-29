@@ -1,8 +1,8 @@
-import { View, Image, StyleSheet, StyleProp, ImageStyle } from "react-native";
+import { View, Image, StyleSheet, StyleProp, ImageStyle } from 'react-native'
 
 interface Props {
-  uri: string;
-  style?: StyleProp<ImageStyle>;
+  uri: string
+  style?: StyleProp<ImageStyle>
 }
 
 const Avatar: React.FC<Props> = ({ uri, style }) => {
@@ -10,17 +10,17 @@ const Avatar: React.FC<Props> = ({ uri, style }) => {
     <View>
       <Image source={{ uri }} style={[styles.image, style]} />
     </View>
-  );
-};
+  )
+}
 
-const SIZE = 80;
+const SIZE = 80
 
 const styles = StyleSheet.create({
   image: {
     width: SIZE,
     height: SIZE,
-    borderRadius: SIZE,
-  },
-});
+    borderRadius: SIZE
+  }
+})
 
-export default Avatar;
+export default Avatar

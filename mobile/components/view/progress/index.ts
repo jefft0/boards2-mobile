@@ -1,3 +1,3 @@
-import ProgressViewModal from "./modal";
+import ProgressViewModal from './modal'
 
 export { ProgressViewModal }

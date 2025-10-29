@@ -142,7 +142,7 @@ The manual release process uses the [`eas`](https://docs.expo.dev/build/setup/#i
 1. Download the `google-services.json` file from the Firebase Console.
 2. Run `make android.release_production` to build the app.
 3. After the build is complete, submit it to the Play Store running `eas submit --platform android`
-You'll need to have a [service account json file](https://developers.google.com/android/management/service-account) to authenticate with Google Play Store.
+   You'll need to have a [service account json file](https://developers.google.com/android/management/service-account) to authenticate with Google Play Store.
 
 ## Opening the App using Links
 

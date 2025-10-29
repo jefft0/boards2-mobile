@@ -1,43 +1,43 @@
-import React from "react";
-import { Image, Pressable, StyleSheet, View } from "react-native";
-import { Post } from "@gno/types";
-import Text from "@gno/components/text";
-import RepliesLabel from "./replies-label";
-import TimeStampLabel from "./timestamp-label";
-import RepostButton from "./repost-button";
-import { setPostToReply, useAppDispatch, setProfileAccountName } from "@gno/redux";
-import { useRouter } from "expo-router";
-import RepostLabel from "./repost-label";
-import { RepostRow } from "./repost-row";
-import GnodLabel from "./gnod-label";
-import PostContentLabel from "./post-content-label";
+import React from 'react'
+import { Image, Pressable, StyleSheet, View } from 'react-native'
+import { Post } from '@gno/types'
+import Text from '@gno/components/text'
+import RepliesLabel from './replies-label'
+import TimeStampLabel from './timestamp-label'
+import RepostButton from './repost-button'
+import { setPostToReply, useAppDispatch, setProfileAccountName } from '@gno/redux'
+import { useRouter } from 'expo-router'
+import RepostLabel from './repost-label'
+import { RepostRow } from './repost-row'
+import GnodLabel from './gnod-label'
+import PostContentLabel from './post-content-label'
 
 interface FeedProps {
-  post?: Post;
-  onPress?: (post: Post) => void;
-  onGnod?: (post: Post) => void;
-  showFooter?: boolean;
+  post?: Post
+  onPress?: (post: Post) => void
+  onGnod?: (post: Post) => void
+  showFooter?: boolean
 }
 
-const func = () => {};
+const func = () => {}
 
 export function PostRow({ post, onPress = func, onGnod = func, showFooter = true }: FeedProps) {
-  const router = useRouter();
-  const dispatch = useAppDispatch();
-  const isRepost = post?.repost_parent;
+  const router = useRouter()
+  const dispatch = useAppDispatch()
+  const isRepost = post?.repost_parent
 
   const onPressRepost = async (p: Post) => {
-    await dispatch(setPostToReply(p));
-    router.navigate({ pathname: "/repost" });
-  };
+    await dispatch(setPostToReply(p))
+    router.navigate({ pathname: '/repost' })
+  }
 
   const nativgateToAccount = async (accountName: string) => {
-    await dispatch(setProfileAccountName(accountName)); 
-    router.navigate({ pathname: "account" });
-  };
+    await dispatch(setProfileAccountName(accountName))
+    router.navigate({ pathname: 'account' })
+  }
 
   if (!post) {
-    return null;
+    return null
   }
 
   return (
@@ -46,9 +46,9 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
       <View style={styles.body}>
         <Image source={{ uri: post.user.avatar }} style={styles.image} />
         <View style={styles.content}>
-          <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <Pressable style={{ flexDirection: "row", alignItems: "center" }} onPress={() => nativgateToAccount(post?.user.name)}>
-              <Text.Body style={[{ fontWeight: "bold", fontSize: 16, paddingRight: 8 }]}>@{post.user.name}</Text.Body>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Pressable style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => nativgateToAccount(post?.user.name)}>
+              <Text.Body style={[{ fontWeight: 'bold', fontSize: 16, paddingRight: 8 }]}>@{post.user.name}</Text.Body>
               <TimeStampLabel timestamp={post.date} />
             </Pressable>
           </View>
@@ -65,38 +65,38 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
         </View>
       ) : null}
     </Pressable>
-  );
+  )
 }
 
 const styles = StyleSheet.create({
   container: {
     padding: 16,
-    borderBottomColor: "#ccc",
-    borderBottomWidth: 1,
+    borderBottomColor: '#ccc',
+    borderBottomWidth: 1
   },
   body: {
-    flexDirection: "row",
-    gap: 16,
+    flexDirection: 'row',
+    gap: 16
   },
   image: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+    borderRadius: 24
   },
   content: {
     gap: 4,
-    flex: 1,
+    flex: 1
   },
   footer: {
-    flexDirection: "row",
+    flexDirection: 'row',
     paddingTop: 12,
     paddingLeft: 44,
-    gap: 16,
+    gap: 16
   },
   footerHighlighted: {
     marginTop: 16,
-    borderTopColor: "#ccc",
-    borderTopWidth: 1,
+    borderTopColor: '#ccc',
+    borderTopWidth: 1
   },
-  reply: { paddingLeft: 16 },
-});
+  reply: { paddingLeft: 16 }
+})
