@@ -2,8 +2,6 @@ import { ParentPost, Post, User } from '@gno/types'
 import { useGnoNativeContext } from '@gnolang/gnonative'
 import { useUserCache } from './use-user-cache'
 import useGnoJsonParser from './use-gno-json-parser'
-import { useIndexerContext } from '@gno/provider/indexer-provider'
-import { Alert } from 'react-native'
 
 interface ThreadPosts {
   data: Post[]
@@ -14,7 +12,6 @@ export const useFeed = () => {
   const { gnonative } = useGnoNativeContext()
   const cache = useUserCache()
   const parser = useGnoJsonParser()
-  const indexer = useIndexerContext()
 
   async function getThreadPosts(
     address: string,
@@ -79,17 +76,6 @@ export const useFeed = () => {
     const json = await enrichData(result)
 
     return json
-  }
-
-  async function fetchFeed(address: string, startIndex: number, endIndex: number): Promise<ThreadPosts> {
-    try {
-      const [nHomePosts, addrAndIDs] = await indexer.getHomePosts(address, BigInt(startIndex), BigInt(endIndex))
-      const result = await gnonative.qEval('gno.land/r/berty/social', `GetJsonTopPostsByID(${addrAndIDs})`)
-      return await enrichData(result, nHomePosts)
-    } catch (error) {
-      Alert.alert('Error while fetching posts', ' ' + error)
-      throw error
-    }
   }
 
   async function enrichData(result: string, nHomePosts?: number) {
@@ -158,5 +144,5 @@ export const useFeed = () => {
     return r.n_posts
   }
 
-  return { fetchFeed, fetchCount, fetchThread, fetchThreadPosts }
+  return { fetchCount, fetchThread, fetchThreadPosts }
 }

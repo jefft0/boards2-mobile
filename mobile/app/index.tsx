@@ -1,4 +1,4 @@
-import { Alert, View } from 'react-native'
+import { View } from 'react-native'
 import Button from '@gno/components/button'
 import Layout from '@gno/components/layout'
 import Ruller from '@gno/components/row/Ruller'
@@ -18,7 +18,6 @@ import Spacer from '@gno/components/spacer'
 import * as Application from 'expo-application'
 import { useEffect } from 'react'
 import { useRouter } from 'expo-router'
-import { useIndexerContext } from '@gno/provider/indexer-provider'
 
 export default function Root() {
   const dispatch = useAppDispatch()
@@ -28,22 +27,12 @@ export default function Root() {
   const account = useAppSelector(selectAccount)
   const loading = useAppSelector(selectLoginLoading)
 
-  const { initIndexer } = useIndexerContext()
-
   const appVersion = Application.nativeApplicationVersion
 
   useEffect(() => {
     if (loading || !bech32AddressSelected || !remoteURL) return
     console.log('bech32AddressSelected on index', bech32AddressSelected)
 
-    if (remoteURL !== 'https://api.gno.berty.io:443') {
-      Alert.alert(
-        'Unsupported Remote URL',
-        'This build supports only https://api.gno.berty.io:443. Please update your remote URL and try again.'
-      )
-      return
-    }
-    initIndexer('https://indexer.gno.berty.io')
     dispatch(loggedIn())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bech32AddressSelected])
