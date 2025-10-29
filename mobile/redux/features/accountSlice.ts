@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { ThunkExtra } from 'redux/redux-provider'
+import { RootState, ThunkExtra } from 'redux/redux-provider'
 
 export interface CounterState {
   account?: User
@@ -14,15 +14,18 @@ const initialState: CounterState = {
   loading: false
 }
 
-interface LoginParam {
-  bech32: string
-}
-
-export const loggedIn = createAsyncThunk<User, LoginParam, ThunkExtra>('account/loggedIn', async (param, thunkAPI) => {
+export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/loggedIn', async (param, thunkAPI) => {
   console.log('Logging in', param)
-  const { bech32 } = param
 
+  const { bech32AddressSelected: bech32, chainId, remoteURL } = (thunkAPI.getState() as RootState).linking
+
+  if (!bech32 || !chainId || !remoteURL) {
+    throw new Error('No bech32 address, chainId or remoteURL found for login')
+  }
   const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
+
+  await gnonative.setChainID(chainId)
+  await gnonative.setRemote(remoteURL)
 
   const user: User = {
     name: (await getAccountName(bech32, gnonative)) || 'Unknown',

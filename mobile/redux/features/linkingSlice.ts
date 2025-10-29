@@ -7,13 +7,15 @@ import { ThunkExtra } from 'redux/redux-provider'
 interface State {
   txJsonSigned: string | undefined
   bech32AddressSelected: string | undefined
-  // session: string | undefined;
+  chainId: string | undefined
+  remoteURL: string | undefined
 }
 
 const initialState: State = {
   txJsonSigned: undefined,
-  bech32AddressSelected: undefined
-  // session: undefined,
+  bech32AddressSelected: undefined,
+  chainId: undefined,
+  remoteURL: undefined
 }
 
 export const requestLoginForGnokeyMobile = createAsyncThunk<boolean>('tx/requestLoginForGnokeyMobile', async () => {
@@ -41,7 +43,6 @@ export const postTxAndRedirectToSign = createAsyncThunk<void, MakeTxAndRedirectP
     const gasWanted = BigInt(50000000)
     const reason = 'Post a message'
     const callbackPath = '/post'
-    // const session = (thunkAPI.getState() as RootState).linking.session;
 
     await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
   }
@@ -58,7 +59,6 @@ type MakeCallTxParams = {
   callerAddressBech32: string
   reason: string
   callbackPath: string
-  // session?: string,
 }
 
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
@@ -87,19 +87,6 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   url.searchParams.append('client_name', 'boards2')
   url.searchParams.append('reason', reason)
   url.searchParams.append('callback', 'land.gno.boards2:/' + callbackPath)
-  // if (session) {
-  //     // Avoid edge case when the session is about to expire
-  //     const sessionInfo = JSON.parse(decodeURIComponent(session))
-  //     const secondsToExpire = (new Date(sessionInfo.expires_at).getTime() - new Date().getTime()) / 1000;
-  //     if (secondsToExpire < 30) {
-  //         url.searchParams.append('session_wanted', 'true');
-  //     } else {
-  //         // TODO: temporarily passing the session key. This should be removed once the session is used to self sign the tx
-  //         url.searchParams.append('session', session);
-  //     }
-  // } else {
-  //     url.searchParams.append('session_wanted', 'true');
-  // }
 
   console.log('redirecting to: ', url)
   Linking.openURL(url.toString())
@@ -152,7 +139,8 @@ export const linkingSlice = createSlice({
 
       state.bech32AddressSelected = queryParams?.address ? (queryParams.address as string) : undefined
       state.txJsonSigned = queryParams?.tx ? (queryParams.tx as string) : undefined
-      // state.session = queryParams?.session ? queryParams.session as string : state.session
+      state.chainId = queryParams?.chain_id ? (queryParams.chain_id as string) : undefined
+      state.remoteURL = queryParams?.remote ? (queryParams.remote as string) : undefined
     },
     clearLinking: (state) => {
       console.log('clearing linking data')
@@ -161,20 +149,13 @@ export const linkingSlice = createSlice({
   },
   selectors: {
     selectQueryParamsTxJsonSigned: (state: State) => state.txJsonSigned as string | undefined,
-    selectBech32AddressSelected: (state: State) => state.bech32AddressSelected as string | undefined
-    // selectSessionValidUntil: (state: State) => {
-    //     const session = state.session;
-    //     if (!session) return undefined;
-    //     const sessionInfo = JSON.parse(decodeURIComponent(session));
-    //     return new Date(sessionInfo.expires_at);
-    // }
+    selectBech32AddressSelected: (state: State) => state.bech32AddressSelected as string | undefined,
+    selectChainId: (state: State) => state.chainId as string | undefined,
+    selectRemoteURL: (state: State) => state.remoteURL as string | undefined
   }
 })
 
 export const { clearLinking, setLinkingData } = linkingSlice.actions
 
-export const {
-  selectQueryParamsTxJsonSigned,
-  selectBech32AddressSelected
-  // selectSessionValidUntil
-} = linkingSlice.selectors
+export const { selectQueryParamsTxJsonSigned, selectBech32AddressSelected, selectChainId, selectRemoteURL } =
+  linkingSlice.selectors
