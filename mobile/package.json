@@ -13,7 +13,6 @@
     "prettier:fix": "prettier . --write"
   },
   "dependencies": {
-    "@buf/gnolang_dsocial-notification.bufbuild_es": "^2.6.2-20241114144543-8b63b3b42be1.1",
     "@bufbuild/protobuf": "^2.6.2",
     "@connectrpc/connect": "^2.0.3",
     "@connectrpc/connect-web": "^2.0.3",
@@ -32,7 +31,6 @@
     "expo-image-picker": "~16.0.6",
     "expo-linear-gradient": "~14.0.2",
     "expo-linking": "~7.0.5",
-    "expo-notifications": "~0.29.14",
     "expo-router": "~4.0.21",
     "expo-splash-screen": "~0.29.24",
     "expo-status-bar": "~2.0.1",
