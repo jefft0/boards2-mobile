@@ -4,7 +4,6 @@ import { configureStore } from '@reduxjs/toolkit'
 import { accountSlice, profileSlice, replySlice, linkingSlice } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
 import { useSearch, UseSearchReturnType } from '@gno/hooks/use-search'
-import { useNotificationContext, UseNotificationReturnType } from '@gno/provider/notification-provider'
 import { useUserCache } from '@gno/hooks/use-user-cache'
 
 interface Props {
@@ -15,7 +14,6 @@ export interface ThunkExtra {
   extra: {
     gnonative: GnoNativeApi
     search: UseSearchReturnType
-    push: UseNotificationReturnType
     userCache: ReturnType<typeof useUserCache>
   }
 }
@@ -33,7 +31,6 @@ const ReduxProvider: React.FC<Props> = ({ children }) => {
   // Exposing GnoNative API to reduxjs/toolkit
   const { gnonative } = useGnoNativeContext()
   const search = useSearch()
-  const push = useNotificationContext()
   const userCache = useUserCache()
   const [store, setStore] = useState<any>(null)
 
@@ -52,7 +49,6 @@ const ReduxProvider: React.FC<Props> = ({ children }) => {
             extraArgument: {
               gnonative,
               search,
-              push,
               userCache
             }
           }

@@ -56,10 +56,7 @@ export default function FeedView({ totalPosts, onPress, onGnod, bech32, type }: 
     setIsLoading(true)
     try {
       console.log('fetching data from %d to %d', startIndex, endIndex)
-      const result =
-        type === 'userPosts'
-          ? await feed.fetchThreadPosts(bech32, startIndex, endIndex)
-          : await feed.fetchFeed(bech32, startIndex, endIndex)
+      const result = await feed.fetchThreadPosts(bech32, startIndex, endIndex)
       setLimit(result.n_posts)
       setStartIndex(subtractOrZero(startIndex, pageSize))
       setEndIndex(startIndex)

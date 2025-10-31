@@ -10,6 +10,7 @@ import {
   selectAccount,
   selectBech32AddressSelected,
   selectLoginLoading,
+  selectRemoteURL,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
@@ -22,17 +23,17 @@ export default function Root() {
   const dispatch = useAppDispatch()
   const route = useRouter()
   const bech32AddressSelected = useAppSelector(selectBech32AddressSelected)
+  const remoteURL = useAppSelector(selectRemoteURL)
   const account = useAppSelector(selectAccount)
   const loading = useAppSelector(selectLoginLoading)
 
   const appVersion = Application.nativeApplicationVersion
 
   useEffect(() => {
-    if (loading) return
+    if (loading || !bech32AddressSelected || !remoteURL) return
     console.log('bech32AddressSelected on index', bech32AddressSelected)
-    if (bech32AddressSelected) {
-      dispatch(loggedIn({ bech32: bech32AddressSelected as string }))
-    }
+
+    dispatch(loggedIn())
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [bech32AddressSelected])
 

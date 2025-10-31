@@ -114,7 +114,7 @@ export default function Page() {
 
   const onPressPost = async (item: Post) => {
     await dispatch(setPostToReply(item))
-    // Posts come from the indexer, the address is a bech32 address.
+    // The address is a bech32 address.
     router.navigate({ pathname: '/post/[post_id]', params: { post_id: item.id, address: String(item.user.address) } })
   }
 

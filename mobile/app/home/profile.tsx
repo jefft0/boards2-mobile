@@ -1,4 +1,4 @@
-import { Alert, ScrollView, StyleSheet, View } from 'react-native'
+import { ScrollView, StyleSheet, View } from 'react-native'
 import { router, useNavigation, usePathname } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useGnoNativeContext } from '@gnolang/gnonative'
@@ -15,17 +15,14 @@ import {
 } from '@gno/redux'
 import Button from '@gno/components/button'
 import Layout from '@gno/components/layout'
-import { LoadingModal } from '@gno/components/loading'
 import { AccountBalance } from '@gno/components/settings'
 import Text from '@gno/components/text'
-import { useNotificationContext } from '@gno/provider/notification-provider'
 import AvatarPicker from '@gno/components/avatar/avatar-picker'
 import { ProgressViewModal } from '@gno/components/view/progress'
 import { compressImage } from '@gno/utils/file-utils'
 import { useUserCache } from '@gno/hooks/use-user-cache'
 
 export default function Page() {
-  const [loading, setLoading] = useState(false)
   const [modalVisible, setModalVisible] = useState(false)
   const [chainID, setChainID] = useState('')
   const [remote, setRemote] = useState('')
@@ -35,7 +32,6 @@ export default function Page() {
   const { gnonative } = useGnoNativeContext()
   const navigation = useNavigation()
   const dispatch = useAppDispatch()
-  const push = useNotificationContext()
   const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
 
   const userCache = useUserCache()
@@ -51,23 +47,6 @@ export default function Page() {
     return unsubscribe
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation])
-
-  const onPressNotification = async () => {
-    if (!account) {
-      throw new Error('No active account')
-    }
-
-    setLoading(true)
-    try {
-      const address_bech32 = await gnonative.addressToBech32(account.address)
-      await push.registerDevice(address_bech32)
-      Alert.alert('Push notification', 'You have successfully registered for push notification!')
-    } catch (error) {
-      console.log('Error on onPressNotification', JSON.stringify(error))
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const fetchAccountData = async () => {
     const chainId = await gnonative.getChainID()
@@ -156,11 +135,6 @@ export default function Page() {
             <Layout.Footer>
               <ProgressViewModal visible={modalVisible} onRequestClose={() => setModalVisible(false)} />
               <Button.TouchableOpacity title="Logs" onPress={() => setModalVisible(true)} variant="primary" />
-              <Button.TouchableOpacity
-                title="Register to the notification service"
-                onPress={onPressNotification}
-                variant="primary"
-              />
               <Button.TouchableOpacity title="Logout" onPress={onPressLogout} style={styles.logout} variant="primary-red" />
               <Button.TouchableOpacity
                 title="Remove Account"
@@ -172,7 +146,6 @@ export default function Page() {
           </ScrollView>
         </Layout.Body>
       </Layout.Container>
-      <LoadingModal visible={loading} />
     </>
   )
 }

@@ -42,10 +42,6 @@ android.reverse:
 	fi
 	adb -s $(ANDROID_DEVICE) reverse tcp:8081 tcp:8081 # metro
 	adb -s $(ANDROID_DEVICE) reverse tcp:26657 tcp:26657 # gnodev
-	adb -s $(ANDROID_DEVICE) reverse tcp:5050 tcp:5050 # faucet
-	adb -s $(ANDROID_DEVICE) reverse tcp:8546 tcp:8546 # tx-indexer
-	adb -s $(ANDROID_DEVICE) reverse tcp:26660 tcp:26660 # indexer
-	adb -s $(ANDROID_DEVICE) reverse tcp:26661 tcp:26661 # push notifications
 .PHONY: android.reverse
 
 start: node_modules ts_check
