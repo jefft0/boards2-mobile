@@ -18,6 +18,7 @@ import Spacer from '@gno/components/spacer'
 import * as Application from 'expo-application'
 import { useEffect } from 'react'
 import { useRouter } from 'expo-router'
+import { Spacer as Spacer2 } from '@gnokeymobile/ui'
 
 export default function Root() {
   const dispatch = useAppDispatch()
@@ -53,6 +54,7 @@ export default function Root() {
   return (
     <>
       <Layout.Container>
+        <Spacer2 />
         <Layout.BodyAlignedBotton>
           <View style={{ alignItems: 'center' }}>
             <Text.Title>Boards2</Text.Title>

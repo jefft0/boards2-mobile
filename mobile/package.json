@@ -16,6 +16,7 @@
     "@bufbuild/protobuf": "^2.6.2",
     "@connectrpc/connect": "^2.0.3",
     "@connectrpc/connect-web": "^2.0.3",
+    "@gnokeymobile/ui": "file:../../gnokey-mobile/mobile/modules/ui",
     "@gnolang/gnonative": "^4.7.3",
     "@reduxjs/toolkit": "^2.1.0",
     "base-64": "^1.0.0",
