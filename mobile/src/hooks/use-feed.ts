@@ -13,6 +13,35 @@ export const useFeed = () => {
   const cache = useUserCache()
   const parser = useGnoJsonParser()
 
+  async function getListedBoards(startIndex: number, endIndex: number): Promise<string> {
+    const boardInfos = await gnonative.qEval('gno.land/r/gnoland/boards2/v1', `GetListedBoards(${startIndex},${endIndex})`)
+    const totalRegex = /^\((\d+) int\)/g
+    const totalMatch = totalRegex.exec(boardInfos)
+    if (!totalMatch) throw new Error("Can't find total in GetListedBoards response")
+    const total = Number(totalMatch![1])
+
+    const boardRegex =
+      /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("([^"]+)" string\),\([^ ]+ \[\]string\),\("(\w+)" .uverse.address\),\((\w+) bool\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.BoardInfo\)/g
+    let boards = []
+    let index = 0
+    let match
+    while ((match = boardRegex.exec(boardInfos)) !== null) {
+      const boardId = Number(match[1])
+      const name = match[2]
+      const creator = match[3]
+      const hidden = match[4] === 'true'
+      const createdAt = match[5]
+      boards.push({
+        index,
+        board: { id: boardId, name, creator, hidden, createdAt }
+      })
+      ++index
+    }
+
+    let data = { n_boards: total, boards: boards }
+    return '(' + JSON.stringify(JSON.stringify(data)) + ' string)'
+  }
+
   async function getThreadPosts(
     address: string,
     threadId: number,
