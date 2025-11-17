@@ -21,7 +21,7 @@ export const useFeed = () => {
     const total = Number(totalMatch![1])
 
     const boardRegex =
-      /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("([^"]+)" string\),\([^ ]+ \[\]string\),\("(\w+)" .uverse.address\),\((\w+) bool\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.BoardInfo\)/g
+      /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("([^"]+)" string\),\([^ ]+ \[\]string\),\("(\w+)" .uverse.address\),\((\w+) bool\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.BoardInfo\)/g
     let boards = []
     let index = 0
     let match
@@ -30,10 +30,11 @@ export const useFeed = () => {
       const name = match[2]
       const creator = match[3]
       const hidden = match[4] === 'true'
-      const createdAt = match[5]
+      const n_threads = Number(match[5])
+      const createdAt = match[6]
       boards.push({
         index,
-        board: { id: boardId, name, creator, hidden, createdAt }
+        board: { id: boardId, name, creator, hidden, n_threads, createdAt }
       })
       ++index
     }
