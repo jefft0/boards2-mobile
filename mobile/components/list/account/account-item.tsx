@@ -1,5 +1,4 @@
-import Button from '@gno/components/button'
-import Spacer from '@gno/components/spacer'
+import { Spacer, Button } from '@berty/gnonative-ui'
 import { GnoAccount } from '@gno/types'
 
 interface SideMenuAccountItemProps {
@@ -12,7 +11,7 @@ const SideMenuAccountItem = (props: SideMenuAccountItemProps) => {
   return (
     <>
       <Spacer />
-      <Button.TouchableOpacity title={account.name} onPress={() => changeAccount(account)} variant="primary" />
+      <Button onPress={() => changeAccount(account)}>{account.name}</Button>
     </>
   )
 }

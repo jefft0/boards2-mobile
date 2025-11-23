@@ -5,6 +5,11 @@ const usersCache = new Map<string, User>()
 
 const DEFAULT_AVATAR = 'https://www.gravatar.com/avatar/tmp'
 
+export type UserCacheApi = {
+  getUser: (bech32: string) => Promise<User>
+  invalidateCache: () => void
+}
+
 export const useUserCache = () => {
   const { gnonative } = useGnoNativeContext()
 

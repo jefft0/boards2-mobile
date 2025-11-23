@@ -12,3 +12,4 @@ export const useAppDispatch: () => AppDispatch = useDispatch
 export type AppDispatch = any
 
 export * from './features'
+export * from './redux-provider'

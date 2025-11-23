@@ -1,5 +1,4 @@
-import { colors } from 'assets/styles/colors'
-import Spacer from 'components/spacer'
+import { Spacer } from '@berty/gnonative-ui'
 import styled from 'styled-components/native'
 
 export interface Props {
@@ -23,13 +22,13 @@ const InnerContent = styled.View<{ severity: Props['severity'] }>`
   background-color: ${({ severity }) => {
     switch (severity) {
       case 'error':
-        return colors.danger
+        return 'red'
       case 'warning':
-        return colors.warning
+        return 'orange'
       case 'info':
-        return colors.main
+        return 'blue'
       case 'success':
-        return colors.success
+        return 'green'
     }
   }};
 `

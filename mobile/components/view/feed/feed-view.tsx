@@ -31,6 +31,7 @@ export default function FeedView({ totalPosts, onPress, onGnod, bech32, type }: 
   const feed = useFeed()
   const ref = useRef<FlatList>(null)
 
+  //@ts-ignore
   useScrollToTop(ref, Platform.select({ ios: -150, default: 0 }))
 
   const [refreshing, setRefreshing] = React.useState(false)

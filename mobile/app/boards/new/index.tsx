@@ -8,6 +8,7 @@ import { KeyboardAvoidingView, Platform } from 'react-native'
 import {
   broadcastTxCommit,
   clearLinking,
+  createBoard,
   postTxAndRedirectToSign,
   selectAccount,
   selectQueryParamsTxJsonSigned,
@@ -15,6 +16,9 @@ import {
   useAppSelector
 } from '@gno/redux'
 import { SessionCountDown } from '@gno/components/counter/session-countdown'
+import { BoardsCreateTemplate } from '@gno/components/templates/BoardsCreateTemplate'
+import { PACKAGE_PATH } from '@gno/constants/Constants'
+import { BoardCreationData } from '@gno/components/boards/CreateBoardForm'
 
 export default function Search() {
   const [threadTitle, setThreadTitle] = useState('')
@@ -69,46 +73,11 @@ export default function Search() {
     await dispatch(postTxAndRedirectToSign({ callerAddressBech32: account.bech32, threadTitle, postContent })).unwrap()
   }
 
-  return (
-    <Layout.Container>
-      <Layout.BodyAlignedBotton>
-        <Button onPress={() => router.back()} color="secondary" style={{ width: 100 }}>
-          Cancel
-        </Button>
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-          <Text.Title>Let's start a new thread on the Gno Blockchain!</Text.Title>
-          <Spacer />
-          <SessionCountDown time={undefined} />
-          <Spacer />
-          <TextInput
-            placeholder="Thread title"
-            onChangeText={setThreadTitle}
-            value={threadTitle}
-            multiline
-            numberOfLines={1}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoFocus
-            style={{ height: 50 }}
-          />
-          <TextInput
-            placeholder="What's happening?"
-            onChangeText={setPostContent}
-            value={postContent}
-            multiline
-            numberOfLines={4}
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoFocus
-            style={{ height: 200 }}
-          />
-          <Spacer space={24} />
-          <Button loading={loading} color="primary" onPress={onPressPost}>
-            New Thread
-          </Button>
-          <Spacer space={48} />
-        </KeyboardAvoidingView>
-      </Layout.BodyAlignedBotton>
-    </Layout.Container>
-  )
+  const breadcrumbItems = PACKAGE_PATH.replace('gno.land/', '').split('/')
+
+  const onCreate = async (board: BoardCreationData) => {
+    dispatch(createBoard(board))
+  }
+
+  return <BoardsCreateTemplate onCreate={onCreate} breadcrumbItems={breadcrumbItems} onBackPress={() => router.back()} />
 }

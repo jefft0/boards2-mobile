@@ -1,12 +1,11 @@
-import * as FileSystem from 'expo-file-system'
+import { File, Paths } from 'expo-file-system'
 import * as ImageManipulator from 'expo-image-manipulator'
 
 export async function convertImageToBase64(imagePath: string): Promise<string | undefined> {
   try {
-    const base64Image = await FileSystem.readAsStringAsync(imagePath, {
-      encoding: FileSystem.EncodingType.Base64
-    })
-    return base64Image
+    const file = new File(Paths.cache, imagePath)
+    const b64 = await file.base64()
+    return b64
   } catch (error) {
     console.error('Error reading image as base64:', error)
   }
@@ -26,7 +25,6 @@ export async function compressImage(
     const data = await ImageManipulator.manipulateAsync(imagePath, [{ resize: { height: 200 } }], {
       compress: quality,
       format: ImageManipulator.SaveFormat.JPEG,
-      // return base64 image:
       base64: true
     })
     compressedUri = data.uri
@@ -45,7 +43,7 @@ export async function compressImage(
 }
 
 async function getFileSizeInKB(uri: string): Promise<number | undefined> {
-  const info = await FileSystem.getInfoAsync(uri)
-  if (info.exists) return info.size / 1024
+  // const info = await FileSystem.getInfoAsync(uri)
+  // if (info.exists) return info.size / 1024
   return undefined
 }

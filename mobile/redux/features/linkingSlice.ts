@@ -1,8 +1,9 @@
+import { PACKAGE_PATH } from '@gno/constants/Constants'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import * as Linking from 'expo-linking'
-import { ThunkExtra } from 'redux/redux-provider'
+import { ThunkExtra } from '@gno/redux'
 
 interface State {
   txJsonSigned: string | undefined
@@ -62,16 +63,7 @@ type MakeCallTxParams = {
 }
 
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
-  const {
-    fnc,
-    callerAddressBech32,
-    gasFee,
-    gasWanted,
-    args,
-    packagePath = 'gno.land/r/gnoland/boards2/v1',
-    reason,
-    callbackPath
-  } = props
+  const { fnc, callerAddressBech32, gasFee, gasWanted, args, packagePath = PACKAGE_PATH, reason, callbackPath } = props
 
   console.log('making a tx for: ', callerAddressBech32)
   const address = await gnonative.addressFromBech32(callerAddressBech32)

@@ -1,10 +1,10 @@
 import { StyleSheet, View } from 'react-native'
 import Text from '../text'
 
-function EmptyFeedList() {
+function EmptyFeedList({ message = 'No data yet.' }: { message?: string }) {
   return (
     <View style={styles.container}>
-      <Text.Subheadline style={styles.text}>No threads yet</Text.Subheadline>
+      <Text.Subheadline style={styles.text}>{message}</Text.Subheadline>
     </View>
   )
 }
@@ -16,7 +16,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingTop: 100
+    paddingTop: 120
   },
   text: {
     fontSize: 20

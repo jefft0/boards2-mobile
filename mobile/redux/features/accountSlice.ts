@@ -2,7 +2,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { RootState, ThunkExtra } from 'redux/redux-provider'
+import { RootState, ThunkExtra } from '@gno/redux'
 
 export interface CounterState {
   account?: User

@@ -153,6 +153,7 @@ export function createWebTransport(options: ConnectTransportOptions): Transport 
           if (useGet) {
             req = transformConnectPostToGetRequest(req, serialize(req.message), useBinaryFormat)
           } else {
+            // @ts-ignore
             body = serialize(req.message)
           }
           const fetch = options.fetch ?? globalThis.fetch

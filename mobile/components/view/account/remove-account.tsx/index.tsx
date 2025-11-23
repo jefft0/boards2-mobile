@@ -3,8 +3,7 @@ import ModalHeader from '@gno/components/layout/modal-header'
 import Text from '@gno/components/text'
 import { User } from '@gno/types'
 import { selectAccount, useAppSelector } from '@gno/redux'
-import Button from '@gno/components/button'
-import Spacer from '@gno/components/spacer'
+import { Spacer, Button } from '@berty/gnonative-ui'
 
 interface Props {
   onConfirm: (account: User) => void
@@ -25,7 +24,9 @@ function RemoveAccountContent({ onConfirm }: Props) {
       <Layout.Body>
         <Text.Body>Do you want to remove the account {account.name} from your list?</Text.Body>
         <Spacer space={32} />
-        <Button.TouchableOpacity title={`Remove ${account.name}`} onPress={() => onConfirm(account)} variant="primary-red" />
+        <Button onPress={() => onConfirm(account)} color="danger">
+          {`Remove ${account.name}`}
+        </Button>
       </Layout.Body>
     </Layout.Container>
   )

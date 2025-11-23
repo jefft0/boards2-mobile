@@ -1,7 +1,7 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { Post } from '@gno/types'
-import { ThunkExtra } from 'redux/redux-provider'
+import { ThunkExtra } from '@gno/redux'
 
 export interface State {
   postToReply: Post | undefined

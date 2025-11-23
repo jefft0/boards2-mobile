@@ -1,0 +1,54 @@
+import { View, StyleSheet } from 'react-native'
+import { Text } from '@berty/gnonative-ui'
+import { ActionButton } from '../molecules/ActionButton'
+import { Breadcrumb } from '../molecules/Breadcrumb'
+
+interface BoardsHeaderProps {
+  breadcrumbItems: string[]
+  onCreateBoard: () => void
+  onListAdminUsers: () => void
+  onHelp: () => void
+}
+
+export const BoardsHeader = ({ breadcrumbItems, onCreateBoard, onListAdminUsers, onHelp }: BoardsHeaderProps) => {
+  return (
+    <View style={styles.header}>
+      <Breadcrumb items={breadcrumbItems} />
+      <Text.LargeTitle style={styles.title}>Boards</Text.LargeTitle>
+      <View style={styles.actions}>
+        <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" />
+        {/* TODO: Implement dynamic action renderer */}
+        {/* <Text.Body color="#ccc" style={styles.divider}>
+          •
+        </Text.Body>
+        <ActionButton label="List Admin Users" onPress={onListAdminUsers} />
+        <Text.Body color="#ccc" style={styles.divider}>
+          •
+        </Text.Body>
+        <ActionButton label="Help" onPress={onHelp} /> */}
+      </View>
+    </View>
+  )
+}
+
+const styles = StyleSheet.create({
+  header: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb'
+  },
+  title: {
+    marginVertical: 8
+  },
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap'
+  },
+  divider: {
+    marginHorizontal: 8
+  }
+})

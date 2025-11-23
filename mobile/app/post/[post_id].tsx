@@ -14,8 +14,7 @@ import {
 } from '@gno/redux'
 import Layout from '@gno/components/layout'
 import TextInput from '@gno/components/textinput'
-import Button from '@gno/components/button'
-import Spacer from '@gno/components/spacer'
+import { Spacer, Button } from '@berty/gnonative-ui'
 import Alert from '@gno/components/alert'
 import { PostRow } from '@gno/components/feed/post-row'
 import { FlatList, KeyboardAvoidingView, View } from 'react-native'
@@ -174,9 +173,13 @@ function Page() {
             numberOfLines={3}
             style={{ height: 80 }}
           />
-          <Button.TouchableOpacity loading={posting} title="Reply" variant="primary" onPress={onPressReply} />
+          <Button loading={posting} color="primary" onPress={onPressReply}>
+            Reply
+          </Button>
           <Spacer space={16} />
-          <Button.TouchableOpacity title="Back" onPress={() => router.back()} variant="secondary" />
+          <Button onPress={() => router.back()} color="secondary">
+            Back
+          </Button>
           <Alert severity="error" message={error} />
           <Spacer space={16} />
         </KeyboardAvoidingView>
