@@ -83,7 +83,6 @@ export const loadThreads = createAsyncThunk<LoadResult | undefined, LoadThreadsR
 
     try {
       const totalPosts = await countThreadPosts(userCache, gnonative, board.id)
-
       const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
       const [postsRes, canCreate] = await Promise.all([
