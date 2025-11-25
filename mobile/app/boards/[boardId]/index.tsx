@@ -2,9 +2,17 @@ import { CustomFlatList } from '@gno/components/list/CustomFlatList'
 import { ThreadHeader } from '@gno/components/threads/ThreadHeader'
 import ThreadCard from '@gno/components/threads/ThreadCard'
 import { BREADCRUMBS } from '@gno/constants/Constants'
-import { selectThreads, selectThreadBoard, selectThreadLoading, useAppSelector, selectCanCreateThread } from '@gno/redux'
+import {
+  selectThreads,
+  selectThreadBoard,
+  selectThreadLoading,
+  useAppSelector,
+  selectCanCreateThread,
+  useAppDispatch,
+  loadThreads
+} from '@gno/redux'
 import { Post } from '@gno/types'
-import { useLocalSearchParams, useRouter } from 'expo-router'
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import styled from 'styled-components/native'
 import { ListEmptyView } from '@gno/components/list/ListEmptyView'
@@ -23,6 +31,19 @@ export default function ThreadsPage() {
   const { name } = useLocalSearchParams()
   const feed = useAppSelector(selectThreads)
   const canCreate = useAppSelector(selectCanCreateThread)
+  const dispatch = useAppDispatch()
+
+  const onRefresh = () => {
+    if (!board) return
+    dispatch(loadThreads({ board }))
+  }
+
+  useFocusEffect(
+    React.useCallback(() => {
+      if (!board) return
+      dispatch(loadThreads({ board }))
+    }, [board, dispatch])
+  )
 
   return (
     <Container>
@@ -40,8 +61,7 @@ export default function ThreadsPage() {
         data={feed}
         isLoading={loading}
         sortBy={sortBy}
-        onBoardPress={() => {}}
-        onRefresh={() => {}}
+        onRefresh={onRefresh}
         refreshing={false}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item: thread }) => <ThreadCard thread={thread} />}

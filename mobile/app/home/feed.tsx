@@ -2,7 +2,15 @@ import { useState, useCallback } from 'react'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { BoardsTemplate } from '@gno/components/templates/BoardsTemplate'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
-import { getListedBoards, selectBoards, selectBoardsLoading, useAppDispatch, useAppSelector, Board, loadThreads } from '@gno/redux'
+import {
+  getListedBoards,
+  selectBoards,
+  selectBoardsLoading,
+  useAppDispatch,
+  useAppSelector,
+  Board,
+  loadThreads
+} from '@gno/redux'
 import { StyleSheet, View } from 'react-native'
 
 export default function Page() {
@@ -15,18 +23,14 @@ export default function Page() {
 
   useFocusEffect(
     useCallback(() => {
-      dispatch(getListedBoards({ startIndex: 0, endIndex: 10 }))
-      return () => {
-        // Do something when the screen is unfocused
-        // Useful for cleanup functions
-      }
+      dispatch(getListedBoards({ startIndex: 0, endIndex: 30 }))
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
   )
 
   const handleRefresh = async () => {
     setRefreshing(true)
-    // await fetchBoards()
+    dispatch(getListedBoards({ startIndex: 0, endIndex: 30 }))
     setRefreshing(false)
   }
 

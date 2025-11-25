@@ -9,7 +9,6 @@ interface CustomFlatListProps<T> {
   keyExtractor: (item: T, index: number) => string
   emptyComponent: React.ReactElement
   sortBy?: string
-  onBoardPress?: (item: T) => void
   onRefresh?: () => void
   refreshing?: boolean
 }
@@ -21,7 +20,6 @@ export const CustomFlatList = <T,>({
   keyExtractor,
   emptyComponent,
   sortBy = 'oldest first',
-  onBoardPress,
   onRefresh,
   refreshing
 }: CustomFlatListProps<T>) => {

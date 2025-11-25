@@ -2,7 +2,7 @@ import { View, StyleSheet } from 'react-native'
 import { Text } from '@berty/gnonative-ui'
 import { ActionButton } from '../button/ActionButton'
 import { Breadcrumb } from '../list/Breadcrumb'
-import BackButton from '../boards/BackButton'
+import BackButton from '../button/BackButton'
 import { CreatedBy } from '../list/CreatedBy'
 import { ThreadCount } from '../list/ThreadCount'
 

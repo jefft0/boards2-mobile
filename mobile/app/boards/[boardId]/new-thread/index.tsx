@@ -1,11 +1,8 @@
 import { useNavigation, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
-  BoardCreationData,
   broadcastTxCommit,
   clearLinking,
-  createBoard,
-  postTxAndRedirectToSign,
   selectAccount,
   selectQueryParamsTxJsonSigned,
   selectThreadBoard,
@@ -13,23 +10,17 @@ import {
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
-import { BoardsCreateTemplate } from '@gno/components/templates/BoardsCreateTemplate'
 import { BREADCRUMBS } from '@gno/constants/Constants'
 import { ThreadsCreateTemplate } from '@gno/components/templates/ThreadsCreateTemplate'
 import { CreateThreadFormData } from '@gno/components/threads/CreateThreadForm'
 
 export default function Search() {
-  const [threadTitle, setThreadTitle] = useState('')
-  const [postContent, setPostContent] = useState('')
   const [loading, setLoading] = useState(false)
-
   const navigation = useNavigation()
   const router = useRouter()
   const dispatch = useAppDispatch()
   const account = useAppSelector(selectAccount)
   const board = useAppSelector(selectThreadBoard)
-
-  // const sessionInMinutes = useAppSelector(selectSessionValidUntil);
 
   const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
 
@@ -44,12 +35,9 @@ export default function Search() {
           setLoading(true)
           await dispatch(clearLinking())
           await dispatch(broadcastTxCommit(signedTx))
-          setTimeout(() => {
-            router.push('home')
-          }, 3000)
+          router.back()
         } catch (error) {
           console.error('on broadcastTxCommit', error)
-          // setError('' + error)
         }
       }
     }
@@ -59,8 +47,6 @@ export default function Search() {
 
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', async () => {
-      setThreadTitle('')
-      setPostContent('')
       setLoading(false)
       if (!account) throw new Error('No active account')
     })
@@ -68,15 +54,18 @@ export default function Search() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [navigation])
 
-  const onPressPost = async () => {
-    if (!account || !account.bech32) throw new Error('No active account: ' + JSON.stringify(account))
-    await dispatch(postTxAndRedirectToSign({ callerAddressBech32: account.bech32, threadTitle, postContent })).unwrap()
-  }
-
   const onCreate = async (form: CreateThreadFormData) => {
     if (!board) throw new Error('No active board')
+    setLoading(true)
     dispatch(threadCreate({ ...form, boardId: board.id.toString() }))
   }
 
-  return <ThreadsCreateTemplate onCreate={onCreate} breadcrumbItems={BREADCRUMBS} onBackPress={() => router.back()} />
+  return (
+    <ThreadsCreateTemplate
+      loading={loading}
+      onCreate={onCreate}
+      breadcrumbItems={BREADCRUMBS}
+      onBackPress={() => router.back()}
+    />
+  )
 }

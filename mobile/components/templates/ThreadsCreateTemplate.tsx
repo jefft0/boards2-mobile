@@ -1,24 +1,25 @@
 import { View, StyleSheet, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import { BoardsCreateHeader } from '../boards/BoardsCreateHeader'
 import CreateThreadForm, { CreateThreadFormData } from '../threads/CreateThreadForm'
+import { ThreadCreateHeader } from '../threads/ThreadCreateHeader'
 
 interface ThreadsCreateTemplateProps {
   breadcrumbItems: string[]
   onBackPress: () => void
   onCreate: (board: CreateThreadFormData) => void
+  loading: boolean
 }
 
-export const ThreadsCreateTemplate = ({ breadcrumbItems, onBackPress, onCreate }: ThreadsCreateTemplateProps) => {
+export const ThreadsCreateTemplate = ({ breadcrumbItems, onBackPress, onCreate, loading }: ThreadsCreateTemplateProps) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <BoardsCreateHeader
+        <ThreadCreateHeader
           title="Create Thread"
           onBackPress={onBackPress}
           breadcrumbItems={[...breadcrumbItems, 'CreateThread']}
         />
-        <CreateThreadForm onCreate={onCreate} />
+        <CreateThreadForm onCancel={onBackPress} onCreate={onCreate} loading={loading} />
       </View>
     </SafeAreaView>
   )

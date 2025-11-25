@@ -52,10 +52,11 @@ export interface CreateThreadFormData {
 
 interface Props {
   onCreate: (form: CreateThreadFormData) => void
-  onCancel?: () => void
+  onCancel: () => void
+  loading: boolean
 }
 
-export default function CreateThreadForm({ onCreate, onCancel }: Props) {
+export default function CreateThreadForm({ onCreate, onCancel, loading }: Props) {
   const [threadName, setBoardName] = useState('')
   const [threadBody, setThreadBody] = useState('')
 
@@ -105,8 +106,8 @@ export default function CreateThreadForm({ onCreate, onCancel }: Props) {
         <View style={{ flexGrow: 1 }} />
 
         <ButtonContainer>
-          <Button onPress={handleCreate} disabled={!threadName.trim()} color="tertirary" activeOpacity={0.8}>
-            Create Thread
+          <Button onPress={handleCreate} disabled={!threadName.trim() || loading} color="tertirary" activeOpacity={0.8}>
+            {loading ? 'Loading' : 'Create Thread'}
           </Button>
           <Button onPress={onCancel} color="secondary" activeOpacity={0.8}>
             Cancel

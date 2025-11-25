@@ -88,10 +88,9 @@ export const broadcastTxCommit = createAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
   async (signedTx, thunkAPI) => {
     console.log('broadcasting tx: ', signedTx)
-
     const gnonative = thunkAPI.extra.gnonative
     const res = await gnonative.broadcastTxCommit(signedTx)
-    console.log('broadcasted tx: ', res)
+    console.log('broadcasted tx: ', JSON.stringify(res))
   }
 )
 
@@ -125,6 +124,14 @@ export const gnodTxAndRedirectToSign = createAsyncThunk<void, GnodCallTxParams, 
 export const linkingSlice = createSlice({
   name: 'linking',
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(broadcastTxCommit.fulfilled, (state) => {
+      state.txJsonSigned = undefined
+      state.bech32AddressSelected = undefined
+      state.chainId = undefined
+      state.remoteURL = undefined
+    })
+  },
   reducers: {
     setLinkingData: (state, action) => {
       const queryParams = action.payload.queryParams
@@ -136,7 +143,10 @@ export const linkingSlice = createSlice({
     },
     clearLinking: (state) => {
       console.log('clearing linking data')
-      state = { ...initialState }
+      state.txJsonSigned = undefined
+      state.bech32AddressSelected = undefined
+      state.chainId = undefined
+      state.remoteURL = undefined
     }
   },
   selectors: {

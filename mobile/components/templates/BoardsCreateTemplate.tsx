@@ -8,31 +8,10 @@ interface BoardsCreateTemplateProps {
   breadcrumbItems: string[]
   onBackPress: () => void
   onCreate: (board: BoardCreationData) => void
-  // data: Board[]
-  // isLoading?: boolean
-  // sortBy?: string
-  // onCreateBoard: () => void
-  // onListAdminUsers: () => void
-  // onHelp: () => void
-  // onBoardPress: (board: Board) => void
-  // onRefresh?: () => void
-  // refreshing?: boolean
+  loading?: boolean
 }
 
-export const BoardsCreateTemplate = ({
-  breadcrumbItems,
-  onBackPress,
-  onCreate
-  // data,
-  // isLoading,
-  // sortBy,
-  // onCreateBoard,
-  // onListAdminUsers,
-  // onHelp,
-  // onBoardPress,
-  // onRefresh,
-  // refreshing
-}: BoardsCreateTemplateProps) => {
+export const BoardsCreateTemplate = ({ breadcrumbItems, onBackPress, onCreate, loading }: BoardsCreateTemplateProps) => {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
@@ -41,15 +20,7 @@ export const BoardsCreateTemplate = ({
           onBackPress={onBackPress}
           breadcrumbItems={[...breadcrumbItems, 'CreateBoard']}
         />
-        <CreateBoardForm onCreate={onCreate} />
-        {/* <BoardsList
-          data={data}
-          isLoading={isLoading}
-          sortBy={sortBy}
-          onBoardPress={onBoardPress}
-          onRefresh={onRefresh}
-          refreshing={refreshing}
-        /> */}
+        <CreateBoardForm onCreate={onCreate} loading={loading} />
       </View>
     </SafeAreaView>
   )

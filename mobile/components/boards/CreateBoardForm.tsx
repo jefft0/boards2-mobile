@@ -64,27 +64,6 @@ const ToggleDescription = styled.Text`
   line-height: 18px;
 `
 
-const InfoBox = styled.View`
-  background-color: #eff6ff;
-  border-width: 1px;
-  border-color: #bfdbfe;
-  border-radius: 8px;
-  padding: 16px;
-  flex-direction: row;
-  margin-bottom: 24px;
-`
-
-const InfoIconContainer = styled.View`
-  margin-right: 12px;
-`
-
-const InfoText = styled.Text`
-  flex: 1;
-  font-size: 12px;
-  color: #1e40af;
-  line-height: 18px;
-`
-
 const ButtonContainer = styled.View`
   gap: 12px;
   margin-top: 8px;
@@ -103,9 +82,10 @@ const FooterText = styled.Text`
 interface CreateBoardFormProps {
   onCreate: (board: BoardCreationData) => void
   onCancel?: () => void
+  loading?: boolean
 }
 
-export default function CreateBoardForm({ onCreate, onCancel }: CreateBoardFormProps) {
+export default function CreateBoardForm({ onCreate, onCancel, loading }: CreateBoardFormProps) {
   const [boardName, setBoardName] = useState('')
   const [isPublic, setIsPublic] = useState(true)
 
@@ -160,8 +140,8 @@ export default function CreateBoardForm({ onCreate, onCancel }: CreateBoardFormP
         <View style={{ flexGrow: 1 }} />
 
         <ButtonContainer>
-          <Button onPress={handleCreate} disabled={!boardName.trim()} color="tertirary" activeOpacity={0.8}>
-            Create Board
+          <Button onPress={handleCreate} disabled={!boardName.trim() || loading} color="tertirary" activeOpacity={0.8}>
+            {loading ? 'Creating...' : 'Create Board'}
           </Button>
           <Button onPress={onCancel} color="secondary" activeOpacity={0.8}>
             Cancel
