@@ -44,11 +44,11 @@ export function RepostRow({ post, onPress = func, showFooter = true }: FeedProps
             <Image source={{ uri: post.user.avatar }} style={styles.image} />
             <Pressable style={{ flexDirection: 'row', alignItems: 'center', paddingLeft: 8 }} onPress={onPressName}>
               <Text.Body style={[{ fontWeight: 'bold', fontSize: 16, paddingRight: 8 }]}>@{post.user.name}</Text.Body>
-              <TimeStampLabel timestamp={post.date} />
+              <TimeStampLabel timestamp={post.createdAt} />
             </Pressable>
           </View>
 
-          <Text.Body selectable>{post.post}</Text.Body>
+          <Text.Body selectable>{post.body}</Text.Body>
         </View>
       </View>
       {showFooter ? (

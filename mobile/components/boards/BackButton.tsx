@@ -1,9 +1,9 @@
-import { TouchableOpacity } from 'react-native'
+import { TouchableOpacity, TouchableOpacityProps } from 'react-native'
 import Icons from '../icons'
 
-const BackButton = ({ onBackPress }: { onBackPress?: () => void }) => {
+const BackButton = (props: TouchableOpacityProps) => {
   return (
-    <TouchableOpacity onPress={onBackPress}>
+    <TouchableOpacity {...props}>
       <Icons.ArrowLeft />
     </TouchableOpacity>
   )

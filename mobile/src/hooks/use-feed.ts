@@ -115,9 +115,10 @@ export const useFeed = () => {
         bech32: ''
       },
       id: jsonPost.id,
+      boardId: jsonPost.boardId,
       title: jsonPost.title,
-      post: jsonPost.body,
-      date: jsonPost.createdAt,
+      body: jsonPost.body,
+      createdAt: jsonPost.createdAt,
       n_replies: jsonPost.n_replies,
       n_gnods: jsonPost.n_gnods,
       n_replies_all: jsonPost.n_replies_all,

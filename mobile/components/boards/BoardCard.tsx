@@ -1,7 +1,7 @@
 import { TouchableOpacity, View, StyleSheet } from 'react-native'
 import { Text } from '@berty/gnonative-ui'
 import { Board } from '@gno/redux'
-import { useTheme } from 'styled-components/native'
+import { CreatedBy } from '../list/CreatedBy'
 
 export interface BoardData {
   id: string
@@ -19,18 +19,10 @@ interface BoardCardProps {
 
 export const BoardCard = ({ board, onPress }: BoardCardProps) => {
   console.log('BoardCard board:', JSON.stringify(board))
-  const theme = useTheme()
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress(board)}>
       <Text.Title3 style={styles.boardTitle}>{board.name}</Text.Title3>
-      <View style={styles.metaContainer}>
-        <Text.Caption>
-          Created by <Text.Caption color={theme.colors.primary}>@{board?.creatorName?.name}</Text.Caption>
-        </Text.Caption>
-        <Text.Caption>
-          on {board.createdAt}, #{board.id}
-        </Text.Caption>
-      </View>
+      <CreatedBy creatorName={board?.creatorName?.name || 'unknown'} createdAt={board.createdAt} boardId={board.id.toString()} />
       <View style={styles.replyRepostContainer}>
         <Text.Caption style={styles.threadCount}>{board.n_threads > 0 ? board.n_threads : 0} threads</Text.Caption>
         <Text.Body color="#ccc" style={styles.divider}>
@@ -64,9 +56,6 @@ const styles = StyleSheet.create({
     marginBottom: 8,
     color: '#266000'
   },
-  metaContainer: {
-    marginBottom: 8
-  },
   threadCount: {
     marginTop: 4,
     fontWeight: '500',
@@ -78,6 +67,6 @@ const styles = StyleSheet.create({
   replyRepostContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginTop: 0
+    marginTop: 8
   }
 })

@@ -4,19 +4,22 @@ import { useTheme } from 'styled-components/native'
 
 interface BreadcrumbProps {
   items: string[]
+  size?: 'default' | 'small'
 }
 
-export const Breadcrumb = ({ items }: BreadcrumbProps) => {
+export const Breadcrumb = ({ items, size = 'default' }: BreadcrumbProps) => {
   const theme = useTheme()
+  const TextComponent = size === 'small' ? Text.Footnote : Text.Body
+
   return (
     <View style={styles.breadcrumb}>
       {items.map((item, index) => (
         <View key={index} style={styles.breadcrumbItem}>
-          <Text.Body color={theme.colors.primary}>{item}</Text.Body>
+          <TextComponent color={index === items.length - 1 ? theme.colors.primary : theme.text.textMuted}>{item}</TextComponent>
           {index < items.length - 1 && (
-            <Text.Body color={theme.colors.gray} style={styles.separator}>
+            <TextComponent color={theme.text.textMuted} style={styles.separator}>
               {' / '}
-            </Text.Body>
+            </TextComponent>
           )}
         </View>
       ))}
@@ -34,6 +37,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row'
   },
   separator: {
-    marginHorizontal: 4
+    marginHorizontal: 2
   }
 })

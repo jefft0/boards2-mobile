@@ -2,22 +2,43 @@ import { View, StyleSheet } from 'react-native'
 import { Text } from '@berty/gnonative-ui'
 import { ActionButton } from '../button/ActionButton'
 import { Breadcrumb } from '../list/Breadcrumb'
+import BackButton from '../boards/BackButton'
+import { CreatedBy } from '../list/CreatedBy'
+import { ThreadCount } from '../list/ThreadCount'
 
-interface BoardsHeaderProps {
+interface ThreadHeaderProps {
   breadcrumbItems: string[]
   onCreateBoard: () => void
-  onListAdminUsers: () => void
-  onHelp: () => void
   title?: string
+  creatorName: string
+  threadCount?: number
+  onBackPress: () => void
 }
 
-export const BoardsHeader = ({ breadcrumbItems, onCreateBoard, onListAdminUsers, onHelp, title }: BoardsHeaderProps) => {
+export const ThreadHeader = ({
+  breadcrumbItems,
+  onCreateBoard,
+  title,
+  creatorName,
+  threadCount,
+  onBackPress
+}: ThreadHeaderProps) => {
   return (
     <View style={styles.header}>
-      <Breadcrumb items={breadcrumbItems} />
-      <Text.LargeTitle style={styles.title}>{title || 'Boards'}</Text.LargeTitle>
+      <View style={styles.row}>
+        <BackButton onPress={onBackPress} />
+        <Text.Title1 style={styles.title}>{title}</Text.Title1>
+      </View>
+      <Breadcrumb size="small" items={breadcrumbItems} />
+      <View style={styles.row}>
+        <CreatedBy creatorName={creatorName} />
+        <Text.Body color="#ccc" style={styles.divider}>
+          •
+        </Text.Body>
+        <ThreadCount count={threadCount || 0} />
+      </View>
       <View style={styles.actions}>
-        <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" />
+        <ActionButton label="Create Thread" onPress={onCreateBoard} icon="Add" />
         {/* TODO: Implement dynamic action renderer */}
         {/* <Text.Body color="#ccc" style={styles.divider}>
           •
@@ -42,14 +63,16 @@ const styles = StyleSheet.create({
     borderBottomColor: '#e5e7eb'
   },
   title: {
-    marginVertical: 8
+    marginVertical: 0
   },
   actions: {
     flexDirection: 'row',
     alignItems: 'center',
-    flexWrap: 'wrap'
+    flexWrap: 'wrap',
+    marginTop: 8
   },
   divider: {
     marginHorizontal: 8
-  }
+  },
+  row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-start', alignContent: 'center' }
 })

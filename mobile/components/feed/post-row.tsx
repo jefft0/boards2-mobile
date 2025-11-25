@@ -39,7 +39,7 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
     return null
   }
 
-  let content = post.post
+  let content = post.body
   let nReplies = post.n_replies
   // showFooter is false when displaying the parent post for replies
   if (post.parent_id === 0 && showFooter) {
@@ -57,7 +57,7 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
             <Pressable style={{ flexDirection: 'row', alignItems: 'center' }} onPress={() => nativgateToAccount(post?.user.name)}>
               <Text.Body style={[{ fontWeight: 'bold', fontSize: 16, paddingRight: 8 }]}>@{post.user.name}</Text.Body>
-              <TimeStampLabel timestamp={post.date} />
+              <TimeStampLabel timestamp={post.createdAt} />
             </Pressable>
           </View>
 

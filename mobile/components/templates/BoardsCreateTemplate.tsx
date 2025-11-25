@@ -1,7 +1,8 @@
 import { View, StyleSheet, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BoardsCreateHeader } from '../boards/BoardsCreateHeader'
-import CreateBoardForm, { BoardCreationData } from '../boards/CreateBoardForm'
+import CreateBoardForm from '../boards/CreateBoardForm'
+import { BoardCreationData } from '@gno/redux'
 
 interface BoardsCreateTemplateProps {
   breadcrumbItems: string[]

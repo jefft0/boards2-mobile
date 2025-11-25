@@ -2,7 +2,7 @@ import React from 'react'
 import { useRouter, useSegments } from 'expo-router'
 import { useAppSelector } from '@gno/redux'
 import { User } from '@gno/types'
-import { selectAccount } from 'redux/features/accountSlice'
+import { selectAccount } from '@gno/redux'
 
 interface PropsWithChildren {
   children: React.ReactNode

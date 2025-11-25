@@ -1,7 +1,7 @@
 import { View, StyleSheet } from 'react-native'
 import { Text } from '@berty/gnonative-ui'
-import { ActionButton } from '../molecules/ActionButton'
-import { Breadcrumb } from '../molecules/Breadcrumb'
+import { ActionButton } from '../button/ActionButton'
+import { Breadcrumb } from '../list/Breadcrumb'
 import BackButton from './BackButton'
 
 interface BoardsHeaderProps {
@@ -15,7 +15,7 @@ export const BoardsCreateHeader = ({ breadcrumbItems, onBackPress, onCreateBoard
   return (
     <View style={styles.header}>
       <View style={styles.titleContainer}>
-        <BackButton onBackPress={onBackPress} />
+        <BackButton onPress={onBackPress} />
         <View style={styles.title}>
           <Text.Title2>{title}</Text.Title2>
         </View>

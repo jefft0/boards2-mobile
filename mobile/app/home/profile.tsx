@@ -12,13 +12,13 @@ import {
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
-import Button from '@gno/components/button'
 import Layout from '@gno/components/layout'
 import { AccountBalance } from '@gno/components/settings'
 import Text from '@gno/components/text'
 import AvatarPicker from '@gno/components/avatar/avatar-picker'
 import { ProgressViewModal } from '@gno/components/view/progress'
 import { useUserCache } from '@gno/hooks/use-user-cache'
+import { Button, Spacer } from '@berty/gnonative-ui'
 
 export default function Page() {
   const [modalVisible, setModalVisible] = useState(false)
@@ -130,16 +130,18 @@ export default function Page() {
               <Text.Body>{remote}</Text.Body>
               <View></View>
             </>
+            <Spacer space={24} />
             <Layout.Footer>
               <ProgressViewModal visible={modalVisible} onRequestClose={() => setModalVisible(false)} />
-              <Button.TouchableOpacity title="Logs" onPress={() => setModalVisible(true)} variant="primary" />
-              <Button.TouchableOpacity title="Logout" onPress={onPressLogout} style={styles.logout} variant="primary-red" />
-              <Button.TouchableOpacity
-                title="Remove Account"
-                onPress={onRemoveAccount}
-                style={styles.logout}
-                variant="primary-red"
-              />
+              <Button onPress={() => setModalVisible(true)} color="primary">
+                Logs
+              </Button>
+              <Button onPress={onPressLogout} style={styles.logout} color="danger">
+                Logout
+              </Button>
+              <Button onPress={onRemoveAccount} style={styles.logout} color="danger">
+                Remove Account
+              </Button>
             </Layout.Footer>
           </ScrollView>
         </Layout.Body>

@@ -1,8 +1,9 @@
 import { View, StyleSheet, Platform } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import { BoardsHeader } from '../boards/BoardsHeader'
-import { BoardsList } from '../boards/BoardsList'
 import { Board } from '@gno/redux'
+import { CustomFlatList } from '../list/CustomFlatList'
+import { BoardCard } from '../boards/BoardCard'
 
 interface BoardsTemplateProps {
   breadcrumbItems: string[]
@@ -38,13 +39,15 @@ export const BoardsTemplate = ({
           onListAdminUsers={onListAdminUsers}
           onHelp={onHelp}
         />
-        <BoardsList
+        <CustomFlatList<Board>
           data={data}
           isLoading={isLoading}
           sortBy={sortBy}
           onBoardPress={onBoardPress}
           onRefresh={onRefresh}
           refreshing={refreshing}
+          keyExtractor={(item) => item.id.toString()}
+          renderItem={({ item }) => <BoardCard board={item} onPress={onBoardPress} />}
         />
       </View>
     </SafeAreaView>

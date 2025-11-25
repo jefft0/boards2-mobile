@@ -1,11 +1,7 @@
-import Layout from '@gno/components/layout'
-import { Spacer, Button } from '@berty/gnonative-ui'
-import Text from '@gno/components/text'
-import TextInput from '@gno/components/textinput'
 import { useNavigation, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
-import { KeyboardAvoidingView, Platform } from 'react-native'
 import {
+  BoardCreationData,
   broadcastTxCommit,
   clearLinking,
   createBoard,
@@ -15,10 +11,8 @@ import {
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
-import { SessionCountDown } from '@gno/components/counter/session-countdown'
 import { BoardsCreateTemplate } from '@gno/components/templates/BoardsCreateTemplate'
-import { PACKAGE_PATH } from '@gno/constants/Constants'
-import { BoardCreationData } from '@gno/components/boards/CreateBoardForm'
+import { BREADCRUMBS } from '@gno/constants/Constants'
 
 export default function Search() {
   const [threadTitle, setThreadTitle] = useState('')
@@ -73,11 +67,9 @@ export default function Search() {
     await dispatch(postTxAndRedirectToSign({ callerAddressBech32: account.bech32, threadTitle, postContent })).unwrap()
   }
 
-  const breadcrumbItems = PACKAGE_PATH.replace('gno.land/', '').split('/')
-
   const onCreate = async (board: BoardCreationData) => {
     dispatch(createBoard(board))
   }
 
-  return <BoardsCreateTemplate onCreate={onCreate} breadcrumbItems={breadcrumbItems} onBackPress={() => router.back()} />
+  return <BoardsCreateTemplate onCreate={onCreate} breadcrumbItems={BREADCRUMBS} onBackPress={() => router.back()} />
 }

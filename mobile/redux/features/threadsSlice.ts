@@ -3,10 +3,11 @@ import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { ParentPost, Post, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
-import { ThunkExtra } from '@gno/redux'
+import { ThunkExtra, Board } from '@gno/redux'
 
-export interface FeedState {
+interface ThreadsState {
   feed: Post[]
+  board?: Board
   loading: boolean
   error?: string
   totalPosts?: number
@@ -16,87 +17,97 @@ export interface FeedState {
 
 const initialState = {
   feed: [] as Post[],
+  board: undefined,
   loading: false,
   error: undefined,
   count: undefined,
   startIndex: undefined,
   endIndex: undefined
-} as FeedState
+} as ThreadsState
 
 const PAGE_SIZE = 9
 
-export const feedSlice = createSlice({
-  name: 'feed',
+export const threadsSlice = createSlice({
+  name: 'threads',
   initialState,
   reducers: {},
   extraReducers(builder) {
-    builder.addCase(loadFeed.fulfilled, (state, action) => {
+    builder.addCase(loadThreads.fulfilled, (state, action) => {
+      state.board = action.payload?.board
       state.loading = false
-      console.log('feed loaded with %d posts', action.payload?.feed?.length || 0)
       state.feed = action.payload?.feed || []
       state.totalPosts = action.payload?.totalPosts || 0
     })
-    builder.addCase(loadFeed.pending, (state) => {
+    builder.addCase(loadThreads.pending, (state) => {
       state.loading = true
       state.error = undefined
     })
-    builder.addCase(loadFeed.rejected, (state, action) => {
+    builder.addCase(loadThreads.rejected, (state, action) => {
       state.loading = false
       state.error = action.error.message
     })
   },
   selectors: {
-    selectFeed: (state: FeedState) => state.feed,
-    selectFeedLoading: (state: FeedState) => state.loading
+    selectThreadBoard: (state: ThreadsState) => state.board,
+    selectThreads: (state: ThreadsState) => state.feed,
+    selectThreadLoading: (state: ThreadsState) => state.loading
   }
 })
 
-export const {} = feedSlice.actions
+export const {} = threadsSlice.actions
 
-export const { selectFeed, selectFeedLoading } = feedSlice.selectors
+export const { selectThreads, selectThreadLoading, selectThreadBoard } = threadsSlice.selectors
 
 type LoadResult = {
+  board: Board
   totalPosts: number
   feed: Post[]
   n_posts: number
 }
 
-export const loadFeed = createAsyncThunk<LoadResult | undefined, void, ThunkExtra>('feed/loadFeed', async (param, thunkAPI) => {
-  // const state = (await thunkAPI.getState()) as RootState
-  const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
-  const userCache = thunkAPI.extra.userCache as UserCacheApi
+type LoadThreadsRequest = {
+  board: Board
+}
 
-  try {
-    // const bech32 = state.account?.account?.bech32
-    const totalPosts = await countThreadPosts(userCache, gnonative)
+export const loadThreads = createAsyncThunk<LoadResult | undefined, LoadThreadsRequest, ThunkExtra>(
+  'threads/loadThreads',
+  async ({ board }, thunkAPI) => {
+    const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
+    const userCache = thunkAPI.extra.userCache as UserCacheApi
 
-    const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
-    const { data, n_posts } = await fetchThreadPosts(userCache, gnonative, startIndex, totalPosts)
+    try {
+      const totalPosts = await countThreadPosts(userCache, gnonative, board.id)
 
-    return {
-      totalPosts,
-      feed: data,
-      n_posts
+      const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
+      const { data, n_posts } = await fetchThreadPosts(userCache, gnonative, board.id, startIndex, totalPosts)
+
+      return {
+        board,
+        totalPosts,
+        feed: data,
+        n_posts
+      }
+    } catch (error) {
+      console.error('error in loadFeed thunk:', error)
+      throw error
     }
-  } catch (error) {
-    console.error('error in loadFeed thunk:', error)
-    throw error
   }
-})
+)
 
 async function fetchThreadPosts(
   userCache: UserCacheApi,
   gnonative: GnoNativeApi,
+  boardId: number,
   startIndex: number,
   endIndex: number
 ): Promise<ThreadPosts> {
-  const result = await qEvalGetPosts(gnonative, 0, 0, startIndex, endIndex)
+  const result = await qEvalGetPosts(gnonative, boardId, 0, 0, startIndex, endIndex)
   const json = await enrichData(userCache, gnonative, result)
   return json
 }
 
-async function countThreadPosts(userCache: UserCacheApi, gnonative: GnoNativeApi): Promise<number> {
-  const result = await qEvalGetPosts(gnonative, 0, 0, 0, 0)
+async function countThreadPosts(userCache: UserCacheApi, gnonative: GnoNativeApi, boardId: number): Promise<number> {
+  const result = await qEvalGetPosts(gnonative, boardId, 0, 0, 0, 0)
   const { n_posts } = await enrichData(userCache, gnonative, result)
   return n_posts
 }
@@ -105,13 +116,13 @@ const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
 
 async function qEvalGetPosts(
   gnonative: GnoNativeApi,
+  boardId: number,
   threadId: number,
   postId: number,
   startIndex: number,
   endIndex: number
 ): Promise<string> {
-  const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetPosts(1,${threadId},${postId},${startIndex},${endIndex})`)
-  console.log('xxx:', postInfos)
+  const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetPosts(${boardId},${threadId},${postId},${startIndex},${endIndex})`)
   const totalRegex = /^\((\d+) int\)/g
   const totalMatch = totalRegex.exec(postInfos)
   if (!totalMatch) throw new Error("Can't find total in GetPosts response")
@@ -207,9 +218,10 @@ function convertToPost(jsonPost: any, creator: User, repost_parent?: ParentPost)
       bech32: ''
     },
     id: jsonPost.id,
+    boardId: jsonPost.boardId,
+    createdAt: jsonPost.createdAt,
     title: jsonPost.title,
-    post: jsonPost.body,
-    date: jsonPost.createdAt,
+    body: jsonPost.body,
     n_replies: jsonPost.n_replies,
     n_gnods: jsonPost.n_gnods,
     n_replies_all: jsonPost.n_replies_all,

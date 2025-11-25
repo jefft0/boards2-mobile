@@ -1,28 +1,31 @@
-import { FlatList, View, StyleSheet, ActivityIndicator } from 'react-native'
-import { BoardCard } from '../molecules/BoardCard'
+import { FlatList, View, StyleSheet, ActivityIndicator, ListRenderItem } from 'react-native'
 import EmptyFeedList from '../feed/empty-feed-list'
 import { Text } from '@berty/gnonative-ui'
-import { Board } from '@gno/redux'
 import { useTheme } from 'styled-components/native'
 
-interface BoardsListProps {
-  data: Board[]
+interface CustomFlatListProps<T> {
+  data: T[]
   isLoading?: boolean
+  renderItem: ListRenderItem<T>
+  keyExtractor: (item: T, index: number) => string
   sortBy?: string
-  onBoardPress: (board: Board) => void
+  onBoardPress?: (item: T) => void
   onRefresh?: () => void
   refreshing?: boolean
 }
 
-export const BoardsList = ({
+export const CustomFlatList = <T,>({
   data,
   isLoading,
+  renderItem,
+  keyExtractor,
   sortBy = 'oldest first',
   onBoardPress,
   onRefresh,
   refreshing
-}: BoardsListProps) => {
+}: CustomFlatListProps<T>) => {
   const theme = useTheme()
+
   if (isLoading) {
     return (
       <View style={styles.centerContainer}>
@@ -34,14 +37,14 @@ export const BoardsList = ({
   return (
     <View style={styles.listContainer}>
       <View style={styles.sortContainer}>
-        <Text.Body>
+        <Text.Label>
           Sort by: <Text.Label>{sortBy}</Text.Label>
-        </Text.Body>
+        </Text.Label>
       </View>
       <FlatList
         data={data}
-        keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item }) => <BoardCard board={item} onPress={onBoardPress} />}
+        keyExtractor={keyExtractor}
+        renderItem={renderItem}
         contentContainerStyle={styles.listContent}
         onRefresh={onRefresh}
         refreshing={refreshing}

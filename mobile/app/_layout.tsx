@@ -53,7 +53,7 @@ const theme: DefaultTheme = {
   },
 
   text: {
-    textMuted: '#A1A1A1'
+    textMuted: '#6b7280'
   },
 
   components: {

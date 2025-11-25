@@ -1,23 +1,22 @@
 import { View, StyleSheet } from 'react-native'
-import { Text } from '@berty/gnonative-ui'
-import { ActionButton } from '../button/ActionButton'
-import { Breadcrumb } from '../list/Breadcrumb'
+import React from 'react'
 
 interface BoardsHeaderProps {
-  breadcrumbItems: string[]
-  onCreateBoard: () => void
-  onListAdminUsers: () => void
-  onHelp: () => void
-  title?: string
+  breadcrumb: React.ReactElement
+  title: React.ReactElement
+  actions: React.ReactElement[]
 }
 
-export const BoardsHeader = ({ breadcrumbItems, onCreateBoard, onListAdminUsers, onHelp, title }: BoardsHeaderProps) => {
+export const Header = ({ breadcrumb, title, actions }: BoardsHeaderProps) => {
   return (
     <View style={styles.header}>
-      <Breadcrumb items={breadcrumbItems} />
-      <Text.LargeTitle style={styles.title}>{title || 'Boards'}</Text.LargeTitle>
+      {breadcrumb}
+      <View style={styles.title}>{title}</View>
       <View style={styles.actions}>
-        <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" />
+        {actions.map((action, index) => (
+          <React.Fragment key={index}>{action}</React.Fragment>
+        ))}
+        {/* <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" /> */}
         {/* TODO: Implement dynamic action renderer */}
         {/* <Text.Body color="#ccc" style={styles.divider}>
           •
