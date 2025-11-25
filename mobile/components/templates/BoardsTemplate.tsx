@@ -44,7 +44,6 @@ export const BoardsTemplate = ({
           data={data}
           isLoading={isLoading}
           sortBy={sortBy}
-          onBoardPress={onBoardPress}
           onRefresh={onRefresh}
           refreshing={refreshing}
           keyExtractor={(item) => item.id.toString()}
