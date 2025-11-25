@@ -5,8 +5,8 @@ import Alert from '@gno/components/alert'
 import Layout from '@gno/components/layout'
 import { Post } from '@gno/types'
 import useScrollToTop from '@gno/components/utils/useScrollToTopWithOffset'
-import EmptyFeedList from '@gno/components/feed/empty-feed-list'
 import { PostRow } from '@gno/components/feed/post-row'
+import { ListEmptyView } from '@gno/components/list/ListEmptyView'
 
 type Props = {
   totalPosts: number
@@ -114,7 +114,7 @@ export default function FeedView({ totalPosts, onPress, onGnod, bech32, type }: 
       data={data}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListFooterComponent={renderFooter}
-      ListEmptyComponent={<EmptyFeedList />}
+      ListEmptyComponent={<ListEmptyView message="No posts yet." />}
       keyExtractor={(item) => `${item.id}`}
       contentContainerStyle={styles.flatListContent}
       renderItem={({ item }) => <PostRow post={item} onPress={onPress} onGnod={onGnod} />}

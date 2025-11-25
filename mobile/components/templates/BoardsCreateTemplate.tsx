@@ -36,7 +36,11 @@ export const BoardsCreateTemplate = ({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <BoardsCreateHeader title="Create Board" onBackPress={onBackPress} breadcrumbItems={breadcrumbItems} />
+        <BoardsCreateHeader
+          title="Create Board"
+          onBackPress={onBackPress}
+          breadcrumbItems={[...breadcrumbItems, 'CreateBoard']}
+        />
         <CreateBoardForm onCreate={onCreate} />
         {/* <BoardsList
           data={data}

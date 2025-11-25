@@ -1,5 +1,4 @@
 import { FlatList, View, StyleSheet, ActivityIndicator, ListRenderItem } from 'react-native'
-import EmptyFeedList from '../feed/empty-feed-list'
 import { Text } from '@berty/gnonative-ui'
 import { useTheme } from 'styled-components/native'
 
@@ -8,6 +7,7 @@ interface CustomFlatListProps<T> {
   isLoading?: boolean
   renderItem: ListRenderItem<T>
   keyExtractor: (item: T, index: number) => string
+  emptyComponent: React.ReactElement
   sortBy?: string
   onBoardPress?: (item: T) => void
   onRefresh?: () => void
@@ -19,6 +19,7 @@ export const CustomFlatList = <T,>({
   isLoading,
   renderItem,
   keyExtractor,
+  emptyComponent,
   sortBy = 'oldest first',
   onBoardPress,
   onRefresh,
@@ -48,7 +49,7 @@ export const CustomFlatList = <T,>({
         contentContainerStyle={styles.listContent}
         onRefresh={onRefresh}
         refreshing={refreshing}
-        ListEmptyComponent={<EmptyFeedList message="No boards yet." />}
+        ListEmptyComponent={emptyComponent}
       />
     </View>
   )

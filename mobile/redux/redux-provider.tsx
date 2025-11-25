@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from 'react'
 import { Provider } from 'react-redux'
 import { configureStore } from '@reduxjs/toolkit'
-import { accountSlice, profileSlice, replySlice, linkingSlice, boardsSlice, threadsSlice, boardsCreateSlice } from './features'
+import {
+  accountSlice,
+  profileSlice,
+  replySlice,
+  linkingSlice,
+  boardsSlice,
+  threadsSlice,
+  boardsCreateSlice,
+  threadsCreateSlice
+} from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
 import { useSearch, UseSearchReturnType } from '@gno/hooks/use-search'
 import { useUserCache } from '@gno/hooks/use-user-cache'
@@ -25,7 +34,8 @@ const reducer = {
   [linkingSlice.reducerPath]: linkingSlice.reducer,
   [threadsSlice.reducerPath]: threadsSlice.reducer,
   [boardsSlice.reducerPath]: boardsSlice.reducer,
-  [boardsCreateSlice.reducerPath]: boardsCreateSlice.reducer
+  [boardsCreateSlice.reducerPath]: boardsCreateSlice.reducer,
+  [threadsCreateSlice.reducerPath]: threadsCreateSlice.reducer
 }
 
 export type RootState = typeof reducer

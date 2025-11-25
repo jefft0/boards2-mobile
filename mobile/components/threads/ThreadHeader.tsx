@@ -8,7 +8,8 @@ import { ThreadCount } from '../list/ThreadCount'
 
 interface ThreadHeaderProps {
   breadcrumbItems: string[]
-  onCreateBoard: () => void
+  onCreateThread: () => void
+  canCreate?: boolean
   title?: string
   creatorName: string
   threadCount?: number
@@ -17,7 +18,8 @@ interface ThreadHeaderProps {
 
 export const ThreadHeader = ({
   breadcrumbItems,
-  onCreateBoard,
+  onCreateThread,
+  canCreate,
   title,
   creatorName,
   threadCount,
@@ -38,7 +40,7 @@ export const ThreadHeader = ({
         <ThreadCount count={threadCount || 0} />
       </View>
       <View style={styles.actions}>
-        <ActionButton label="Create Thread" onPress={onCreateBoard} icon="Add" />
+        <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" disabled={!canCreate} />
         {/* TODO: Implement dynamic action renderer */}
         {/* <Text.Body color="#ccc" style={styles.divider}>
           •

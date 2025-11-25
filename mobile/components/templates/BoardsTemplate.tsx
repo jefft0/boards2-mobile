@@ -4,6 +4,7 @@ import { BoardsHeader } from '../boards/BoardsHeader'
 import { Board } from '@gno/redux'
 import { CustomFlatList } from '../list/CustomFlatList'
 import { BoardCard } from '../boards/BoardCard'
+import { ListEmptyView } from '../list/ListEmptyView'
 
 interface BoardsTemplateProps {
   breadcrumbItems: string[]
@@ -48,6 +49,7 @@ export const BoardsTemplate = ({
           refreshing={refreshing}
           keyExtractor={(item) => item.id.toString()}
           renderItem={({ item }) => <BoardCard board={item} onPress={onBoardPress} />}
+          emptyComponent={<ListEmptyView message="No Boards yet." />}
         />
       </View>
     </SafeAreaView>

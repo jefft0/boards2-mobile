@@ -21,7 +21,7 @@ export const BoardsCreateHeader = ({ breadcrumbItems, onBackPress, onCreateBoard
         </View>
       </View>
       <View style={styles.dividerGrey}>
-        <Breadcrumb items={[...breadcrumbItems, 'CreateBoard']} />
+        <Breadcrumb items={breadcrumbItems} />
       </View>
       <View style={styles.actions}>
         {onCreateBoard && <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" />}

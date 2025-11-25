@@ -93,7 +93,11 @@ const theme: DefaultTheme = {
       border: '#15803d',
       label: '#FFFFFF'
     },
-    danger: '#FF4647',
+    danger: {
+      background: '#fa6363ff',
+      border: '#d04252ff',
+      label: '#FFFFFF'
+    },
     dangersecondary: '#E5E5E5',
 
     label: {

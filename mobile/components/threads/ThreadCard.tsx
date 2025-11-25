@@ -1,7 +1,5 @@
 import { Post } from '@gno/types'
 import styled, { useTheme } from 'styled-components/native'
-import { CreatedBy } from '../list/CreatedBy'
-import { Text } from '@berty/gnonative-ui'
 import Icons from '../icons'
 import CardFooter from '../cards/CardFooter'
 
@@ -35,23 +33,6 @@ const ThreadPreview = styled.Text`
   margin-bottom: 12px;
 `
 
-// const ThreadMeta = styled.View`
-//   flex-direction: row;
-//   align-items: center;
-//   flex: 1;
-// `
-
-// const MetaItem = styled.View`
-//   flex-direction: row;
-//   align-items: center;
-//   margin-right: 16px;
-// `
-
-const MetaIcon = styled.Text`
-  font-size: 14px;
-  margin-right: 4px;
-`
-
 const ThreadCard = ({ thread }: { thread: Post }) => {
   const theme = useTheme()
   return (
@@ -73,13 +54,11 @@ const ThreadCard = ({ thread }: { thread: Post }) => {
             <CardFooter.MetaValue color={theme.colors.primary}>@{thread.user.name}</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Replies</CardFooter.MetaValue>
-            <CardFooter.Spacer />
-            <CardFooter.MetaValue>{thread.n_replies}</CardFooter.MetaValue>
+            <CardFooter.MetaValue>{thread.n_replies} Replies</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
             <CardFooter.MetaIcon>{thread.n_gnods > 0 ? <Icons.Gnoded /> : <Icons.Gnod />}</CardFooter.MetaIcon>
-            <CardFooter.MetaValue>{thread.n_gnods}</CardFooter.MetaValue>
+            <CardFooter.MetaValue>{thread.n_gnods} Gnods</CardFooter.MetaValue>
           </CardFooter.MetaItem>
         </CardFooter.Meta>
       </CardFooter.Footer>
