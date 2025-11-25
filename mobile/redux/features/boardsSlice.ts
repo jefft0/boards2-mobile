@@ -1,7 +1,7 @@
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createAsyncThunk, createSlice, selectCanCreateThread } from '@reduxjs/toolkit'
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, selectAccount, RootState } from '@gno/redux'
 
 export interface BoardsState {
@@ -52,7 +52,7 @@ export const boardsSlice = createSlice({
   }
 })
 
-export const {} = boardsSlice.actions
+// export const {} = boardsSlice.actions
 
 export const { selectBoards, selectBoardsLoading, selectCanCreateBoard } = boardsSlice.selectors
 

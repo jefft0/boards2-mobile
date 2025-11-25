@@ -32,7 +32,6 @@ export default function Search() {
           router.back()
         } catch (error) {
           console.error('on broadcastTxCommit', error)
-          // setError('' + error)
         }
       }
     }

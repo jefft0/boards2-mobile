@@ -58,7 +58,7 @@ export const threadsSlice = createSlice({
   }
 })
 
-export const {} = threadsSlice.actions
+// export const {} = threadsSlice.actions
 
 export const { selectThreads, selectThreadLoading, selectThreadBoard, selectCanCreateThread } = threadsSlice.selectors
 

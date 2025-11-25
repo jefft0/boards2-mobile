@@ -44,9 +44,9 @@ export const boardsCreateSlice = createSlice({
   }
 })
 
-export const {} = boardsCreateSlice.actions
+// export const {} = boardsCreateSlice.actions
 
-export const {} = boardsCreateSlice.selectors
+// export const {} = boardsCreateSlice.selectors
 
 type BoardsResult = {
   n_boards: number

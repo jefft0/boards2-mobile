@@ -24,6 +24,7 @@ const Container = styled.View`
 `
 
 export default function ThreadsPage() {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sortBy, setSortBy] = useState('newest')
   const router = useRouter()
   const board = useAppSelector(selectThreadBoard)

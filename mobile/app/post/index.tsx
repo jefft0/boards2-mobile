@@ -45,7 +45,6 @@ export default function Search() {
           }, 3000)
         } catch (error) {
           console.error('on broadcastTxCommit', error)
-          // setError('' + error)
         }
       }
     }

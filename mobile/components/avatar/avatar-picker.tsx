@@ -1,6 +1,5 @@
 import React from 'react'
 import { TouchableOpacity } from 'react-native'
-// import * as ImagePicker from 'expo-image-picker'
 import { selectAvatar, useAppSelector } from '@gno/redux'
 import Avatar from './avatar'
 

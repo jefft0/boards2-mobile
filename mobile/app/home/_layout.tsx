@@ -26,7 +26,7 @@ export default function AppLayout() {
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused }) => <Icons.Search color={focused ? theme.colors.primary : theme.colors.gray}  />
+          tabBarIcon: ({ focused }) => <Icons.Search color={focused ? theme.colors.primary : theme.colors.gray} />
         }}
       />
       <Tabs.Screen

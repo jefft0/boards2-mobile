@@ -13,7 +13,7 @@
     "prettier:fix": "prettier . --write"
   },
   "dependencies": {
-    "@berty/gnonative-ui": "0.0.2",
+    "@berty/gnonative-ui": "^0.0.2",
     "@bufbuild/protobuf": "^2.6.2",
     "@connectrpc/connect": "^2.0.3",
     "@connectrpc/connect-web": "^2.0.3",
