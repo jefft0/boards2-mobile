@@ -39,12 +39,12 @@ export default function ThreadsPage() {
     dispatch(loadThreads({ board }))
   }
 
-  useFocusEffect(
-    React.useCallback(() => {
-      if (!board) return
-      dispatch(loadThreads({ board }))
-    }, [board, dispatch])
-  )
+  // useFocusEffect(
+  //   React.useCallback(() => {
+  //     if (!board) return
+  //     dispatch(loadThreads({ board }))
+  //   }, [board, dispatch])
+  // )
 
   return (
     <Container>
@@ -56,6 +56,7 @@ export default function ThreadsPage() {
         onBackPress={() => router.back()}
         creatorName={board?.creatorName?.name || 'unknown'}
         threadCount={board?.n_threads || 0}
+        loading={loading}
       />
 
       <CustomFlatList<Post>

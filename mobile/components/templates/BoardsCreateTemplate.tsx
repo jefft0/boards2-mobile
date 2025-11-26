@@ -20,7 +20,7 @@ export const BoardsCreateTemplate = ({ breadcrumbItems, onBackPress, onCreate, l
           onBackPress={onBackPress}
           breadcrumbItems={[...breadcrumbItems, 'CreateBoard']}
         />
-        <CreateBoardForm onCreate={onCreate} loading={loading} />
+        <CreateBoardForm onCreate={onCreate} onCancel={onBackPress} loading={loading} />
       </View>
     </SafeAreaView>
   )

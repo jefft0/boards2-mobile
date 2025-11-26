@@ -14,6 +14,7 @@ interface ThreadHeaderProps {
   creatorName: string
   threadCount?: number
   onBackPress: () => void
+  loading?: boolean
 }
 
 export const ThreadHeader = ({
@@ -23,7 +24,8 @@ export const ThreadHeader = ({
   title,
   creatorName,
   threadCount,
-  onBackPress
+  onBackPress,
+  loading
 }: ThreadHeaderProps) => {
   return (
     <View style={styles.header}>
@@ -37,7 +39,7 @@ export const ThreadHeader = ({
         <Text.Body color="#ccc" style={styles.divider}>
           •
         </Text.Body>
-        <ThreadCount count={threadCount || 0} />
+        {loading ? null : <ThreadCount count={threadCount || 0} />}
       </View>
       <View style={styles.actions}>
         <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" disabled={!canCreate} />
