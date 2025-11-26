@@ -2,15 +2,7 @@ import { useState, useCallback } from 'react'
 import { useFocusEffect, useRouter } from 'expo-router'
 import { BoardsTemplate } from '@gno/components/templates/BoardsTemplate'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
-import {
-  getListedBoards,
-  selectBoards,
-  selectBoardsLoading,
-  useAppDispatch,
-  useAppSelector,
-  Board,
-  loadThreads
-} from '@gno/redux'
+import { getListedBoards, selectBoards, selectBoardsLoading, useAppDispatch, useAppSelector, Board } from '@gno/redux'
 import { StyleSheet, View } from 'react-native'
 
 export default function Page() {
@@ -47,7 +39,6 @@ export default function Page() {
   }
 
   const handleBoardPress = (board: Board) => {
-    dispatch(loadThreads({ board }))
     router.push(`/boards/${board.id}?name=${board.name}`)
   }
 
