@@ -105,7 +105,9 @@ export default function CreateBoardForm({ onCreate, onCancel, loading }: CreateB
             onChangeText={setBoardName}
             placeholder="Enter board name"
             placeholderTextColor="#9ca3af"
-            autoCapitalize="words"
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect={false}
           />
           <HelperText>Choose a descriptive name for your board</HelperText>
         </FormGroup>
