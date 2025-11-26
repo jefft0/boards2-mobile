@@ -31,7 +31,7 @@ export const boardsSlice = createSlice({
   extraReducers(builder) {
     builder.addCase(getListedBoards.fulfilled, (state, action) => {
       state.loading = false
-      console.log('xxxx4', action.payload)
+      // console.log('xxxx4', action.payload)
       state.boards = action.payload?.boards.map((b) => b.board) || []
       state.canCreate = action.payload?.canCreate || false
     })

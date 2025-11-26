@@ -1,7 +1,8 @@
 import { Post } from '@gno/types'
 import styled, { useTheme } from 'styled-components/native'
-import Icons from '../icons'
 import CardFooter from '../cards/CardFooter'
+import GnodLikeButton from '../button/GnodLikeButton'
+import { useState } from 'react'
 
 const Container = styled.TouchableOpacity`
   background-color: #ffffff;
@@ -35,6 +36,14 @@ const ThreadPreview = styled.Text`
 
 const ThreadCard = ({ thread }: { thread: Post }) => {
   const theme = useTheme()
+  const [likes, setLikes] = useState(0)
+  const [isLiked, setIsLiked] = useState(false)
+
+  const handleLike = (liked: boolean) => {
+    setIsLiked(liked)
+    setLikes((prev) => (liked ? prev + 1 : prev - 1))
+  }
+
   return (
     <Container key={thread.id} activeOpacity={0.7}>
       <ThreadHeader>
@@ -57,8 +66,14 @@ const ThreadCard = ({ thread }: { thread: Post }) => {
             <CardFooter.MetaValue>{thread.n_replies} Replies</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
-            <CardFooter.MetaIcon>{thread.n_gnods > 0 ? <Icons.Gnoded /> : <Icons.Gnod />}</CardFooter.MetaIcon>
-            <CardFooter.MetaValue>{thread.n_gnods} Gnods</CardFooter.MetaValue>
+            <GnodLikeButton
+              isLiked={isLiked}
+              onPress={handleLike}
+              size={16}
+              likedColor={theme.colors.primary}
+              unlikedColor="#9ca3af"
+              gnodCount={likes}
+            />
           </CardFooter.MetaItem>
         </CardFooter.Meta>
       </CardFooter.Footer>
