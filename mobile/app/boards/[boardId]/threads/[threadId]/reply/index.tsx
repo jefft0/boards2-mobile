@@ -1,28 +1,26 @@
-import { useNavigation, useRouter } from 'expo-router'
+import { useLocalSearchParams, usePathname, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import {
   broadcastTxCommit,
   clearLinking,
-  selectAccount,
   selectQueryParamsTxJsonSigned,
   selectThreadBoard,
-  threadCreate,
+  threadReplyAndRedirectToSign,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
 import { BREADCRUMBS } from '@gno/constants/Constants'
-import { ThreadsCreateTemplate } from '@gno/components/templates/ThreadsCreateTemplate'
-import { CreateThreadFormData } from '@gno/components/threads/CreateThreadForm'
+import { ThreadsReplyTemplate } from '@gno/components/templates/ThreadsReplyTemplate'
+import ReplyThreadForm, { CreateReplyThreadFormData } from '@gno/components/threads/ReplyThreadForm'
 
-export default function Search() {
+export default function Page() {
   const [loading, setLoading] = useState(false)
-  const navigation = useNavigation()
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const account = useAppSelector(selectAccount)
   const board = useAppSelector(selectThreadBoard)
-
   const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const { boardId, threadId, title } = useLocalSearchParams()
+  const currentPath = usePathname()
 
   // hook to handle the signed tx from the Gnokey and broadcast it
   useEffect(() => {
@@ -45,27 +43,19 @@ export default function Search() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txJsonSigned])
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      setLoading(false)
-      if (!account) throw new Error('No active account')
-    })
-    return unsubscribe
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation])
-
-  const onCreate = async (form: CreateThreadFormData) => {
+  const onCreate = async (form: CreateReplyThreadFormData) => {
     if (!board) throw new Error('No active board')
     setLoading(true)
-    dispatch(threadCreate({ ...form, boardId: board.id.toString() }))
+    dispatch(threadReplyAndRedirectToSign({ callbackPath: currentPath, replyBody: form.replyBody }))
   }
 
   return (
-    <ThreadsCreateTemplate
-      loading={loading}
-      onCreate={onCreate}
-      breadcrumbItems={[...BREADCRUMBS, board?.name || 'unknown']}
+    <ThreadsReplyTemplate
+      breadcrumbItems={[...BREADCRUMBS, `${board?.name.toString()}`, `${threadId.toString()}`]}
       onBackPress={() => router.back()}
-    />
+      title="Reply"
+    >
+      <ReplyThreadForm onCancel={() => router.back()} onCreate={onCreate} loading={loading} />
+    </ThreadsReplyTemplate>
   )
 }

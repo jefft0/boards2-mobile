@@ -9,10 +9,11 @@ import {
   useAppSelector,
   selectCanCreateThread,
   useAppDispatch,
-  loadThreads
+  loadThreads,
+  setThreadToReply
 } from '@gno/redux'
 import { Post } from '@gno/types'
-import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router'
+import { useLocalSearchParams, useRouter } from 'expo-router'
 import React, { useState } from 'react'
 import styled from 'styled-components/native'
 import { ListEmptyView } from '@gno/components/list/ListEmptyView'
@@ -30,7 +31,7 @@ export default function ThreadsPage() {
   const board = useAppSelector(selectThreadBoard)
   const loading = useAppSelector(selectThreadLoading)
   const { name } = useLocalSearchParams()
-  const feed = useAppSelector(selectThreads)
+  const threads = useAppSelector(selectThreads)
   const canCreate = useAppSelector(selectCanCreateThread)
   const dispatch = useAppDispatch()
 
@@ -46,6 +47,11 @@ export default function ThreadsPage() {
   //   }, [board, dispatch])
   // )
 
+  const handleReply = (thread: Post) => {
+    dispatch(setThreadToReply(thread))
+    router.push(`/boards/${thread.boardId}/threads/${thread.id}/reply?title=${thread.title}`)
+  }
+
   return (
     <Container>
       <ThreadHeader
@@ -60,13 +66,13 @@ export default function ThreadsPage() {
       />
 
       <CustomFlatList<Post>
-        data={feed}
+        data={threads}
         isLoading={loading}
         sortBy={sortBy}
         onRefresh={onRefresh}
         refreshing={false}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item: thread }) => <ThreadCard thread={thread} />}
+        renderItem={({ item: thread }) => <ThreadCard thread={thread} onReply={() => handleReply(thread)} />}
         emptyComponent={<ListEmptyView message="No Threads yet." />}
       />
     </Container>

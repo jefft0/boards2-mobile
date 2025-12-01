@@ -1,15 +1,31 @@
 import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { Post } from '@gno/types'
-import { ThunkExtra } from '@gno/redux'
+import { ThunkExtra, RootState, selectThreadBoard, selectAccount } from '@gno/redux'
 
 export interface State {
-  postToReply: Post | undefined
+  threadToReply: Post | undefined
 }
 
 const initialState: State = {
-  postToReply: undefined
+  threadToReply: undefined
 }
+
+export const threadReplySlice = createSlice({
+  name: 'reply',
+  initialState,
+  reducers: {
+    setThreadToReply: (state, action: PayloadAction<Post>) => {
+      state.threadToReply = action.payload
+    }
+  },
+  selectors: {
+    selectThreadToReply: (state) => state.threadToReply
+  }
+})
+
+export const { setThreadToReply } = threadReplySlice.actions
+export const { selectThreadToReply } = threadReplySlice.selectors
 
 interface RepostTxAndRedirectParams {
   post: Post
@@ -43,15 +59,26 @@ type ReplytTxAndRedirectParams = {
   callbackPath: string
 }
 
-export const replyTxAndRedirectToSign = createAsyncThunk<void, ReplytTxAndRedirectParams, ThunkExtra>(
-  'tx/replyTxAndRedirectToSign',
+interface CreateReplyRequestParams {
+  replyBody: string
+  callbackPath: string
+}
+
+export const threadReplyAndRedirectToSign = createAsyncThunk<void, CreateReplyRequestParams, ThunkExtra>(
+  'threadReply/CreateReply',
   async (props, thunkAPI) => {
-    const { post, replyContent, callerAddressBech32, callbackPath } = props
+    const boad = selectThreadBoard(thunkAPI.getState() as RootState)
+    const thread = selectThreadToReply(thunkAPI.getState() as RootState)
+    const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
+
+    if (!boad || !thread) throw new Error('No active board or thread')
+
+    const { replyBody, callbackPath } = props
 
     const fnc = 'CreateReply'
     const gasFee = '1000000ugnot'
     const gasWanted = BigInt(50000000)
-    const args: string[] = ['1', String(post.id), '0', replyContent]
+    const args: string[] = [String(boad.id), String(thread.id), '0', replyBody]
     const reason = 'Reply a message'
     // const session = (thunkAPI.getState() as RootState).linking.session;
 
@@ -59,19 +86,3 @@ export const replyTxAndRedirectToSign = createAsyncThunk<void, ReplytTxAndRedire
     await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
   }
 )
-
-export const replySlice = createSlice({
-  name: 'reply',
-  initialState,
-  reducers: {
-    setPostToReply: (state, action: PayloadAction<Post>) => {
-      state.postToReply = action.payload
-    }
-  },
-  selectors: {
-    selectPostToReply: (state) => state.postToReply
-  }
-})
-
-export const { setPostToReply } = replySlice.actions
-export const { selectPostToReply } = replySlice.selectors

@@ -3,6 +3,7 @@ import styled, { useTheme } from 'styled-components/native'
 import CardFooter from '../cards/CardFooter'
 import GnodLikeButton from '../button/GnodLikeButton'
 import { useState } from 'react'
+import ReplyIconButton from '../button/ReplyIconButton'
 
 const Container = styled.TouchableOpacity`
   background-color: #ffffff;
@@ -34,7 +35,12 @@ const ThreadPreview = styled.Text`
   margin-bottom: 12px;
 `
 
-const ThreadCard = ({ thread }: { thread: Post }) => {
+interface Props {
+  thread: Post
+  onReply: () => void
+}
+
+const ThreadCard = ({ thread, onReply }: Props) => {
   const theme = useTheme()
   const [likes, setLikes] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
@@ -59,11 +65,11 @@ const ThreadCard = ({ thread }: { thread: Post }) => {
 
       <CardFooter.Footer>
         <CardFooter.Meta>
-          <CardFooter.MetaItem>
+          <CardFooter.MetaItem style={{ minWidth: 120 }}>
             <CardFooter.MetaValue color={theme.colors.primary}>@{thread.user.name}</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
-            <CardFooter.MetaValue>{thread.n_replies} Replies</CardFooter.MetaValue>
+            <ReplyIconButton onPress={onReply} count={thread.n_replies} />
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
             <GnodLikeButton

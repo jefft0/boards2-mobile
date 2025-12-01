@@ -4,11 +4,11 @@ import { configureStore } from '@reduxjs/toolkit'
 import {
   accountSlice,
   profileSlice,
-  replySlice,
   linkingSlice,
   boardsSlice,
   threadsSlice,
   boardsCreateSlice,
+  threadReplySlice,
   threadsCreateSlice
 } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
@@ -30,11 +30,11 @@ export interface ThunkExtra {
 const reducer = {
   [accountSlice.reducerPath]: accountSlice.reducer,
   [profileSlice.reducerPath]: profileSlice.reducer,
-  [replySlice.reducerPath]: replySlice.reducer,
   [linkingSlice.reducerPath]: linkingSlice.reducer,
   [threadsSlice.reducerPath]: threadsSlice.reducer,
   [boardsSlice.reducerPath]: boardsSlice.reducer,
   [boardsCreateSlice.reducerPath]: boardsCreateSlice.reducer,
+  [threadReplySlice.reducerPath]: threadReplySlice.reducer,
   [threadsCreateSlice.reducerPath]: threadsCreateSlice.reducer
 }
 

@@ -9,7 +9,7 @@ interface Props {
   title: string
 }
 
-export const ThreadCreateHeader = ({ breadcrumbItems, onBackPress, title = 'Boards' }: Props) => {
+export const ThreadReplyHeader = ({ breadcrumbItems, onBackPress, title = 'Boards' }: Props) => {
   return (
     <View style={styles.header}>
       <View style={styles.titleContainer}>
@@ -31,7 +31,6 @@ export const ThreadCreateHeader = ({ breadcrumbItems, onBackPress, title = 'Boar
 const styles = StyleSheet.create({
   header: {
     backgroundColor: '#fff',
-    paddingHorizontal: 16,
     paddingTop: 16,
     paddingBottom: 12,
     borderBottomWidth: 1,
