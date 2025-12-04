@@ -1,10 +1,11 @@
 import React, { useRef, useState } from 'react'
-import { Animated, TouchableOpacity, View, StyleSheet } from 'react-native'
+import { Animated, View, StyleSheet } from 'react-native'
 import Icons from '../icons'
-import CardFooter from '../cards/CardFooter'
+import CardFooterButton from '../cards/CardFooterButton'
 
 interface GnodLikeButtonProps {
   isLiked?: boolean
+  hideLabel?: boolean
   onPress?: (liked: boolean) => void
   size?: number
   likedColor?: string
@@ -23,6 +24,7 @@ interface Sparkle {
 
 export default function GnodLikeButton({
   isLiked: initialIsLiked = false,
+  hideLabel = false,
   onPress,
   size = 24,
   likedColor = '#266000',
@@ -42,9 +44,6 @@ export default function GnodLikeButton({
     const newSparkles: Sparkle[] = []
 
     for (let i = 0; i < sparkleCount; i++) {
-      const angle = (i / sparkleCount) * Math.PI * 2
-      const distance = size * 1.2
-
       newSparkles.push({
         id: Date.now() + i,
         scale: new Animated.Value(0),
@@ -175,7 +174,8 @@ export default function GnodLikeButton({
   }
 
   return (
-    <TouchableOpacity activeOpacity={0.7} onPress={handlePress} style={styles.container}>
+    <CardFooterButton onPress={handlePress} label="Gnods" count={gnodCount} hideLabel={hideLabel}>
+      {/* <TouchableOpacity activeOpacity={0.7} onPress={handlePress} style={styles.container}> */}
       <View style={styles.iconContainer}>
         {/* Burst circle effect */}
         <Animated.View
@@ -233,8 +233,7 @@ export default function GnodLikeButton({
           />
         </Animated.View>
       </View>
-      <CardFooter.MetaValue style={{ color: isLiked ? likedColor : unlikedColor }}> {gnodCount} Gnods</CardFooter.MetaValue>
-    </TouchableOpacity>
+    </CardFooterButton>
   )
 }
 

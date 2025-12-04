@@ -25,6 +25,7 @@ const Container = styled.View`
 `
 
 export default function ThreadsPage() {
+  // TODO: implement sortBy functionality
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [sortBy, setSortBy] = useState('newest')
   const router = useRouter()
@@ -72,7 +73,13 @@ export default function ThreadsPage() {
         onRefresh={onRefresh}
         refreshing={false}
         keyExtractor={(item) => item.id.toString()}
-        renderItem={({ item: thread }) => <ThreadCard thread={thread} onReply={() => handleReply(thread)} />}
+        renderItem={({ item: thread }) => (
+          <ThreadCard
+            thread={thread}
+            onReply={() => handleReply(thread)}
+            onOpen={() => router.push(`/boards/${thread.boardId}/threads/${thread.id}`)}
+          />
+        )}
         emptyComponent={<ListEmptyView message="No Threads yet." />}
       />
     </Container>

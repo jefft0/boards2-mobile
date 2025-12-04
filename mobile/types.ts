@@ -6,7 +6,7 @@ type PostInterface = {
   body: string
   boardId: number
   createdAt: string
-  id: string
+  id: number
   n_replies: number
   n_gnods: number
   n_replies_all: number
@@ -41,3 +41,8 @@ export type NetworkMetainfo = {
 }
 
 export type GnoAccount = KeyInfo
+
+export interface ThreadPosts {
+  data: Post[]
+  n_posts: number
+}

@@ -52,13 +52,6 @@ export const repostTxAndRedirectToSign = createAsyncThunk<void, RepostTxAndRedir
   }
 )
 
-type ReplytTxAndRedirectParams = {
-  post: Post
-  replyContent: string
-  callerAddressBech32: string
-  callbackPath: string
-}
-
 interface CreateReplyRequestParams {
   replyBody: string
   callbackPath: string
@@ -67,22 +60,26 @@ interface CreateReplyRequestParams {
 export const threadReplyAndRedirectToSign = createAsyncThunk<void, CreateReplyRequestParams, ThunkExtra>(
   'threadReply/CreateReply',
   async (props, thunkAPI) => {
-    const boad = selectThreadBoard(thunkAPI.getState() as RootState)
-    const thread = selectThreadToReply(thunkAPI.getState() as RootState)
-    const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
+    try {
+      const boad = selectThreadBoard(thunkAPI.getState() as RootState)
+      const thread = selectThreadToReply(thunkAPI.getState() as RootState)
+      const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
 
-    if (!boad || !thread) throw new Error('No active board or thread')
+      if (!boad || !thread) throw new Error('No active board or thread')
 
-    const { replyBody, callbackPath } = props
+      const { replyBody, callbackPath } = props
 
-    const fnc = 'CreateReply'
-    const gasFee = '1000000ugnot'
-    const gasWanted = BigInt(50000000)
-    const args: string[] = [String(boad.id), String(thread.id), '0', replyBody]
-    const reason = 'Reply a message'
-    // const session = (thunkAPI.getState() as RootState).linking.session;
+      const fnc = 'CreateReply'
+      const gasFee = '1000000ugnot'
+      const gasWanted = BigInt(50000000)
+      const args: string[] = [String(boad.id), String(thread.id), '0', replyBody]
+      const reason = 'Reply a message'
+      // const session = (thunkAPI.getState() as RootState).linking.session;
 
-    // await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath, session }, thunkAPI.extra.gnonative);
-    await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
+      // await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath, session }, thunkAPI.extra.gnonative);
+      await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
+    } catch (error) {
+      console.error('Error in threadReplyAndRedirectToSign thunk:', error)
+    }
   }
 )

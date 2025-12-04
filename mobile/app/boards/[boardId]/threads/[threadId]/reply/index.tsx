@@ -19,7 +19,7 @@ export default function Page() {
   const dispatch = useAppDispatch()
   const board = useAppSelector(selectThreadBoard)
   const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
-  const { boardId, threadId, title } = useLocalSearchParams()
+  const { threadId } = useLocalSearchParams()
   const currentPath = usePathname()
 
   // hook to handle the signed tx from the Gnokey and broadcast it

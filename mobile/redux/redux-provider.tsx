@@ -9,7 +9,8 @@ import {
   threadsSlice,
   boardsCreateSlice,
   threadReplySlice,
-  threadsCreateSlice
+  threadsCreateSlice,
+  threadDetailSlice
 } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
 import { useSearch, UseSearchReturnType } from '@gno/hooks/use-search'
@@ -35,7 +36,8 @@ const reducer = {
   [boardsSlice.reducerPath]: boardsSlice.reducer,
   [boardsCreateSlice.reducerPath]: boardsCreateSlice.reducer,
   [threadReplySlice.reducerPath]: threadReplySlice.reducer,
-  [threadsCreateSlice.reducerPath]: threadsCreateSlice.reducer
+  [threadsCreateSlice.reducerPath]: threadsCreateSlice.reducer,
+  [threadDetailSlice.reducerPath]: threadDetailSlice.reducer
 }
 
 export type RootState = typeof reducer
