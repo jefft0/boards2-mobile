@@ -8,12 +8,12 @@ import {
   broadcastTxCommit,
   clearLinking,
   selectQueryParamsTxJsonSigned,
-  setPostToReply,
+  // setPostToReply,
   useAppSelector,
   selectAccount,
   gnodTxAndRedirectToSign
 } from '@gno/redux'
-import { selectProfileAccountName } from 'redux/features/profileSlice'
+import { selectProfileAccountName } from '@gno/redux'
 import { useFeed } from '@gno/hooks/use-feed'
 import { useUserCache } from '@gno/hooks/use-user-cache'
 import ErrorView from '@gno/components/view/account/no-account-view'
@@ -113,7 +113,7 @@ export default function Page() {
   }
 
   const onPressPost = async (item: Post) => {
-    await dispatch(setPostToReply(item))
+    // await dispatch(setPostToReply(item))
     // The address is a bech32 address.
     router.navigate({ pathname: '/post/[post_id]', params: { post_id: item.id, address: String(item.user.address) } })
   }

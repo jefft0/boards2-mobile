@@ -1,6 +1,5 @@
 import React from 'react'
 import { TouchableOpacity } from 'react-native'
-import * as ImagePicker from 'expo-image-picker'
 import { selectAvatar, useAppSelector } from '@gno/redux'
 import Avatar from './avatar'
 
@@ -14,19 +13,21 @@ const AvatarPicker: React.FC<Props> = ({ onChanged }) => {
   const avatarBase64 = useAppSelector(selectAvatar)
 
   const pickImage = async () => {
-    let result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 0.5 // compress image for smaller size
-    })
+    return false
+    // TODO: re-enable image picker
+    // let result = await ImagePicker.launchImageLibraryAsync({
+    //   mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    //   allowsEditing: true,
+    //   aspect: [4, 3],
+    //   quality: 0.5 // compress image for smaller size
+    // })
 
-    if (!result.canceled) {
-      const imagePath = result.assets[0].uri
-      const mimeType = result.assets[0].mimeType
+    // if (!result.canceled) {
+    //   const imagePath = result.assets[0].uri
+    //   const mimeType = result.assets[0].mimeType
 
-      onChanged(imagePath, mimeType)
-    }
+    //   onChanged(imagePath, mimeType)
+    // }
   }
 
   return (

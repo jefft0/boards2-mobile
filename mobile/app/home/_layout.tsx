@@ -1,36 +1,39 @@
 import Icons from '@gno/components/icons'
-import { colors } from '@gno/styles/colors'
 import { Tabs } from 'expo-router'
+import { useTheme } from 'styled-components/native'
 
 type Group<T extends string> = `(${T})`
-export type SharedSegment = Group<'feed'> | Group<'search'> | Group<'profile'>
+export type SharedSegment = Group<'boards'> | Group<'search'> | Group<'profile'>
 
 export default function AppLayout() {
+  const theme = useTheme()
   return (
     <Tabs
       screenOptions={{
-        headerShown: false
+        headerShown: false,
+        tabBarActiveTintColor: theme.colors.primary,
+        tabBarInactiveTintColor: theme.colors.gray
       }}
     >
       <Tabs.Screen
         name="feed"
         options={{
-          title: 'Feed',
-          tabBarIcon: ({ focused }) => <Icons.Home color={focused ? colors.icon.focus : colors.icon.default} />
+          title: 'Boards',
+          tabBarIcon: ({ focused }) => <Icons.Home color={focused ? theme.colors.primary : theme.colors.gray} />
         }}
       />
       <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
-          tabBarIcon: ({ focused }) => <Icons.Search color={focused ? colors.icon.focus : colors.icon.default} />
+          tabBarIcon: ({ focused }) => <Icons.Search color={focused ? theme.colors.primary : theme.colors.gray} />
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',
-          tabBarIcon: ({ focused }) => <Icons.Profile color={focused ? colors.icon.focus : colors.icon.default} />
+          tabBarIcon: ({ focused }) => <Icons.Profile color={focused ? theme.colors.primary : theme.colors.gray} />
         }}
       />
     </Tabs>

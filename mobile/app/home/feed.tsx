@@ -1,99 +1,73 @@
-import { ActivityIndicator, FlatList, Platform, StyleSheet, View, Alert as RNAlert, SafeAreaView } from 'react-native'
-import React, { useEffect, useRef, useState } from 'react'
-import { useNavigation, usePathname, useRouter } from 'expo-router'
-import { useFeed } from '@gno/hooks/use-feed'
-import Layout from '@gno/components/layout'
-import useScrollToTop from '@gno/components/utils/useScrollToTopWithOffset'
-import Button from '@gno/components/button'
-import { Post } from '@gno/types'
-import { gnodTxAndRedirectToSign, selectAccount, setPostToReply, useAppDispatch, useAppSelector } from '@gno/redux'
-import Alert from '@gno/components/alert'
-import { FeedView } from '@gno/components/view'
+import { useState, useCallback } from 'react'
+import { useFocusEffect, useRouter } from 'expo-router'
+import { BoardsTemplate } from '@gno/components/templates/BoardsTemplate'
+import { PACKAGE_PATH } from '@gno/constants/Constants'
+import {
+  getListedBoards,
+  selectBoards,
+  selectBoardsLoading,
+  useAppDispatch,
+  useAppSelector,
+  Board,
+  loadThreads
+} from '@gno/redux'
+import { StyleSheet, View } from 'react-native'
 
 export default function Page() {
-  const [totalPosts, setTotalPosts] = useState(0)
-  const [error, setError] = useState<unknown | Error | undefined>(undefined)
-  const [isLoading, setIsLoading] = useState(true)
-
+  const [refreshing, setRefreshing] = useState(false)
   const router = useRouter()
-  const navigation = useNavigation()
-  const feed = useFeed()
-  const ref = useRef<FlatList>(null)
   const dispatch = useAppDispatch()
 
-  const account = useAppSelector(selectAccount)
-  const pathName = usePathname()
+  const data = useAppSelector(selectBoards)
+  const isLoading = useAppSelector(selectBoardsLoading)
 
-  useScrollToTop(ref, Platform.select({ ios: -150, default: 0 }))
+  useFocusEffect(
+    useCallback(() => {
+      dispatch(getListedBoards({ startIndex: 0, endIndex: 30 }))
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [])
+  )
 
-  useEffect(() => {
-    const unsubscribe = navigation.addListener('focus', async () => {
-      if (!account) return
-      setError(undefined)
-      setIsLoading(true)
-      try {
-        const total = await feed.fetchCount(account.bech32)
-        setTotalPosts(total)
-      } catch (error) {
-        RNAlert.alert('Error while fetching posts.', ' ' + error)
-        console.error(error)
-      } finally {
-        setIsLoading(false)
-      }
-    })
-    return unsubscribe
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [navigation])
-
-  const onPressPost = () => {
-    router.navigate({ pathname: '/post' })
+  const handleRefresh = async () => {
+    setRefreshing(true)
+    dispatch(getListedBoards({ startIndex: 0, endIndex: 30 }))
+    setRefreshing(false)
   }
 
-  const onPress = async (p: Post) => {
-    await dispatch(setPostToReply(p))
-    router.navigate({ pathname: '/post/[post_id]' })
+  const handleCreateBoard = () => {
+    router.push('/boards/new')
   }
 
-  const onGnod = async (post: Post) => {
-    if (!account) throw new Error('No active account')
-    dispatch(gnodTxAndRedirectToSign({ post, callerAddressBech32: account.bech32, callbackPath: pathName })).unwrap()
+  const handleListAdminUsers = () => {
+    router.push('/boards/admins')
   }
 
-  if (isLoading)
-    return (
-      <Layout.Container>
-        <Layout.Body>
-          <ActivityIndicator size="large" color="#0000ff" />
-        </Layout.Body>
-      </Layout.Container>
-    )
-
-  if (error)
-    return (
-      <Layout.Container>
-        <Layout.Body>
-          <Alert severity="error" message="Error while fetching posts, please, check the logs." />
-        </Layout.Body>
-      </Layout.Container>
-    )
-
-  if (!account) {
-    return (
-      <Layout.Container>
-        <Layout.Body>
-          <Alert severity="error" message="No user found." />
-        </Layout.Body>
-      </Layout.Container>
-    )
+  const handleHelp = () => {
+    router.push('/boards/help')
   }
+
+  const handleBoardPress = (board: Board) => {
+    dispatch(loadThreads({ board }))
+    router.push(`/boards/${board.id}?name=${board.name}`)
+  }
+
+  const breadcrumbItems = PACKAGE_PATH.replace('gno.land/', '').split('/')
 
   return (
-    <SafeAreaView style={{ flex: 1, paddingTop: Platform.select({ ios: 0, default: 20 }) }}>
-      <View style={styles.container}>
-        <FeedView totalPosts={totalPosts} onPress={onPress} onGnod={onGnod} bech32={account.bech32} type="userPosts" />
-        <Button.TouchableOpacity title="New Thread" onPress={onPressPost} style={styles.post} variant="primary" />
-      </View>
-    </SafeAreaView>
+    <View style={styles.container}>
+      <BoardsTemplate
+        breadcrumbItems={breadcrumbItems}
+        data={data}
+        isLoading={isLoading}
+        sortBy="oldest first"
+        onCreateBoard={handleCreateBoard}
+        onListAdminUsers={handleListAdminUsers}
+        onHelp={handleHelp}
+        onBoardPress={handleBoardPress}
+        onRefresh={handleRefresh}
+        refreshing={refreshing}
+      />
+    </View>
   )
 }
 

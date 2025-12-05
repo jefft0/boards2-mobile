@@ -2,13 +2,13 @@ import Button from '@gno/components/button'
 import { PostRow } from '@gno/components/feed/post-row'
 import Layout from '@gno/components/layout'
 import TextInput from '@gno/components/textinput'
-import { repostTxAndRedirectToSign, selectAccount, selectPostToReply, useAppDispatch, useAppSelector } from '@gno/redux'
+import { repostTxAndRedirectToSign, selectAccount, useAppDispatch, useAppSelector } from '@gno/redux'
 import { useRouter } from 'expo-router'
 import { useState } from 'react'
 import { Alert, View } from 'react-native'
 
 export default function Page() {
-  const post = useAppSelector(selectPostToReply)
+  const post = undefined // useAppSelector(selectPostToReply)
   const router = useRouter()
 
   const [replyContent, setReplyContent] = useState('')

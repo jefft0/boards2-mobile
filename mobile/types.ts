@@ -3,9 +3,10 @@ import { KeyInfo } from '@gnolang/gnonative'
 type PostInterface = {
   user: User
   title: string
-  post: string
-  date: string
-  id: string
+  body: string
+  boardId: number
+  createdAt: string
+  id: number
   n_replies: number
   n_gnods: number
   n_replies_all: number
@@ -40,3 +41,8 @@ export type NetworkMetainfo = {
 }
 
 export type GnoAccount = KeyInfo
+
+export interface ThreadPosts {
+  data: Post[]
+  n_posts: number
+}

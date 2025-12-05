@@ -5,8 +5,9 @@ import Alert from '@gno/components/alert'
 import Layout from '@gno/components/layout'
 import { Post } from '@gno/types'
 import useScrollToTop from '@gno/components/utils/useScrollToTopWithOffset'
-import EmptyFeedList from '@gno/components/feed/empty-feed-list'
 import { PostRow } from '@gno/components/feed/post-row'
+import { ListEmptyView } from '@gno/components/list/ListEmptyView'
+import { subtractOrZero } from '@gno/redux'
 
 type Props = {
   totalPosts: number
@@ -15,8 +16,6 @@ type Props = {
   bech32: string
   type: 'userPosts' | 'userFeed'
 }
-
-const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
 
 export default function FeedView({ totalPosts, onPress, onGnod, bech32, type }: Props) {
   const pageSize = 9
@@ -31,6 +30,7 @@ export default function FeedView({ totalPosts, onPress, onGnod, bech32, type }: 
   const feed = useFeed()
   const ref = useRef<FlatList>(null)
 
+  //@ts-ignore
   useScrollToTop(ref, Platform.select({ ios: -150, default: 0 }))
 
   const [refreshing, setRefreshing] = React.useState(false)
@@ -113,7 +113,7 @@ export default function FeedView({ totalPosts, onPress, onGnod, bech32, type }: 
       data={data}
       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
       ListFooterComponent={renderFooter}
-      ListEmptyComponent={<EmptyFeedList />}
+      ListEmptyComponent={<ListEmptyView message="No posts yet." />}
       keyExtractor={(item) => `${item.id}`}
       contentContainerStyle={styles.flatListContent}
       renderItem={({ item }) => <PostRow post={item} onPress={onPress} onGnod={onGnod} />}

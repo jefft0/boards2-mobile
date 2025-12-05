@@ -1,10 +1,7 @@
 import { Modal as NativeModal } from 'react-native'
 import ModalHeader from './ModalHeader'
 import ModalContent from './ModalContent'
-import Button from 'components/button'
-import Ruller from 'components/row/Ruller'
-import Spacer from 'components/spacer'
-import Text from 'components/text'
+import { Button, Spacer, Text } from '@berty/gnonative-ui'
 
 export type Props = {
   title: string
@@ -19,11 +16,15 @@ const ModalConfirm = ({ visible, onClose, onConfirm, title, message }: Props) =>
     <NativeModal visible={visible} transparent={true} animationType="slide">
       <ModalContent>
         <ModalHeader title={title} onClose={onClose} />
-        <Text.BodyMedium>{message}</Text.BodyMedium>
+        <Text.Body>{message}</Text.Body>
         <Spacer />
-        <Button.TouchableOpacity title="Confirm" onPress={onConfirm} variant="primary-red" />
-        <Ruller />
-        <Button.TouchableOpacity title="Close" onPress={onClose} variant="secondary" />
+        <Button onPress={onConfirm} color="danger">
+          Confirm
+        </Button>
+        <Spacer />
+        <Button onPress={onClose} color="secondary">
+          Close
+        </Button>
       </ModalContent>
     </NativeModal>
   )

@@ -1,8 +1,9 @@
+import { PACKAGE_PATH } from '@gno/constants/Constants'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import * as Linking from 'expo-linking'
-import { ThunkExtra } from 'redux/redux-provider'
+import { ThunkExtra } from '@gno/redux'
 
 interface State {
   txJsonSigned: string | undefined
@@ -62,16 +63,7 @@ type MakeCallTxParams = {
 }
 
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
-  const {
-    fnc,
-    callerAddressBech32,
-    gasFee,
-    gasWanted,
-    args,
-    packagePath = 'gno.land/r/gnoland/boards2/v1',
-    reason,
-    callbackPath
-  } = props
+  const { fnc, callerAddressBech32, gasFee, gasWanted, args, packagePath = PACKAGE_PATH, reason, callbackPath } = props
 
   console.log('making a tx for: ', callerAddressBech32)
   const address = await gnonative.addressFromBech32(callerAddressBech32)
@@ -96,10 +88,9 @@ export const broadcastTxCommit = createAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
   async (signedTx, thunkAPI) => {
     console.log('broadcasting tx: ', signedTx)
-
     const gnonative = thunkAPI.extra.gnonative
     const res = await gnonative.broadcastTxCommit(signedTx)
-    console.log('broadcasted tx: ', res)
+    console.log('broadcasted tx: ', JSON.stringify(res))
   }
 )
 
@@ -133,6 +124,14 @@ export const gnodTxAndRedirectToSign = createAsyncThunk<void, GnodCallTxParams, 
 export const linkingSlice = createSlice({
   name: 'linking',
   initialState,
+  extraReducers: (builder) => {
+    builder.addCase(broadcastTxCommit.fulfilled, (state) => {
+      state.txJsonSigned = undefined
+      state.bech32AddressSelected = undefined
+      state.chainId = undefined
+      state.remoteURL = undefined
+    })
+  },
   reducers: {
     setLinkingData: (state, action) => {
       const queryParams = action.payload.queryParams
@@ -144,7 +143,10 @@ export const linkingSlice = createSlice({
     },
     clearLinking: (state) => {
       console.log('clearing linking data')
-      state = { ...initialState }
+      state.txJsonSigned = undefined
+      state.bech32AddressSelected = undefined
+      state.chainId = undefined
+      state.remoteURL = undefined
     }
   },
   selectors: {

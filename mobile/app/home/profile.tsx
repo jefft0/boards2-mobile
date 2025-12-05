@@ -1,9 +1,8 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { router, useNavigation, usePathname } from 'expo-router'
+import { router, useNavigation } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useGnoNativeContext } from '@gnolang/gnonative'
 import {
-  avatarTxAndRedirectToSign,
   broadcastTxCommit,
   clearLinking,
   logedOut,
@@ -13,20 +12,18 @@ import {
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
-import Button from '@gno/components/button'
 import Layout from '@gno/components/layout'
 import { AccountBalance } from '@gno/components/settings'
 import Text from '@gno/components/text'
 import AvatarPicker from '@gno/components/avatar/avatar-picker'
 import { ProgressViewModal } from '@gno/components/view/progress'
-import { compressImage } from '@gno/utils/file-utils'
 import { useUserCache } from '@gno/hooks/use-user-cache'
+import { Button, Spacer } from '@berty/gnonative-ui'
 
 export default function Page() {
   const [modalVisible, setModalVisible] = useState(false)
   const [chainID, setChainID] = useState('')
   const [remote, setRemote] = useState('')
-  const pathName = usePathname()
 
   const account = useAppSelector(selectAccount)
   const { gnonative } = useGnoNativeContext()
@@ -75,21 +72,22 @@ export default function Page() {
   }
 
   const onAvatarChanged = async (imagePath: string, mimeType?: string) => {
-    const imageCompressed = await compressImage(imagePath)
-    if (!imageCompressed || !mimeType || !imageCompressed.base64) {
-      console.log('Error compressing image or missing data')
-      return
-    }
+    return
+    // const imageCompressed = await compressImage(imagePath)
+    // if (!imageCompressed || !mimeType || !imageCompressed.base64) {
+    //   console.log('Error compressing image or missing data')
+    //   return
+    // }
 
-    if (!account) throw new Error('No account found')
-    await dispatch(
-      avatarTxAndRedirectToSign({
-        mimeType,
-        base64: imageCompressed.base64,
-        callerAddressBech32: account.bech32,
-        callbackPath: pathName
-      })
-    ).unwrap()
+    // if (!account) throw new Error('No account found')
+    // await dispatch(
+    //   avatarTxAndRedirectToSign({
+    //     mimeType,
+    //     base64: imageCompressed.base64,
+    //     callerAddressBech32: account.bech32,
+    //     callbackPath: pathName
+    //   })
+    // ).unwrap()
   }
 
   useEffect(() => {
@@ -132,16 +130,18 @@ export default function Page() {
               <Text.Body>{remote}</Text.Body>
               <View></View>
             </>
+            <Spacer space={24} />
             <Layout.Footer>
               <ProgressViewModal visible={modalVisible} onRequestClose={() => setModalVisible(false)} />
-              <Button.TouchableOpacity title="Logs" onPress={() => setModalVisible(true)} variant="primary" />
-              <Button.TouchableOpacity title="Logout" onPress={onPressLogout} style={styles.logout} variant="primary-red" />
-              <Button.TouchableOpacity
-                title="Remove Account"
-                onPress={onRemoveAccount}
-                style={styles.logout}
-                variant="primary-red"
-              />
+              <Button onPress={() => setModalVisible(true)} color="primary">
+                Logs
+              </Button>
+              <Button onPress={onPressLogout} style={styles.logout} color="danger">
+                Logout
+              </Button>
+              <Button onPress={onRemoveAccount} style={styles.logout} color="danger">
+                Remove Account
+              </Button>
             </Layout.Footer>
           </ScrollView>
         </Layout.Body>

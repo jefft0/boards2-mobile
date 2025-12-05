@@ -2,6 +2,7 @@ import { ParentPost, Post, User } from '@gno/types'
 import { useGnoNativeContext } from '@gnolang/gnonative'
 import { useUserCache } from './use-user-cache'
 import useGnoJsonParser from './use-gno-json-parser'
+import { PACKAGE_PATH } from '@gno/constants/Constants'
 
 interface ThreadPosts {
   data: Post[]
@@ -20,10 +21,7 @@ export const useFeed = () => {
     startIndex: number,
     endIndex: number
   ): Promise<string> {
-    const postInfos = await gnonative.qEval(
-      'gno.land/r/gnoland/boards2/v1',
-      `GetPosts(1,${threadId},${postId},${startIndex},${endIndex})`
-    )
+    const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetPosts(1,${threadId},${postId},${startIndex},${endIndex})`)
     const totalRegex = /^\((\d+) int\)/g
     const totalMatch = totalRegex.exec(postInfos)
     if (!totalMatch) throw new Error("Can't find total in GetPosts response")
@@ -117,9 +115,10 @@ export const useFeed = () => {
         bech32: ''
       },
       id: jsonPost.id,
+      boardId: jsonPost.boardId,
       title: jsonPost.title,
-      post: jsonPost.body,
-      date: jsonPost.createdAt,
+      body: jsonPost.body,
+      createdAt: jsonPost.createdAt,
       n_replies: jsonPost.n_replies,
       n_gnods: jsonPost.n_gnods,
       n_replies_all: jsonPost.n_replies_all,

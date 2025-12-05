@@ -15,7 +15,7 @@ import { ModalView } from '.'
 import TextInput from '../textinput'
 import Text from '../text'
 import Button from '../button'
-import Spacer from '../spacer'
+import { Spacer } from '@berty/gnonative-ui'
 
 export type Props = {
   visible: boolean

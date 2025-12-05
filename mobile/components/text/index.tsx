@@ -83,3 +83,4 @@ const Subheadline = styled.Text`
 const Text = { Title, Body, HeaderSubtitle, HeaderTitle, HeaderTitleText, HeaderSubtitleText, Subheadline, BodyMedium, Caption1 }
 
 export default Text
+export { default as TextUsername } from './TextUsername'
