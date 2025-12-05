@@ -42,6 +42,7 @@ export const threadsSlice = createSlice({
       state.canCreate = action.payload?.canCreate || false
     })
     builder.addCase(loadThreads.pending, (state) => {
+      state.threads = []
       state.loading = true
       state.error = undefined
     })

@@ -4,9 +4,9 @@ import CardFooter from '../../cards/CardFooter'
 import GnodLikeButton from '../../button/GnodLikeButton'
 import { useState } from 'react'
 import ReplyIconButton from '../../button/ReplyIconButton'
-import { Spacer, Text } from '@berty/gnonative-ui'
+import { Spacer } from '@berty/gnonative-ui'
 import { TextUsername } from '../../text'
-import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
+import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
 import TextCreateDate from '@gno/components/text/TextCreateDate'
 
 interface Props {
@@ -52,7 +52,7 @@ const ThreadCardDetails = ({
         </UserInfo>
       </ThreadHeader>
 
-      <Text.Title3>{threadTitle}</Text.Title3>
+      <ThreadTitle>{threadTitle}</ThreadTitle>
       <Spacer space={8} />
 
       <ThreadContent>{threadBody}</ThreadContent>

@@ -1,6 +1,5 @@
-import { FlatList, View, StyleSheet, ActivityIndicator, ListRenderItem } from 'react-native'
+import { FlatList, View, StyleSheet, ListRenderItem } from 'react-native'
 import { Text } from '@berty/gnonative-ui'
-import { useTheme } from 'styled-components/native'
 
 interface CustomFlatListProps<T> {
   data: T[]
@@ -23,22 +22,10 @@ export const CustomFlatList = <T,>({
   onRefresh,
   refreshing
 }: CustomFlatListProps<T>) => {
-  const theme = useTheme()
-
-  if (isLoading) {
-    return (
-      <View style={styles.centerContainer}>
-        <ActivityIndicator size="large" color={theme.colors.primary} />
-      </View>
-    )
-  }
-
   return (
     <View style={styles.listContainer}>
       <View style={styles.sortContainer}>
-        <Text.Label>
-          Sort by: <Text.Label>{sortBy}</Text.Label>
-        </Text.Label>
+        <Text.Label>{isLoading ? 'Loading...' : `Sort by: ${sortBy}`}</Text.Label>
       </View>
       <FlatList
         data={data}

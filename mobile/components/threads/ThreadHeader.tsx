@@ -39,7 +39,7 @@ export const ThreadHeader = ({
         <Text.Body color="#ccc" style={styles.divider}>
           •
         </Text.Body>
-        {loading ? null : <ThreadCount count={threadCount || 0} />}
+        <ThreadCount loading={loading} count={threadCount || 0} />
       </View>
       <View style={styles.actions}>
         <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" disabled={!canCreate} />

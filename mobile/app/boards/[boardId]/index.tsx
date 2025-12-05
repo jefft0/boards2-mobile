@@ -80,7 +80,7 @@ export default function ThreadsPage() {
             onOpen={() => router.push(`/boards/${thread.boardId}/threads/${thread.id}`)}
           />
         )}
-        emptyComponent={<ListEmptyView message="No Threads yet." />}
+        emptyComponent={<ListEmptyView message={loading ? '' : 'No Threads yet.'} />}
       />
     </Container>
   )

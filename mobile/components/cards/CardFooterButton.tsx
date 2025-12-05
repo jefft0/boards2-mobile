@@ -1,6 +1,6 @@
 import { TouchableOpacity, TouchableOpacityProps } from 'react-native'
 import CardFooter from './CardFooter'
-import styled from 'styled-components/native'
+import { LoadingSkeleton } from '../skeleton'
 
 export type CardFooterButtonProps = {
   label: string
@@ -14,7 +14,7 @@ export type CardFooterButtonProps = {
 const CardFooterButton = ({ children, label, hideLabel, count, loading, ...rest }: CardFooterButtonProps) => {
   const displayLabel = hideLabel ? ` ${count}` : ` ${count} ${label}`
   if (loading) {
-    return <LoadingView />
+    return <LoadingSkeleton />
   }
   return (
     <TouchableOpacity style={{ flexDirection: 'row', alignItems: 'center' }} {...rest}>
@@ -23,12 +23,5 @@ const CardFooterButton = ({ children, label, hideLabel, count, loading, ...rest 
     </TouchableOpacity>
   )
 }
-
-const LoadingView = styled.View`
-  width: 50px;
-  height: 16px;
-  background-color: #e5e7eb;
-  border-radius: 4px;
-`
 
 export default CardFooterButton
