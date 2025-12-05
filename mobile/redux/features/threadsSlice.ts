@@ -54,13 +54,15 @@ export const threadsSlice = createSlice({
     selectThreadBoard: (state: ThreadsState) => state.board,
     selectThreads: (state: ThreadsState) => state.threads,
     selectThreadLoading: (state: ThreadsState) => state.loading,
-    selectCanCreateThread: (state: ThreadsState) => state.canCreate
+    selectCanCreateThread: (state: ThreadsState) => state.canCreate,
+    selectThreadById: (state: ThreadsState, id: number | string) => state.threads.find((thread) => thread.id === Number(id))
   }
 })
 
 // export const {} = threadsSlice.actions
 
-export const { selectThreads, selectThreadLoading, selectThreadBoard, selectCanCreateThread } = threadsSlice.selectors
+export const { selectThreads, selectThreadLoading, selectThreadBoard, selectCanCreateThread, selectThreadById } =
+  threadsSlice.selectors
 
 type LoadResult = {
   board: Board

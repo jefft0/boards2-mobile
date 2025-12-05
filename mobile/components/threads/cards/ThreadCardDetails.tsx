@@ -12,11 +12,28 @@ import TextCreateDate from '@gno/components/text/TextCreateDate'
 interface Props {
   loading?: boolean
   thread?: Post
+  threadId: string
+  threadTitle: string
+  threadBody?: string
+  threadReplyCount?: number
+  threadCreatorName?: string
+  threadCreatedAt?: string
   onReply: () => void
   onOpen?: () => void
 }
 
-const ThreadCardDetails = ({ thread, onReply, onOpen, loading }: Props) => {
+const ThreadCardDetails = ({
+  thread,
+  threadId,
+  threadTitle,
+  threadBody,
+  threadReplyCount,
+  threadCreatorName,
+  threadCreatedAt,
+  onReply,
+  onOpen,
+  loading
+}: Props) => {
   const theme = useTheme()
   const [likes, setLikes] = useState(0)
   const [isLiked, setIsLiked] = useState(false)
@@ -27,26 +44,27 @@ const ThreadCardDetails = ({ thread, onReply, onOpen, loading }: Props) => {
   }
 
   return (
-    <ThreadContainer key={thread?.id} activeOpacity={0.7} onPress={onOpen}>
+    <ThreadContainer key={threadId} activeOpacity={0.7} onPress={onOpen}>
       <ThreadHeader>
         <UserInfo>
-          <TextUsername value={thread?.user.name} />
-          <TextCreateDate value={thread?.createdAt} />
+          <TextUsername value={threadCreatorName} />
+          <TextCreateDate value={threadCreatedAt} />
         </UserInfo>
       </ThreadHeader>
 
-      <Text.Title3>{thread?.title}</Text.Title3>
+      <Text.Title3>{threadTitle}</Text.Title3>
       <Spacer space={8} />
 
-      <ThreadContent>{thread?.body}</ThreadContent>
+      <ThreadContent>{threadBody}</ThreadContent>
 
       <CardFooter.Footer>
         <CardFooter.Meta>
           <CardFooter.MetaItem>
-            <ReplyIconButton showLabel onPress={onReply} count={thread?.n_replies ?? 0} />
+            <ReplyIconButton onPress={onReply} count={threadReplyCount} loading={loading} />
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
             <GnodLikeButton
+              loading={loading}
               isLiked={isLiked}
               onPress={handleLike}
               size={16}

@@ -1,18 +1,18 @@
 import { useTheme } from 'styled-components/native'
 import Ionicons from '@expo/vector-icons/Ionicons'
-import CardFooterButton from '../cards/CardFooterButton'
+import CardFooterButton, { CardFooterButtonProps } from '../cards/CardFooterButton'
 
-interface Props {
-  onPress: () => void
-  count: number
-  showLabel?: boolean
-}
+type Props = Omit<CardFooterButtonProps, 'label' | 'children'>
 
-const ReplyIconButton = ({ onPress, count, showLabel }: Props) => {
+const ReplyIconButton = ({ count, ...rest }: Props) => {
   const theme = useTheme()
   return (
-    <CardFooterButton onPress={onPress} label="Replies" count={count}>
-      <Ionicons name={count > 0 ? 'chatbox-ellipses-sharp' : 'chatbox-ellipses-outline'} size={16} color={theme.colors.gray} />
+    <CardFooterButton {...rest} label="Replies" count={count}>
+      <Ionicons
+        name={count && count > 0 ? 'chatbox-ellipses-sharp' : 'chatbox-ellipses-outline'}
+        size={16}
+        color={theme.colors.gray}
+      />
     </CardFooterButton>
   )
 }

@@ -7,6 +7,7 @@ import {
   clearLinking,
   selectQueryParamsTxJsonSigned,
   selectThreadBoard,
+  selectThreadById,
   selectThreadReplies,
   setThreadToReply,
   threadReplyAndRedirectToSign,
@@ -103,6 +104,8 @@ export default function ThreadDetailScreen() {
   const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
 
   const { boardId, threadId } = useLocalSearchParams<{ boardId: string; threadId: string }>()
+  // Use the cache to avoid name flashes when refreshing
+  const threadCache = useAppSelector((state) => selectThreadById(state, threadId))
 
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -160,7 +163,7 @@ export default function ThreadDetailScreen() {
       <Container>
         <ThreadHeaderSmall
           breadcrumbItems={[...BREADCRUMBS, board?.name || '', threadId]}
-          title={thread ? `Thread ${thread.id}` : ''}
+          title={`Thread ${threadId}`}
           onBackPress={() => router.back()}
           creatorName={board?.creatorName?.name || 'unknown'}
           createdDate={thread?.createdAt}
@@ -173,7 +176,17 @@ export default function ThreadDetailScreen() {
         >
           <ScrollView refreshControl={<RefreshControl refreshing={loading} onRefresh={onRefresh} />}>
             {/* Main Thread Post */}
-            <ThreadCardDetails loading={loading} thread={thread!} onReply={() => {}} />
+            <ThreadCardDetails
+              loading={loading}
+              threadId={threadId}
+              threadTitle={threadCache?.title || ''}
+              threadBody={threadCache?.body || ''}
+              threadReplyCount={thread?.n_replies || 0}
+              threadCreatorName={threadCache?.user.name || ''}
+              threadCreatedAt={threadCache?.createdAt || ''}
+              thread={thread!}
+              onReply={() => {}}
+            />
 
             {/* Replies Section */}
             <SectionHeader>

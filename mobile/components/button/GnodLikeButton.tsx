@@ -11,6 +11,7 @@ interface GnodLikeButtonProps {
   likedColor?: string
   unlikedColor?: string
   gnodCount?: number
+  loading?: boolean
 }
 
 interface Sparkle {
@@ -29,7 +30,8 @@ export default function GnodLikeButton({
   size = 24,
   likedColor = '#266000',
   unlikedColor = '#9ca3af',
-  gnodCount = 0
+  gnodCount = 0,
+  loading
 }: GnodLikeButtonProps) {
   const [isLiked, setIsLiked] = useState(initialIsLiked)
   const [sparkles, setSparkles] = useState<Sparkle[]>([])
@@ -174,7 +176,7 @@ export default function GnodLikeButton({
   }
 
   return (
-    <CardFooterButton onPress={handlePress} label="Gnods" count={gnodCount} hideLabel={hideLabel}>
+    <CardFooterButton loading={loading} onPress={handlePress} label="Gnods" count={gnodCount} hideLabel={hideLabel}>
       {/* <TouchableOpacity activeOpacity={0.7} onPress={handlePress} style={styles.container}> */}
       <View style={styles.iconContainer}>
         {/* Burst circle effect */}
