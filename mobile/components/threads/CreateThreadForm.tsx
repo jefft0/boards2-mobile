@@ -74,7 +74,7 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
           <Input
             value={threadName}
             onChangeText={setBoardName}
-            placeholder="Enter board name"
+            placeholder="Enter thread name"
             placeholderTextColor="#9ca3af"
             autoCapitalize="none"
             autoComplete="off"
