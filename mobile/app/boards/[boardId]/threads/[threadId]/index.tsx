@@ -135,6 +135,12 @@ export default function ThreadDetailScreen() {
     }
   }
 
+  const navigateToReplyScreen = () => {
+    if (!thread) return
+    dispatch(setThreadToReply(thread))
+    router.push(`/boards/${thread.boardId}/threads/${thread.id}/reply?title=${thread.title}`)
+  }
+
   // hook to handle the signed tx from the Gnokey and broadcast it
   useEffect(() => {
     const handleSignedTx = async () => {
@@ -148,7 +154,7 @@ export default function ThreadDetailScreen() {
           setReplyText('')
           setTimeout(() => {
             onRefresh()
-          }, 3000)
+          }, 2000)
         } catch (error) {
           console.error('on broadcastTxCommit', error)
         }
@@ -185,7 +191,7 @@ export default function ThreadDetailScreen() {
               threadCreatorName={threadCache?.user.name || ''}
               threadCreatedAt={threadCache?.createdAt || ''}
               thread={thread!}
-              onReply={() => {}}
+              onReply={navigateToReplyScreen}
             />
 
             {/* Replies Section */}
