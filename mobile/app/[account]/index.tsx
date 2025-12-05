@@ -8,7 +8,7 @@ import {
   broadcastTxCommit,
   clearLinking,
   selectQueryParamsTxJsonSigned,
-  setPostToReply,
+  // setPostToReply,
   useAppSelector,
   selectAccount,
   gnodTxAndRedirectToSign
@@ -113,7 +113,7 @@ export default function Page() {
   }
 
   const onPressPost = async (item: Post) => {
-    await dispatch(setPostToReply(item))
+    // await dispatch(setPostToReply(item))
     // The address is a bech32 address.
     router.navigate({ pathname: '/post/[post_id]', params: { post_id: item.id, address: String(item.user.address) } })
   }

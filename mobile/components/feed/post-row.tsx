@@ -5,7 +5,7 @@ import Text from '@gno/components/text'
 import RepliesLabel from './replies-label'
 import TimeStampLabel from './timestamp-label'
 import RepostButton from './repost-button'
-import { setPostToReply, useAppDispatch, setProfileAccountName } from '@gno/redux'
+import { useAppDispatch, setProfileAccountName } from '@gno/redux'
 import { useRouter } from 'expo-router'
 import RepostLabel from './repost-label'
 import { RepostRow } from './repost-row'
@@ -26,7 +26,7 @@ export function PostRow({ post, onPress = func, onGnod = func, showFooter = true
   const isRepost = post?.repost_parent
 
   const onPressRepost = async (p: Post) => {
-    await dispatch(setPostToReply(p))
+    // await dispatch(setPostToReply(p))
     router.navigate({ pathname: '/repost' })
   }
 
