@@ -57,7 +57,7 @@ interface Props {
 }
 
 export default function CreateThreadForm({ onCreate, onCancel, loading }: Props) {
-  const [threadName, setBoardName] = useState('')
+  const [threadName, setThreadName] = useState('')
   const [threadBody, setThreadBody] = useState('')
 
   const handleCreate = () => {
