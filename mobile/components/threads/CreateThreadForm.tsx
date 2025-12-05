@@ -73,7 +73,7 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
           <GnoText.Label>Thread Name *</GnoText.Label>
           <Input
             value={threadName}
-            onChangeText={setBoardName}
+            onChangeText={setThreadName}
             placeholder="Enter thread name"
             placeholderTextColor="#9ca3af"
             autoCapitalize="none"
