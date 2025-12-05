@@ -4,7 +4,6 @@
     "slug": "boards2",
     "platforms": ["ios", "android"],
     "version": "1.0.0",
-    "sdkVersion": "52.0.0",
     "orientation": "portrait",
     "scheme": "land.gno.boards2",
     "icon": "./assets/images/icon.png",
@@ -40,7 +39,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "land.gno.boards2.android",
-      "versionCode": "1"
+      "versionCode": 1
     },
     "web": {
       "favicon": "./assets/images/favicon.png"
