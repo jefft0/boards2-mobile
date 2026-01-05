@@ -12,7 +12,7 @@ interface BoardsHeaderProps {
   title?: string
 }
 
-export const BoardsHeader = ({ 
+export const BoardsHeader = ({
   breadcrumbItems,
   onCreateBoard,
   canCreate,
