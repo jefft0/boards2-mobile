@@ -8,6 +8,7 @@ import {
   selectBoardsLoading,
   useAppDispatch,
   useAppSelector,
+  selectCanCreateBoard,
   Board,
   loadThreads
 } from '@gno/redux'
@@ -16,6 +17,7 @@ import { StyleSheet, View } from 'react-native'
 export default function Page() {
   const [refreshing, setRefreshing] = useState(false)
   const router = useRouter()
+  const canCreate = useAppSelector(selectCanCreateBoard)
   const dispatch = useAppDispatch()
 
   const data = useAppSelector(selectBoards)
@@ -60,6 +62,7 @@ export default function Page() {
         data={data}
         isLoading={isLoading}
         sortBy="oldest first"
+        canCreate={canCreate}
         onCreateBoard={handleCreateBoard}
         onListAdminUsers={handleListAdminUsers}
         onHelp={handleHelp}

@@ -6,18 +6,26 @@ import { Breadcrumb } from '../list/Breadcrumb'
 interface BoardsHeaderProps {
   breadcrumbItems: string[]
   onCreateBoard: () => void
+  canCreate?: boolean
   onListAdminUsers: () => void
   onHelp: () => void
   title?: string
 }
 
-export const BoardsHeader = ({ breadcrumbItems, onCreateBoard, onListAdminUsers, onHelp, title }: BoardsHeaderProps) => {
+export const BoardsHeader = ({ 
+  breadcrumbItems,
+  onCreateBoard,
+  canCreate,
+  onListAdminUsers,
+  onHelp,
+  title
+}: BoardsHeaderProps) => {
   return (
     <View style={styles.header}>
       <Breadcrumb items={breadcrumbItems} />
       <Text.LargeTitle style={styles.title}>{title || 'Boards'}</Text.LargeTitle>
       <View style={styles.actions}>
-        <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" />
+        <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" disabled={!canCreate} />
         {/* TODO: Implement dynamic action renderer */}
         {/* <Text.Body color="#ccc" style={styles.divider}>
           •

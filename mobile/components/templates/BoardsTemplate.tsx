@@ -12,6 +12,7 @@ interface BoardsTemplateProps {
   isLoading?: boolean
   sortBy?: string
   onCreateBoard: () => void
+  canCreate?: boolean
   onListAdminUsers: () => void
   onHelp: () => void
   onBoardPress: (board: Board) => void
@@ -25,6 +26,7 @@ export const BoardsTemplate = ({
   isLoading,
   sortBy,
   onCreateBoard,
+  canCreate,
   onListAdminUsers,
   onHelp,
   onBoardPress,
@@ -36,6 +38,7 @@ export const BoardsTemplate = ({
       <View style={styles.container}>
         <BoardsHeader
           breadcrumbItems={breadcrumbItems}
+          canCreate={canCreate}
           onCreateBoard={onCreateBoard}
           onListAdminUsers={onListAdminUsers}
           onHelp={onHelp}
