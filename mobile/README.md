@@ -9,7 +9,7 @@ The Boards2 mobile app uses Expo. You can review the general expo requirements:
 
 Here are specific steps to install the requirements on your platform.
 
-### Install requirements for macOS 14 and macOS 15
+### Install requirements for macOS 15 and macOS 26
 
 (If you are on Ubuntu, see the next section to install requirements.)
 
@@ -19,15 +19,12 @@ Install Xcode. To install the Command Line Developer Tools, in a terminal enter:
 xcode-select --install
 ```
 
-After the Developer Tools are installed, we need to make sure it is updated. In
-System Preferences, click Software Update and update it if needed.
-
 To install asdf using brew, follow instructions at <https://asdf-vm.com> . In short,
 first install brew following the instructions at <https://brew.sh> . Then, in
 a terminal enter:
 
 ```sh
-brew install asdf gnu-tar gpg
+brew install asdf gnu-tar gpg libyaml
 ```
 
 If your terminal is zsh, enter:
