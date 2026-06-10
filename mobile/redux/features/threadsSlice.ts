@@ -112,5 +112,5 @@ async function checkThreadCreatePermission(gnonative: GnoNativeApi, boardId: num
   const res = await gnonative.qEval('gno.land/r/gnoland/boards2/v1', `IsMember(${boardId},"${address}")`)
   return res === '(true bool)'
   */
-  return true;
+  return true
 }

@@ -135,9 +135,7 @@ export default function CreateBoardForm({ onCreate, onCancel, loading }: CreateB
             <ToggleContent>
               <ToggleTitle>Open Board</ToggleTitle>
               <ToggleDescription>
-                {isOpen
-                  ? 'Any user can create threads on this board'
-                  : 'Only members can create threads on this board'}
+                {isOpen ? 'Any user can create threads on this board' : 'Only members can create threads on this board'}
               </ToggleDescription>
             </ToggleContent>
             <Switch
