@@ -14,7 +14,6 @@ export const useUserCache = () => {
   const { gnonative } = useGnoNativeContext()
 
   async function getUser(bech32: string): Promise<User> {
-    //bech32 = "g1juz2yxmdsa6audkp6ep9vfv80c8p5u76e03vvh" // debug until we detect if bech32 is a username
     if (usersCache.has(bech32)) {
       // Cached user
       return usersCache.get(bech32) as User
@@ -28,7 +27,8 @@ export const useUserCache = () => {
         name = match[1]
       }
     } catch (error) {
-      console.error('Error in ResolveAddress', error)
+      // The error is expected if the user isn't registered
+      console.log('Error in ResolveAddress', error)
     }
 
     const response = await gnonative.qEval('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
