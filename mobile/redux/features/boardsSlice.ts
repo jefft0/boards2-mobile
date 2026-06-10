@@ -70,7 +70,6 @@ export type Board = {
   name: string
   creator: string
   creatorName?: User
-  hidden: boolean
   n_threads: number
   createdAt: string
 }
@@ -113,28 +112,30 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
   const userCache = thunkAPI.extra.userCache as UserCacheApi
 
-  const boardInfos = await gnonative.qEval('gno.land/r/gnoland/boards2/v1', `GetListedBoards(${startIndex},${endIndex})`)
+  const boardInfos = await gnonative.qEval('gno.land/r/gnoland/boards2/v1/hub', `GetBoards(${startIndex},${endIndex})`)
+  const boardCount = await gnonative.qEval('gno.land/r/gnoland/boards2/v1', `BoardCount()`)
   const totalRegex = /^\((\d+) int\)/g
-  const totalMatch = totalRegex.exec(boardInfos)
-  if (!totalMatch) throw new Error("Can't find total in GetListedBoards response")
+  const totalMatch = totalRegex.exec(boardCount)
+  if (!totalMatch) throw new Error("Can't find count in BoardCount response")
   const total = Number(totalMatch![1])
 
   const boardRegex =
-    /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("([^"]+)" string\),\([^ ]+ \[\]string\),\("(\w+)" .uverse.address\),\((\w+) bool\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.BoardInfo\)/g
+    // TODO: Skip non-empty Aliases
+    /\*gno\.land\/p\/gnoland\/boards\.Board\),\((\d+) uint64\),\("([^"]+)" string\),\(nil \[\]string\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\(\d+ int64\)} gno\.land\/r\/gnoland\/boards2\/v1\/hub\.Board\)/g
   let boards = []
   let index = 0
   let match
   while ((match = boardRegex.exec(boardInfos)) !== null) {
     const boardId = Number(match[1])
     const name = match[2]
-    const creator = match[3]
+    const creator = match[4]
     const creatorName = await userCache.getUser(creator)
-    const hidden = match[4] === 'true'
-    const n_threads = Number(match[5])
-    const createdAt = match[6]
+    const n_threads = Number(match[3])
+    const createdAtUnix = Number(match[5])
+    const createdAt = new Date(createdAtUnix * 1000).toISOString()
     boards.push({
       index,
-      board: { id: boardId, name, creator, hidden, n_threads, createdAt, creatorName }
+      board: { id: boardId, name, creator, n_threads, createdAt, creatorName }
     })
     ++index
   }
