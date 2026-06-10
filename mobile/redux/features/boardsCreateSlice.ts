@@ -59,17 +59,18 @@ type BoardsResult = {
 export interface BoardCreationData {
   boardName: string
   isPublic: boolean
+  isOpen: boolean
 }
 
 export const createBoard = createAsyncThunk<BoardsResult | undefined, BoardCreationData, ThunkExtra>(
   'boardsCreate/create',
   async (param, thunkAPI) => {
-    const { boardName, isPublic } = param
+    const { boardName, isPublic, isOpen } = param
 
     const callerAddressBech32 = (thunkAPI.getState() as RootState).account.account?.bech32
 
     const fnc = 'CreateBoard'
-    const args: string[] = [boardName, isPublic.toString()]
+    const args: string[] = [boardName, isPublic.toString(), isOpen.toString()]
     const gasFee = '100000ugnot'
     const gasWanted = BigInt(50000000)
     const reason = 'Creating a new board'

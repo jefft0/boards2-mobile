@@ -88,10 +88,11 @@ interface CreateBoardFormProps {
 export default function CreateBoardForm({ onCreate, onCancel, loading }: CreateBoardFormProps) {
   const [boardName, setBoardName] = useState('')
   const [isPublic, setIsPublic] = useState(true)
+  const [isOpen, setIsOpen] = useState(false)
 
   const handleCreate = () => {
     if (boardName.trim()) {
-      onCreate({ boardName, isPublic })
+      onCreate({ boardName, isPublic, isOpen })
     }
   }
 
@@ -127,6 +128,23 @@ export default function CreateBoardForm({ onCreate, onCancel, loading }: CreateB
               onValueChange={setIsPublic}
               trackColor={{ false: '#d1d5db', true: '#86efac' }}
               thumbColor={isPublic ? '#15803d' : '#f3f4f6'}
+              ios_backgroundColor="#d1d5db"
+            />
+          </ToggleRow>
+          <ToggleRow>
+            <ToggleContent>
+              <ToggleTitle>Open Board</ToggleTitle>
+              <ToggleDescription>
+                {isOpen
+                  ? 'Any user can create threads on this board'
+                  : 'Only members can create threads on this board'}
+              </ToggleDescription>
+            </ToggleContent>
+            <Switch
+              value={isOpen}
+              onValueChange={setIsOpen}
+              trackColor={{ false: '#d1d5db', true: '#86efac' }}
+              thumbColor={isOpen ? '#15803d' : '#f3f4f6'}
               ios_backgroundColor="#d1d5db"
             />
           </ToggleRow>
