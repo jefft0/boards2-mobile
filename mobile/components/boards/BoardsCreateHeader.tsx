@@ -9,7 +9,7 @@ interface Props {
   title: string
 }
 
-export const BoardsCreateHeader = ({ breadcrumbItems, onBackPress, title = 'Boards' }: Props) => {
+export const BoardsCreateHeader = ({ breadcrumbItems, onBackPress, title = 'Boards2' }: Props) => {
   return (
     <View style={styles.header}>
       <View style={styles.titleContainer}>

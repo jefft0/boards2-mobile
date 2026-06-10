@@ -23,7 +23,7 @@ export const BoardsHeader = ({
   return (
     <View style={styles.header}>
       <Breadcrumb items={breadcrumbItems} />
-      <Text.LargeTitle style={styles.title}>{title || 'Boards'}</Text.LargeTitle>
+      <Text.LargeTitle style={styles.title}>{title || 'Boards2'}</Text.LargeTitle>
       <View style={styles.actions}>
         <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" disabled={!canCreate} />
         {/* TODO: Implement dynamic action renderer */}
