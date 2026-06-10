@@ -108,6 +108,9 @@ export const loadThreads = createAsyncThunk<LoadResult | undefined, LoadThreadsR
 )
 
 async function checkThreadCreatePermission(gnonative: GnoNativeApi, boardId: number, address: string): Promise<boolean> {
+  /* We can check if the user is a board member, but there is no API to check if the board is open. Always enable Create Thread and wait for error
   const res = await gnonative.qEval('gno.land/r/gnoland/boards2/v1', `IsMember(${boardId},"${address}")`)
   return res === '(true bool)'
+  */
+  return true;
 }
