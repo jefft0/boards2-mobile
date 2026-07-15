@@ -120,7 +120,7 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   const total = Number(totalMatch![1])
 
   const boardRegex =
-    /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("([^"]+)" string\),\([^ ]+ \[\]string\),\("(\w+)" .uverse.address\),\((\w+) bool\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.BoardInfo\)/g
+    /\(struct{\((\d+) gno\.land\/p\/gnoland\/boards\.ID\),\("([^"]+)" string\),\([^ ]+ \[\]string\),\("(\w+)" .uverse.address\),\((\w+) bool\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.BoardInfo\)/g
   let boards = []
   let index = 0
   let match

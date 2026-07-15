@@ -2,9 +2,6 @@ import Icons from '@gno/components/icons'
 import { Tabs } from 'expo-router'
 import { useTheme } from 'styled-components/native'
 
-type Group<T extends string> = `(${T})`
-export type SharedSegment = Group<'boards'> | Group<'search'> | Group<'profile'>
-
 export default function AppLayout() {
   const theme = useTheme()
   return (

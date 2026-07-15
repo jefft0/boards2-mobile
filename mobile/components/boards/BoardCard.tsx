@@ -3,15 +3,6 @@ import { Text } from '@berty/gnonative-ui'
 import { Board } from '@gno/redux'
 import { CreatedBy } from '../list/CreatedBy'
 
-export interface BoardData {
-  id: string
-  title: string
-  creator: string
-  createdAt: string
-  threadCount: number
-  boardNumber: number
-}
-
 interface BoardCardProps {
   board: Board
   onPress: (board: Board) => void

@@ -39,11 +39,13 @@ export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/logged
 
 async function getAccountName(bech32: string, gnonative: GnoNativeApi) {
   try {
+    /* TODO: Handle the case where the user isn't registered
     console.log('GetUserByAddress request:', bech32)
     const accountNameStr = await gnonative.qEval('gno.land/r/sys/users', `ResolveAddress("${bech32}").Name()`)
     console.log('GetUserByAddress result:', accountNameStr)
     const accountName = accountNameStr.match(/\("(\w+)"/)?.[1]
-    console.log('GetUserByAddress after regex', accountName)
+    */
+    const accountName = 'unknown'
     return accountName
   } catch (error) {
     console.error('Error getting account name', error)

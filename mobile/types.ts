@@ -24,24 +24,6 @@ export interface User extends Pick<KeyInfo, 'address' | 'name'> {
   avatar?: string
 }
 
-export type GnoConfig = {
-  Remote: string
-  ChainID: string
-  KeyName: string
-  Password: string
-  GasFee: string
-  GasWanted: bigint
-  Mnemonic: string
-}
-
-export type NetworkMetainfo = {
-  chainId: string
-  chainName: string
-  gnoAddress: string
-}
-
-export type GnoAccount = KeyInfo
-
 export interface ThreadPosts {
   data: Post[]
   n_posts: number

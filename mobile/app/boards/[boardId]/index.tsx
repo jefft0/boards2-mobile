@@ -7,7 +7,6 @@ import {
   selectThreadBoard,
   selectThreadLoading,
   useAppSelector,
-  selectCanCreateThread,
   useAppDispatch,
   loadThreads,
   setThreadToReply
@@ -33,7 +32,6 @@ export default function ThreadsPage() {
   const loading = useAppSelector(selectThreadLoading)
   const { name } = useLocalSearchParams()
   const threads = useAppSelector(selectThreads)
-  const canCreate = useAppSelector(selectCanCreateThread)
   const dispatch = useAppDispatch()
 
   const onRefresh = () => {
@@ -57,7 +55,6 @@ export default function ThreadsPage() {
     <Container>
       <ThreadHeader
         breadcrumbItems={[...BREADCRUMBS, name.toString()]}
-        canCreate={canCreate}
         onCreateThread={() => router.push(`/boards/${board?.id}/new-thread`)}
         title={name.toString()}
         onBackPress={() => router.back()}

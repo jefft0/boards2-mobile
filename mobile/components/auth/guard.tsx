@@ -12,7 +12,6 @@ interface PropsWithChildren {
 function useProtectedRoute(user: User | undefined) {
   const segments = useSegments()
   const router = useRouter()
-  // const [segment] = useSegments() as [SharedSegment]
 
   const unauthSegments = ['sign-up', 'sign-in']
 

@@ -53,7 +53,7 @@ export async function qEvalGetPosts(
   const total = Number(totalMatch![1])
 
   const postRegex =
-    /\(struct{\((\d+) gno.land\/r\/gnoland\/boards2\/v1.PostID\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\("(\w+)" .uverse.address\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.PostID\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.PostID\),\((\d+) gno.land\/r\/gnoland\/boards2\/v1.BoardID\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.PostInfo\)/g
+    /\(struct{\((\d+) gno\.land\/p\/gnoland\/boards\.ID\),\((\d+) gno\.land\/p\/gnoland\/boards\.ID\),\("(\w+)" .uverse.address\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) gno\.land\/p\/gnoland\/boards\.ID\),\((\d+) gno\.land\/p\/gnoland\/boards\.ID\),\((\d+) gno\.land\/p\/gnoland\/boards\.ID\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("([^"]+)" string\)} gno.land\/r\/gnoland\/boards2\/v1.PostInfo\)/g
   let posts = []
   let index = 0
   let match

@@ -27,28 +27,6 @@ export const requestLoginForGnokeyMobile = createAsyncThunk<boolean>('tx/request
   return await Linking.openURL(url.toString())
 })
 
-type MakeTxAndRedirectParams = {
-  threadTitle: string
-  postContent: string
-  callerAddressBech32: string
-}
-
-export const postTxAndRedirectToSign = createAsyncThunk<void, MakeTxAndRedirectParams, ThunkExtra>(
-  'tx/makeCallTxAndRedirectToSign',
-  async (props, thunkAPI) => {
-    const { callerAddressBech32, threadTitle, postContent } = props
-
-    const fnc = 'CreateThread'
-    const args: string[] = ['1', threadTitle, postContent]
-    const gasFee = '1000000ugnot'
-    const gasWanted = BigInt(50000000)
-    const reason = 'Post a message'
-    const callbackPath = '/post'
-
-    await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
-  }
-)
-
 type MakeCallTxParams = {
   packagePath?: string
   fnc: string
