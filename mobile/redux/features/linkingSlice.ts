@@ -2,8 +2,33 @@ import { PACKAGE_PATH } from '@gno/constants/Constants'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { Buffer } from 'buffer'
 import * as Linking from 'expo-linking'
 import { ThunkExtra } from '@gno/redux'
+
+// GnoConnect launch-link / callback conventions.
+const GNOKEY_SCHEME = 'land.gno.gnokey'
+const BOARDS2_CALLBACK = 'land.gno.boards2:/'
+
+/**
+ * Opaque, single-use `state` tokens we have issued to the wallet and expect
+ * echoed back on the callback. Lets us reject unsolicited/forged callbacks —
+ * the callback scheme is public, so anyone can open it. Kept in-module (the
+ * round trip is within one app session); crypto-random so it can't be guessed.
+ */
+const expectedStates = new Set<string>()
+const rememberState = (state: string) => expectedStates.add(state)
+
+/** True (and consumes the token, single-use) if we issued this state. */
+export const consumeState = (state: string): boolean => expectedStates.delete(state)
+
+const generateState = (): string => {
+  const bytes = new Uint8Array(16)
+  const c = (globalThis as { crypto?: Crypto }).crypto
+  if (c?.getRandomValues) c.getRandomValues(bytes)
+  else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256)
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
+}
 
 interface State {
   txJsonSigned: string | undefined
@@ -20,9 +45,13 @@ const initialState: State = {
 }
 
 export const requestLoginForGnokeyMobile = createAsyncThunk<boolean>('tx/requestLoginForGnokeyMobile', async () => {
-  const url = new URL('land.gno.gnokey://tosignin')
-  url.searchParams.append('callback', 'land.gno.boards2://signin-callback')
-  url.searchParams.append('client_name', 'boards2')
+  // GnoConnect `connect`: display-level sign-in (no challenge/signature). The
+  // wallet returns the address to our callback; `state` correlates the response.
+  const state = generateState()
+  rememberState(state)
+  const url = new URL(`${GNOKEY_SCHEME}://connect`)
+  url.searchParams.append('callback', `${BOARDS2_CALLBACK}/signin-callback`)
+  url.searchParams.append('state', state)
   console.log('redirecting to: ', url)
   return await Linking.openURL(url.toString())
 })
@@ -41,22 +70,28 @@ type MakeCallTxParams = {
 }
 
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
-  const { fnc, callerAddressBech32, gasFee, gasWanted, args, packagePath = PACKAGE_PATH, reason, callbackPath } = props
+  const { fnc, callerAddressBech32, args, packagePath = PACKAGE_PATH, callbackPath, send } = props
 
-  console.log('making a tx for: ', callerAddressBech32)
-  const address = await gnonative.addressFromBech32(callerAddressBech32)
+  // GnoConnect `tx` launch link in sign-only mode (broadcast=false): gnokey
+  // builds the MsgCall from these params, the user reviews and signs, and
+  // returns the signed tx to our callback (`signedtx`) for us to broadcast.
+  // Positional `args` are accepted as a back-compat alias — gnokey resolves
+  // declaration order via vm/qdoc. `signer` pins the account (from `connect`);
+  // `state` correlates the response and rejects forged callbacks.
+  const state = generateState()
+  rememberState(state)
 
-  const res = await gnonative.makeCallTx(packagePath, fnc, args, gasFee, gasWanted, address)
-
-  const url = new URL('land.gno.gnokey://tosign')
-  url.searchParams.append('chain_id', await gnonative.getChainID())
-  url.searchParams.append('remote', await gnonative.getRemote())
-  url.searchParams.append('tx', res.txJson)
-  url.searchParams.append('update_tx', 'true')
-  url.searchParams.append('address', callerAddressBech32)
-  url.searchParams.append('client_name', 'boards2')
-  url.searchParams.append('reason', reason)
-  url.searchParams.append('callback', 'land.gno.boards2:/' + callbackPath)
+  const url = new URL(`${GNOKEY_SCHEME}://tx`)
+  url.searchParams.append('path', packagePath)
+  url.searchParams.append('func', fnc)
+  for (const arg of args) url.searchParams.append('args', arg)
+  if (send) url.searchParams.append('send', send)
+  url.searchParams.append('rpc', await gnonative.getRemote())
+  url.searchParams.append('chainid', await gnonative.getChainID())
+  url.searchParams.append('signer', callerAddressBech32)
+  url.searchParams.append('broadcast', 'false')
+  url.searchParams.append('callback', BOARDS2_CALLBACK + callbackPath)
+  url.searchParams.append('state', state)
 
   console.log('redirecting to: ', url)
   Linking.openURL(url.toString())
@@ -111,12 +146,30 @@ export const linkingSlice = createSlice({
   },
   reducers: {
     setLinkingData: (state, action) => {
-      const queryParams = action.payload.queryParams
+      const q = action.payload.queryParams ?? {}
 
-      state.bech32AddressSelected = queryParams?.address ? (queryParams.address as string) : undefined
-      state.txJsonSigned = queryParams?.tx ? (queryParams.tx as string) : undefined
-      state.chainId = queryParams?.chain_id ? (queryParams.chain_id as string) : undefined
-      state.remoteURL = queryParams?.remote ? (queryParams.remote as string) : undefined
+      // A failed sign-in / signing (user cancelled or wallet error): leave state
+      // untouched so no stale address/tx is picked up.
+      if (q.status && q.status !== 'success') {
+        console.log('gnokey callback status:', q.status, q.message ?? '')
+        return
+      }
+
+      // connect: the user's address (display-level identity; the address is
+      // untrusted — authority comes from the on-chain tx gnokey signs).
+      if (q.address) state.bech32AddressSelected = q.address as string
+
+      // tx sign-only: the signed tx is returned base64-encoded (amino-JSON);
+      // decode it for broadcastTxCommit. `tx` stays supported for the legacy
+      // tosign flow.
+      if (q.signedtx) {
+        state.txJsonSigned = Buffer.from(q.signedtx as string, 'base64').toString('utf-8')
+      } else if (q.tx) {
+        state.txJsonSigned = q.tx as string
+      }
+
+      if (q.chainid || q.chain_id) state.chainId = (q.chainid ?? q.chain_id) as string
+      if (q.remote) state.remoteURL = q.remote as string
     },
     clearLinking: (state) => {
       console.log('clearing linking data')

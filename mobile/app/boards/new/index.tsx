@@ -22,7 +22,7 @@ export default function Search() {
   useEffect(() => {
     const handleSignedTx = async () => {
       if (txJsonSigned) {
-        const signedTx = decodeURIComponent(txJsonSigned as string)
+        const signedTx = txJsonSigned as string // already decoded amino-JSON from setLinkingData
         console.log('signedTx: ', signedTx)
 
         try {

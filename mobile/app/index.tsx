@@ -6,7 +6,6 @@ import {
   selectAccount,
   selectBech32AddressSelected,
   selectLoginLoading,
-  selectRemoteURL,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
@@ -18,12 +17,13 @@ export default function Root() {
   const dispatch = useAppDispatch()
   const route = useRouter()
   const bech32AddressSelected = useAppSelector(selectBech32AddressSelected)
-  const remoteURL = useAppSelector(selectRemoteURL)
   const account = useAppSelector(selectAccount)
   const loading = useAppSelector(selectLoginLoading)
 
   useEffect(() => {
-    if (loading || !bech32AddressSelected || !remoteURL) return
+    // The GnoConnect `connect` callback returns the address (not a remote URL) —
+    // boards2 already knows its own network — so login gates on the address only.
+    if (loading || !bech32AddressSelected) return
     console.log('bech32AddressSelected on index', bech32AddressSelected)
 
     dispatch(loggedIn())

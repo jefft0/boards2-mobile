@@ -91,7 +91,7 @@ export default function Page() {
       if (txJsonSigned) {
         console.log('txJsonSigned: ', txJsonSigned)
 
-        const signedTx = decodeURIComponent(txJsonSigned as string)
+        const signedTx = txJsonSigned as string // already decoded amino-JSON from setLinkingData
         try {
           await dispatch(broadcastTxCommit(signedTx)).unwrap()
         } catch (error) {
