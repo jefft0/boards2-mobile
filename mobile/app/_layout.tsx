@@ -4,13 +4,14 @@ import { Guard } from '@gno/components/auth/guard'
 import { GnoNativeProvider } from '@gnolang/gnonative'
 import { ReduxProvider } from '@gno/redux'
 import { LinkingProvider } from '@gno/provider/linking-provider'
+import { CHAIN_ID, REMOTE } from '@gno/constants/Constants'
 import { ThemeProvider, DefaultTheme } from '@berty/gnonative-ui'
 
 const gnoDefaultConfig = {
   // @ts-ignore
-  remote: '', // It will be set dynamically from linking state
+  remote: REMOTE,
   // @ts-ignore
-  chain_id: '' // It will be set dynamically from linking state
+  chain_id: CHAIN_ID
 }
 
 const theme: DefaultTheme = {
