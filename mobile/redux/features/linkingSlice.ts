@@ -5,32 +5,15 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { Buffer } from 'buffer'
 import * as Linking from 'expo-linking'
 import { ThunkExtra } from '@gno/redux'
+import { issueState } from '@gno/utils/callback-state'
 
 // GnoConnect launch-link / callback conventions.
 const GNOKEY_SCHEME = 'land.gno.gnokey'
 const BOARDS2_CALLBACK = 'land.gno.boards2:/'
 
-/**
- * Opaque, single-use `state` tokens we have issued to the wallet and expect
- * echoed back on the callback. Lets us reject unsolicited/forged callbacks —
- * the callback scheme is public, so anyone can open it. Kept in-module (the
- * round trip is within one app session); crypto-random so it can't be guessed.
- */
-const expectedStates = new Set<string>()
-const rememberState = (state: string) => expectedStates.add(state)
-
-/** True (and consumes the token, single-use) if we issued this state. */
-export const consumeState = (state: string): boolean => expectedStates.delete(state)
-
-const generateState = (): string => {
-  const bytes = new Uint8Array(16)
-  const c = (globalThis as { crypto?: Crypto }).crypto
-  if (c?.getRandomValues) c.getRandomValues(bytes)
-  else for (let i = 0; i < bytes.length; i++) bytes[i] = Math.floor(Math.random() * 256)
-  return Array.from(bytes, (b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 interface State {
+  /** Last non-success callback, so a screen can stop waiting and say why. */
+  failure: { status: string; message?: string } | undefined
   txJsonSigned: string | undefined
   bech32AddressSelected: string | undefined
   chainId: string | undefined
@@ -38,6 +21,7 @@ interface State {
 }
 
 const initialState: State = {
+  failure: undefined,
   txJsonSigned: undefined,
   bech32AddressSelected: undefined,
   chainId: undefined,
@@ -47,14 +31,30 @@ const initialState: State = {
 export const requestLoginForGnokeyMobile = createAsyncThunk<boolean>('tx/requestLoginForGnokeyMobile', async () => {
   // GnoConnect `connect`: display-level sign-in (no challenge/signature). The
   // wallet returns the address to our callback; `state` correlates the response.
-  const state = generateState()
-  rememberState(state)
+  const state = issueState()
   const url = new URL(`${GNOKEY_SCHEME}://connect`)
   url.searchParams.append('callback', `${BOARDS2_CALLBACK}/signin-callback`)
   url.searchParams.append('state', state)
   console.log('redirecting to: ', url)
   return await Linking.openURL(url.toString())
 })
+
+/**
+ * Parameter names, in declaration order, for the realm functions we call —
+ * taken from the realm sources, not guessed: a wrong name would be bound as an
+ * unknown argument while the real parameter went out empty.
+ *
+ * `AddReaction` and `RepostThread` are deliberately absent: neither is an
+ * exported function of `gno.land/r/gnoland/boards2/v1` (the realm only has a
+ * `renderRepostThread` *render* route), so there is no signature to name them
+ * from. Those calls fall back to positional `args=`.
+ */
+const ARG_NAMES: Record<string, string[]> = {
+  CreateBoard: ['name', 'listed', 'open'],
+  CreateThread: ['boardID', 'title', 'body'],
+  CreateReply: ['boardID', 'threadID', 'replyID', 'body'],
+  SetStringField: ['field', 'value']
+}
 
 type MakeCallTxParams = {
   packagePath?: string
@@ -75,16 +75,25 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   // GnoConnect `tx` launch link in sign-only mode (broadcast=false): gnokey
   // builds the MsgCall from these params, the user reviews and signs, and
   // returns the signed tx to our callback (`signedtx`) for us to broadcast.
-  // Positional `args` are accepted as a back-compat alias — gnokey resolves
-  // declaration order via vm/qdoc. `signer` pins the account (from `connect`);
-  // `state` correlates the response and rejects forged callbacks.
-  const state = generateState()
-  rememberState(state)
+  // `signer` pins the account (from `connect`); `state` correlates the response
+  // and rejects forged callbacks.
+  const state = issueState()
 
   const url = new URL(`${GNOKEY_SCHEME}://tx`)
   url.searchParams.append('path', packagePath)
   url.searchParams.append('func', fnc)
-  for (const arg of args) url.searchParams.append('args', arg)
+
+  // Prefer named `arg.<name>` params (the encoding the standard asks producers
+  // to emit). Positional `args=` is only a back-compat alias, and it binds by
+  // position: if our order ever diverges from the realm's declaration order the
+  // values land in the wrong parameters silently. Fall back to it only for
+  // functions whose signature we don't have.
+  const names = ARG_NAMES[fnc]
+  if (names && names.length === args.length) {
+    args.forEach((value, i) => url.searchParams.append(`arg.${names[i]}`, value))
+  } else {
+    for (const arg of args) url.searchParams.append('args', arg)
+  }
   if (send) url.searchParams.append('send', send)
   url.searchParams.append('rpc', await gnonative.getRemote())
   url.searchParams.append('chainid', await gnonative.getChainID())
@@ -138,6 +147,7 @@ export const linkingSlice = createSlice({
   initialState,
   extraReducers: (builder) => {
     builder.addCase(broadcastTxCommit.fulfilled, (state) => {
+      state.failure = undefined
       state.txJsonSigned = undefined
       state.bech32AddressSelected = undefined
       state.chainId = undefined
@@ -148,12 +158,15 @@ export const linkingSlice = createSlice({
     setLinkingData: (state, action) => {
       const q = action.payload.queryParams ?? {}
 
-      // A failed sign-in / signing (user cancelled or wallet error): leave state
-      // untouched so no stale address/tx is picked up.
+      // A failed sign-in / signing (user cancelled or wallet error): record it
+      // so the screen that opened the wallet can stop waiting and explain, and
+      // leave the rest untouched so no stale address/tx is picked up. Silently
+      // swallowing this leaves the UI spinning on a request the user declined.
       if (q.status && q.status !== 'success') {
-        console.log('gnokey callback status:', q.status, q.message ?? '')
+        state.failure = { status: q.status as string, message: q.message as string | undefined }
         return
       }
+      state.failure = undefined
 
       // connect: the user's address (display-level identity; the address is
       // untrusted — authority comes from the on-chain tx gnokey signs).
@@ -173,6 +186,7 @@ export const linkingSlice = createSlice({
     },
     clearLinking: (state) => {
       console.log('clearing linking data')
+      state.failure = undefined
       state.txJsonSigned = undefined
       state.bech32AddressSelected = undefined
       state.chainId = undefined
@@ -180,6 +194,7 @@ export const linkingSlice = createSlice({
     }
   },
   selectors: {
+    selectLinkingFailure: (state: State) => state.failure,
     selectQueryParamsTxJsonSigned: (state: State) => state.txJsonSigned as string | undefined,
     selectBech32AddressSelected: (state: State) => state.bech32AddressSelected as string | undefined,
     selectChainId: (state: State) => state.chainId as string | undefined,
@@ -189,5 +204,10 @@ export const linkingSlice = createSlice({
 
 export const { clearLinking, setLinkingData } = linkingSlice.actions
 
-export const { selectQueryParamsTxJsonSigned, selectBech32AddressSelected, selectChainId, selectRemoteURL } =
-  linkingSlice.selectors
+export const {
+  selectLinkingFailure,
+  selectQueryParamsTxJsonSigned,
+  selectBech32AddressSelected,
+  selectChainId,
+  selectRemoteURL
+} = linkingSlice.selectors
