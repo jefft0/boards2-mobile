@@ -111,8 +111,20 @@ export const broadcastTxCommit = createAsyncThunk<void, string, ThunkExtra>(
   async (signedTx, thunkAPI) => {
     console.log('broadcasting tx: ', signedTx)
     const gnonative = thunkAPI.extra.gnonative
-    const res = await gnonative.broadcastTxCommit(signedTx)
-    console.log('broadcasted tx: ', JSON.stringify(res))
+
+    // `broadcastTxCommit` returns a *stream* (Promise<AsyncIterable<…>>), so
+    // awaiting it only hands back the iterator — the call is never driven and
+    // the transaction never leaves the device. It logged an empty object and
+    // looked like a success while nothing reached the chain. Iterate it.
+    const stream = await gnonative.broadcastTxCommit(signedTx)
+    let delivered = false
+    for await (const res of stream) {
+      delivered = true
+      console.log('broadcast result: height=%s hash=%s', String(res.height), Buffer.from(res.hash).toString('base64'))
+    }
+    if (!delivered) {
+      throw new Error('Broadcast produced no response; the transaction was not sent.')
+    }
   }
 )
 
