@@ -2,7 +2,7 @@ import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createAsyncThunk, createSlice, RootState } from '@reduxjs/toolkit'
-import { ThunkExtra, fetchThreadPostDetail, selectThreads, qEvalGetPosts, enrichData, subtractOrZero } from '@gno/redux'
+import { ThunkExtra, fetchThreadComments, selectThreads, qEvalGetComments, enrichData, subtractOrZero } from '@gno/redux'
 
 interface ThreadDetailState {
   loading: boolean
@@ -77,7 +77,7 @@ export const loadThreadDetail = createAsyncThunk<LoadThreadDetailResult | undefi
       const totalPosts = await countPosts(userCache, gnonative, boardId, threadId)
       const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
-      const res = await fetchThreadPostDetail(userCache, gnonative, boardId, threadId, startIndex, totalPosts)
+      const res = await fetchThreadComments(userCache, gnonative, boardId, threadId, startIndex, totalPosts)
 
       return {
         thread: threads.find((t) => t.id === Number(threadId)),
@@ -92,7 +92,7 @@ export const loadThreadDetail = createAsyncThunk<LoadThreadDetailResult | undefi
 )
 
 async function countPosts(userCache: UserCacheApi, gnonative: GnoNativeApi, boardId: number, threadId: number): Promise<number> {
-  const result = await qEvalGetPosts(gnonative, boardId, threadId, 0, 0, 0)
+  const result = await qEvalGetComments(gnonative, boardId, threadId, 0, 0)
   const { n_posts } = await enrichData(userCache, gnonative, result)
   return n_posts
 }

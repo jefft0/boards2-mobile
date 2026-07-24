@@ -28,7 +28,7 @@ export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/logged
   await gnonative.setRemote(remoteURL)
 
   const user: User = {
-    name: (await getAccountName(bech32, gnonative)) || 'Unknown',
+    name: await getAccountName(bech32, gnonative),
     address: await gnonative.addressFromBech32(bech32),
     bech32,
     avatar: await loadBech32AvatarFromChain(bech32, thunkAPI)
@@ -37,20 +37,20 @@ export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/logged
   return user
 })
 
-async function getAccountName(bech32: string, gnonative: GnoNativeApi) {
+// getAccountName uses gnonative to call `ResolveAddress` for the bech32 name.
+// If successful return the name, else return bech32.
+export async function getAccountName(bech32: string, gnonative: GnoNativeApi): Promise<string> {
+  let name = bech32
   try {
-    /* TODO: Handle the case where the user isn't registered
-    console.log('GetUserByAddress request:', bech32)
-    const accountNameStr = await gnonative.qEval('gno.land/r/sys/users', `ResolveAddress("${bech32}").Name()`)
-    console.log('GetUserByAddress result:', accountNameStr)
-    const accountName = accountNameStr.match(/\("(\w+)"/)?.[1]
-    */
-    const accountName = 'unknown'
-    return accountName
+    const result = await gnonative.qEval('gno.land/r/sys/users', `ResolveAddress("${bech32}")`)
+    const match = result.match(/\("\w+" \.uverse\.address\),\("([^"]+)" string\)/)
+    if (match) {
+      name = match[1]
+    }
   } catch (error) {
     console.error('Error getting account name', error)
   }
-  return undefined
+  return name
 }
 
 interface AvatarCallTxParams {

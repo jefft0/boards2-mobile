@@ -69,7 +69,8 @@ export const createBoard = createAsyncThunk<BoardsResult | undefined, BoardCreat
     const callerAddressBech32 = (thunkAPI.getState() as RootState).account.account?.bech32
 
     const fnc = 'CreateBoard'
-    const args: string[] = [boardName, isPublic.toString()]
+    const isListed = true
+    const args: string[] = [boardName, isListed.toString(), isPublic.toString()]
     const gasFee = '100000ugnot'
     const gasWanted = BigInt(50000000)
     const reason = 'Creating a new board'

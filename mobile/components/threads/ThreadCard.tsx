@@ -23,6 +23,8 @@ const ThreadCard = ({ thread, onReply, onOpen }: Props) => {
     setLikes((prev) => (liked ? prev + 1 : prev - 1))
   }
 
+  const stacked = thread.user.name.length > 20
+
   return (
     <ThreadContainer key={thread.id} activeOpacity={0.7} onPress={onOpen}>
       <ThreadTitle>{thread.title}</ThreadTitle>
@@ -30,11 +32,12 @@ const ThreadCard = ({ thread, onReply, onOpen }: Props) => {
 
       <ThreadContent>{thread.body}</ThreadContent>
 
-      <CardFooter.Footer>
-        <CardFooter.MetaItem style={{ minWidth: 120 }}>
+      <CardFooter.Footer style={stacked ? { flexDirection: 'column', alignItems: 'flex-start' } : undefined}>
+        <CardFooter.MetaItem style={stacked ? undefined : { minWidth: 120 }}>
           <CardFooter.MetaValue color={theme.colors.primary}>@{thread.user.name}</CardFooter.MetaValue>
         </CardFooter.MetaItem>
-        <CardFooter.Meta>
+        {stacked && <Spacer space={8} />}
+        <CardFooter.Meta style={stacked ? { marginLeft: 136 } : undefined}>
           <CardFooter.MetaItem>
             <ReplyIconButton onPress={onReply} count={thread.n_replies} />
           </CardFooter.MetaItem>

@@ -13,7 +13,7 @@ export default function AppLayout() {
       }}
     >
       <Tabs.Screen
-        name="feed"
+        name="boards"
         options={{
           title: 'Boards',
           tabBarIcon: ({ focused }) => <Icons.Home color={focused ? theme.colors.primary : theme.colors.gray} />

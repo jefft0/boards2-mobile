@@ -38,7 +38,6 @@ export const useFeed = () => {
       const createdAt = match[14]
       const creator = match[3]
       const n_replies = Number(match[11])
-      const n_replies_all = Number(match[12])
       const thread_id = Number(match[8])
       const parent_id = Number(match[9])
       const hidden = match[6] === 'true'
@@ -53,7 +52,7 @@ export const useFeed = () => {
       }
       posts.push({
         index,
-        post: { id: postId, boardId, createdAt, creator, n_gnods: 0, n_replies, n_replies_all, thread_id, parent_id, title, body }
+        post: { id: postId, boardId, createdAt, creator, n_gnods: 0, n_replies, thread_id, parent_id, title, body }
       })
       ++index
     }
@@ -115,15 +114,17 @@ export const useFeed = () => {
         bech32: ''
       },
       id: jsonPost.id,
+      originalBoardId: jsonPost.originalBoardId,
+      originalThreadId: jsonPost.originalThreadId,
       boardId: jsonPost.boardId,
       title: jsonPost.title,
       body: jsonPost.body,
-      createdAt: jsonPost.createdAt,
+      hidden: jsonPost.hidden,
+      readOnly: jsonPost.readOnly,
       n_replies: jsonPost.n_replies,
       n_gnods: jsonPost.n_gnods,
-      n_replies_all: jsonPost.n_replies_all,
-      thread_id: jsonPost.thread_id,
-      parent_id: jsonPost.parent_id,
+      createdAt: jsonPost.createdAt,
+      updatedAt: jsonPost.updatedAt,
       repost_parent
     }
 
