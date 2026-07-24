@@ -21,8 +21,17 @@ export const useUserCache = () => {
     }
 
     let name = await getAccountName(bech32, gnonative)
-    const response = await gnonative.qEval('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
-    const bech32Image = response.substring(2, response.length - '" string)'.length)
+
+    let bech32Image = DEFAULT_AVATAR
+    try {
+      const response = await gnonative.qEval(
+        'gno.land/r/demo/profile',
+        `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`
+      )
+      bech32Image = response.substring(2, response.length - '" string)'.length)
+    } catch (error) {
+      console.error('Error loading avatar for', bech32, error)
+    }
 
     const user = {
       name: name,
