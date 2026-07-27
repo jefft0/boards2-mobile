@@ -177,7 +177,6 @@ export default function GnodLikeButton({
 
   return (
     <CardFooterButton loading={loading} onPress={handlePress} label="Gnods" count={gnodCount} hideLabel={hideLabel}>
-      {/* <TouchableOpacity activeOpacity={0.7} onPress={handlePress} style={styles.container}> */}
       <View style={styles.iconContainer}>
         {/* Burst circle effect */}
         <Animated.View

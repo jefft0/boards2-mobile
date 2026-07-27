@@ -19,7 +19,7 @@ const Header: React.FC<Props> = ({ iconType = 'close', onCloseHandler, title = '
       if (router.canGoBack()) {
         router.back()
       } else {
-        router.navigate({ pathname: '/home' })
+        router.navigate({ pathname: '/home/boards' })
       }
     }
   }

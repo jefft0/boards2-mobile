@@ -13,8 +13,6 @@ interface BoardsTemplateProps {
   sortBy?: string
   onCreateBoard: () => void
   canCreate?: boolean
-  onListAdminUsers: () => void
-  onHelp: () => void
   onBoardPress: (board: Board) => void
   onRefresh?: () => void
   refreshing?: boolean
@@ -27,8 +25,6 @@ export const BoardsTemplate = ({
   sortBy,
   onCreateBoard,
   canCreate,
-  onListAdminUsers,
-  onHelp,
   onBoardPress,
   onRefresh,
   refreshing
@@ -36,13 +32,7 @@ export const BoardsTemplate = ({
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <BoardsHeader
-          breadcrumbItems={breadcrumbItems}
-          canCreate={canCreate}
-          onCreateBoard={onCreateBoard}
-          onListAdminUsers={onListAdminUsers}
-          onHelp={onHelp}
-        />
+        <BoardsHeader breadcrumbItems={breadcrumbItems} canCreate={canCreate} onCreateBoard={onCreateBoard} />
         <CustomFlatList<Board>
           data={data}
           isLoading={isLoading}

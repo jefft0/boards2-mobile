@@ -32,7 +32,6 @@ export const boardsSlice = createSlice({
   extraReducers(builder) {
     builder.addCase(getListedBoards.fulfilled, (state, action) => {
       state.loading = false
-      // console.log('xxxx4', action.payload)
       state.boards = action.payload?.boards.map((b) => b.board) || []
       state.canCreate = action.payload?.canCreate || false
     })
@@ -52,8 +51,6 @@ export const boardsSlice = createSlice({
     selectCanCreateBoard: (state: BoardsState) => state.canCreate
   }
 })
-
-// export const {} = boardsSlice.actions
 
 export const { selectBoards, selectBoardsLoading, selectCanCreateBoard } = boardsSlice.selectors
 

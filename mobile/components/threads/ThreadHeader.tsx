@@ -42,14 +42,6 @@ export const ThreadHeader = ({
       <View style={styles.actions}>
         <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" />
         {/* TODO: Implement dynamic action renderer */}
-        {/* <Text.Body color="#ccc" style={styles.divider}>
-          •
-        </Text.Body>
-        <ActionButton label="List Admin Users" onPress={onListAdminUsers} />
-        <Text.Body color="#ccc" style={styles.divider}>
-          •
-        </Text.Body>
-        <ActionButton label="Help" onPress={onHelp} /> */}
       </View>
     </View>
   )

@@ -13,7 +13,6 @@ import {
   threadDetailSlice
 } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
-import { useSearch, UseSearchReturnType } from '@gno/hooks/use-search'
 import { useUserCache } from '@gno/hooks/use-user-cache'
 
 interface Props {
@@ -23,7 +22,6 @@ interface Props {
 export interface ThunkExtra {
   extra: {
     gnonative: GnoNativeApi
-    search: UseSearchReturnType
     userCache: ReturnType<typeof useUserCache>
   }
 }
@@ -45,7 +43,6 @@ export type RootState = typeof reducer
 const ReduxProvider: React.FC<Props> = ({ children }) => {
   // Exposing GnoNative API to reduxjs/toolkit
   const { gnonative } = useGnoNativeContext()
-  const search = useSearch()
   const userCache = useUserCache()
   const [store, setStore] = useState<any>(null)
 
@@ -63,7 +60,6 @@ const ReduxProvider: React.FC<Props> = ({ children }) => {
             // https://redux.js.org/tutorials/essentials/part-6-performance-normalization#thunk-arguments
             extraArgument: {
               gnonative,
-              search,
               userCache
             }
           }

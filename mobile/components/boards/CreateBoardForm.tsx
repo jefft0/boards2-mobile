@@ -132,13 +132,6 @@ export default function CreateBoardForm({ onCreate, onCancel, loading }: CreateB
           </ToggleRow>
         </ToggleContainer>
 
-        {/* Info Box */}
-        {/* <InfoBox>
-          <InfoIconContainer>
-            <Text style={{ fontSize: 20 }}>ℹ️</Text>
-          </InfoIconContainer>
-          <InfoText>Once created, you'll be the board administrator and can manage threads, users, and settings.</InfoText>
-        </InfoBox> */}
         <View style={{ flexGrow: 1 }} />
 
         <ButtonContainer>

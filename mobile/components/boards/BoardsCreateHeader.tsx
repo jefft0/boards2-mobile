@@ -21,9 +21,6 @@ export const BoardsCreateHeader = ({ breadcrumbItems, onBackPress, title = 'Boar
       <View style={styles.dividerGrey}>
         <Breadcrumb items={breadcrumbItems} />
       </View>
-      <View style={styles.actions}>
-        {/* <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" disabled={!canCreate} /> */}
-      </View>
     </View>
   )
 }
@@ -45,14 +42,6 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     paddingRight: 16
-  },
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap'
-  },
-  divider: {
-    marginHorizontal: 8
   },
   dividerGrey: {
     marginTop: 16

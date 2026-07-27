@@ -98,13 +98,6 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
           <HelperText>Write the main content of your thread</HelperText>
         </FormGroup>
 
-        {/* Info Box */}
-        {/* <InfoBox>
-          <InfoIconContainer>
-            <Text style={{ fontSize: 20 }}>ℹ️</Text>
-          </InfoIconContainer>
-          <InfoText>Once created, you'll be the board administrator and can manage threads, users, and settings.</InfoText>
-        </InfoBox> */}
         <View style={{ flexGrow: 1 }} />
 
         <ButtonContainer>

@@ -71,7 +71,6 @@ export const avatarTxAndRedirectToSign = createAsyncThunk<void, AvatarCallTxPara
     const gasWanted = BigInt(10000000)
     const args: string[] = ['Avatar', String(`data:${mimeType};base64,` + base64)]
     const reason = 'Upload a new avatar'
-    // const session = (thunkAPI.getState() as RootState).linking.session;
 
     await makeCallTx(
       {

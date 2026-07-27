@@ -9,7 +9,6 @@ interface BoardCardProps {
 }
 
 export const BoardCard = ({ board, onPress }: BoardCardProps) => {
-  // console.log('BoardCard board:', JSON.stringify(board))
   return (
     <TouchableOpacity style={styles.card} onPress={() => onPress(board)}>
       <Text.Title3 style={styles.boardTitle}>{board.name}</Text.Title3>
@@ -19,8 +18,6 @@ export const BoardCard = ({ board, onPress }: BoardCardProps) => {
         <Text.Body color="#ccc" style={styles.divider}>
           •
         </Text.Body>
-        {/* <Text.Label style={styles.threadCount}>{board.} replies</Text.Label> */}
-        {/* <Text.Label style={styles.threadCount}>{board.threadCount} threads</Text.Label> */}
       </View>
     </TouchableOpacity>
   )

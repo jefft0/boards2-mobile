@@ -7,19 +7,10 @@ interface BoardsHeaderProps {
   breadcrumbItems: string[]
   onCreateBoard: () => void
   canCreate?: boolean
-  onListAdminUsers: () => void
-  onHelp: () => void
   title?: string
 }
 
-export const BoardsHeader = ({
-  breadcrumbItems,
-  onCreateBoard,
-  canCreate,
-  onListAdminUsers,
-  onHelp,
-  title
-}: BoardsHeaderProps) => {
+export const BoardsHeader = ({ breadcrumbItems, onCreateBoard, canCreate, title }: BoardsHeaderProps) => {
   return (
     <View style={styles.header}>
       <Breadcrumb items={breadcrumbItems} />
@@ -27,14 +18,6 @@ export const BoardsHeader = ({
       <View style={styles.actions}>
         <ActionButton label="Create Board" onPress={onCreateBoard} icon="Add" disabled={!canCreate} />
         {/* TODO: Implement dynamic action renderer */}
-        {/* <Text.Body color="#ccc" style={styles.divider}>
-          •
-        </Text.Body>
-        <ActionButton label="List Admin Users" onPress={onListAdminUsers} />
-        <Text.Body color="#ccc" style={styles.divider}>
-          •
-        </Text.Body>
-        <ActionButton label="Help" onPress={onHelp} /> */}
       </View>
     </View>
   )
@@ -56,8 +39,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     flexWrap: 'wrap'
-  },
-  divider: {
-    marginHorizontal: 8
   }
 })

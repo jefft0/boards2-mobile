@@ -34,7 +34,7 @@ export default function Root() {
     if (loading) return
     if (account) {
       dispatch(clearLinking())
-      route.replace('/home')
+      route.replace('/home/boards')
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [account])

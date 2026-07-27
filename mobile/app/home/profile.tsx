@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { router, useNavigation } from 'expo-router'
+import { useNavigation } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useGnoNativeContext } from '@gnolang/gnonative'
 import {
@@ -60,10 +60,6 @@ export default function Page() {
     } catch (error: unknown | Error) {
       console.log(error)
     }
-  }
-
-  const onRemoveAccount = async () => {
-    router.navigate({ pathname: 'account/remove' })
   }
 
   const onPressLogout = async () => {
@@ -138,9 +134,6 @@ export default function Page() {
               </Button>
               <Button onPress={onPressLogout} style={styles.logout} color="danger">
                 Logout
-              </Button>
-              <Button onPress={onRemoveAccount} style={styles.logout} color="danger">
-                Remove Account
               </Button>
             </Layout.Footer>
           </ScrollView>

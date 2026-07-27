@@ -35,7 +35,7 @@ export const threadsSlice = createSlice({
     builder.addCase(loadThreads.fulfilled, (state, action) => {
       state.board = action.payload?.board
       state.loading = false
-      state.threads = action.payload?.feed || []
+      state.threads = action.payload?.posts || []
       state.totalPosts = action.payload?.totalPosts || 0
     })
     builder.addCase(loadThreads.pending, (state) => {
@@ -61,7 +61,7 @@ export const { selectThreads, selectThreadLoading, selectThreadBoard, selectThre
 type LoadResult = {
   board: Board
   totalPosts: number
-  feed: Post[]
+  posts: Post[]
   n_posts: number
 }
 
@@ -84,11 +84,11 @@ export const loadThreads = createAsyncThunk<LoadResult | undefined, LoadThreadsR
       return {
         board,
         totalPosts,
-        feed: postsRes.data,
+        posts: postsRes.data,
         n_posts: postsRes.n_posts
       }
     } catch (error) {
-      console.error('error in loadFeed thunk:', error)
+      console.error('error in loadThreads thunk:', error)
       throw error
     }
   }

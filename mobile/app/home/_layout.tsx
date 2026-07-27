@@ -20,13 +20,6 @@ export default function AppLayout() {
         }}
       />
       <Tabs.Screen
-        name="search"
-        options={{
-          title: 'Search',
-          tabBarIcon: ({ focused }) => <Icons.Search color={focused ? theme.colors.primary : theme.colors.gray} />
-        }}
-      />
-      <Tabs.Screen
         name="profile"
         options={{
           title: 'Profile',

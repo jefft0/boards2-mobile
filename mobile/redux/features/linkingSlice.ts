@@ -91,7 +91,6 @@ export const gnodTxAndRedirectToSign = createAsyncThunk<void, GnodCallTxParams, 
     const args: string[] = [String(post.user.address), String(post.id), String(post.id), String('0')]
     const reason = 'Gnoding a message'
 
-    // await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath, session }, thunkAPI.extra.gnonative);
     await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
   }
 )

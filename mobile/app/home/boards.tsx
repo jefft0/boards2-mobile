@@ -40,14 +40,6 @@ export default function Page() {
     router.push('/boards/new')
   }
 
-  const handleListAdminUsers = () => {
-    router.push('/boards/admins')
-  }
-
-  const handleHelp = () => {
-    router.push('/boards/help')
-  }
-
   const handleBoardPress = (board: Board) => {
     dispatch(loadThreads({ board }))
     router.push(`/boards/${board.id}?name=${board.name}`)
@@ -64,8 +56,6 @@ export default function Page() {
         sortBy="oldest first"
         canCreate={canCreate}
         onCreateBoard={handleCreateBoard}
-        onListAdminUsers={handleListAdminUsers}
-        onHelp={handleHelp}
         onBoardPress={handleBoardPress}
         onRefresh={handleRefresh}
         refreshing={refreshing}

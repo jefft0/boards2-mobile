@@ -3,7 +3,7 @@ import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, Board, makeCallTx, selectAccount, RootState } from '@gno/redux'
 
 interface ThreadsState {
-  feed: Post[]
+  posts: Post[]
   board?: Board
   loading: boolean
   error?: string
@@ -13,7 +13,7 @@ interface ThreadsState {
 }
 
 const initialState = {
-  feed: [] as Post[],
+  posts: [] as Post[],
   board: undefined,
   loading: false,
   error: undefined,
@@ -29,10 +29,6 @@ export const threadsCreateSlice = createSlice({
   extraReducers() {},
   selectors: {}
 })
-
-// export const {} = threadsCreateSlice.actions
-
-// export const {} = threadsCreateSlice.selectors
 
 export type ThreadCreateParams = {
   boardId: string
