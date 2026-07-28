@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { useNavigation } from 'expo-router'
+import { useNavigation, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useGnoNativeContext } from '@gnolang/gnonative'
 import {
@@ -28,6 +28,7 @@ export default function Page() {
   const account = useAppSelector(selectAccount)
   const { gnonative } = useGnoNativeContext()
   const navigation = useNavigation()
+  const router = useRouter()
   const dispatch = useAppDispatch()
   const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
 
@@ -126,6 +127,12 @@ export default function Page() {
               <Text.Body>{remote}</Text.Body>
               <View></View>
             </>
+            <Spacer space={16} />
+            {/* Same page the sign-in screen links to, rather than a second copy
+                of the picker that would have to be kept in step with it. */}
+            <Button onPress={() => router.navigate('/network')} color="secondary">
+              Change network
+            </Button>
             <Spacer space={24} />
             <Layout.Footer>
               <ProgressViewModal visible={modalVisible} onRequestClose={() => setModalVisible(false)} />

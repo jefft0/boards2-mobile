@@ -10,7 +10,8 @@ import {
   boardsCreateSlice,
   threadReplySlice,
   threadsCreateSlice,
-  threadDetailSlice
+  threadDetailSlice,
+  switchNetwork
 } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
 import { useUserCache } from '@gno/hooks/use-user-cache'
@@ -26,16 +27,29 @@ export interface ThunkExtra {
   }
 }
 
+/**
+ * Clears a slice when the network changes (see `switchNetwork`): passing
+ * `undefined` makes the wrapped reducer return its own initial state.
+ *
+ * Applied at the map below so that a slice is wrapped on the same line that
+ * registers it — an unwrapped slice would silently keep another chain's data,
+ * which surfaces as wrong content rather than as an error.
+ */
+const resetOnNetworkSwitch =
+  <S, A extends { type: string }>(sliceReducer: (state: S | undefined, action: A) => S) =>
+  (state: S | undefined, action: A): S =>
+    sliceReducer(action.type === switchNetwork.fulfilled.type ? undefined : state, action)
+
 const reducer = {
-  [accountSlice.reducerPath]: accountSlice.reducer,
-  [profileSlice.reducerPath]: profileSlice.reducer,
-  [linkingSlice.reducerPath]: linkingSlice.reducer,
-  [threadsSlice.reducerPath]: threadsSlice.reducer,
-  [boardsSlice.reducerPath]: boardsSlice.reducer,
-  [boardsCreateSlice.reducerPath]: boardsCreateSlice.reducer,
-  [threadReplySlice.reducerPath]: threadReplySlice.reducer,
-  [threadsCreateSlice.reducerPath]: threadsCreateSlice.reducer,
-  [threadDetailSlice.reducerPath]: threadDetailSlice.reducer
+  [accountSlice.reducerPath]: resetOnNetworkSwitch(accountSlice.reducer),
+  [profileSlice.reducerPath]: resetOnNetworkSwitch(profileSlice.reducer),
+  [linkingSlice.reducerPath]: resetOnNetworkSwitch(linkingSlice.reducer),
+  [threadsSlice.reducerPath]: resetOnNetworkSwitch(threadsSlice.reducer),
+  [boardsSlice.reducerPath]: resetOnNetworkSwitch(boardsSlice.reducer),
+  [boardsCreateSlice.reducerPath]: resetOnNetworkSwitch(boardsCreateSlice.reducer),
+  [threadReplySlice.reducerPath]: resetOnNetworkSwitch(threadReplySlice.reducer),
+  [threadsCreateSlice.reducerPath]: resetOnNetworkSwitch(threadsCreateSlice.reducer),
+  [threadDetailSlice.reducerPath]: resetOnNetworkSwitch(threadDetailSlice.reducer)
 }
 
 export type RootState = typeof reducer

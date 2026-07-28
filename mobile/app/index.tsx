@@ -1,4 +1,4 @@
-import { Image, View, StyleSheet } from 'react-native'
+import { Image, View, StyleSheet, TouchableOpacity } from 'react-native'
 import {
   clearLinking,
   loggedIn,
@@ -11,11 +11,14 @@ import {
 } from '@gno/redux'
 import { useEffect } from 'react'
 import { useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
 import { HomeLayout, Button, Ruller, Text } from '@berty/gnonative-ui'
+import Icons from '@gno/components/icons'
 
 export default function Root() {
   const dispatch = useAppDispatch()
   const route = useRouter()
+  const insets = useSafeAreaInsets()
   const bech32AddressSelected = useAppSelector(selectBech32AddressSelected)
   const account = useAppSelector(selectAccount)
   const loading = useAppSelector(selectLoginLoading)
@@ -46,7 +49,18 @@ export default function Root() {
 
   return (
     <HomeLayout
-      header={null}
+      // `connect` names the network the wallet is asked to switch to, so the
+      // network has to be selectable *before* signing in — the profile screen is
+      // behind the auth guard, which is the one place it cannot help.
+      header={
+        // HomeLayout renders the header raw and only insets its footer, so the
+        // status bar has to be cleared here or the icon sits under it.
+        <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
+          <TouchableOpacity onPress={() => route.navigate('/network')} hitSlop={12} accessibilityLabel="Network settings">
+            <Icons.Network />
+          </TouchableOpacity>
+        </View>
+      }
       footer={
         <View style={styles.footerContainer}>
           <Text.Body_Bold>Sign in using Gnokey Mobile:</Text.Body_Bold>
@@ -79,6 +93,13 @@ export default function Root() {
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 8 // overridden with the safe-area inset at the call site
+  },
   footerContainer: {
     gap: 12,
     width: '100%',

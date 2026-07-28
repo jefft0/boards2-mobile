@@ -3,7 +3,7 @@ import { makeCallTx } from './linkingSlice'
 import { User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { RootState, ThunkExtra } from '@gno/redux'
-import { CHAIN_ID } from '@gno/constants/Constants'
+import { getActiveNetwork } from '@gno/utils/network-store'
 
 export interface CounterState {
   account?: User
@@ -21,17 +21,22 @@ export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/logged
   const { bech32AddressSelected: bech32, chainId } = (thunkAPI.getState() as RootState).linking
 
   // Only the address is required. `connect` returns no RPC endpoint by design,
-  // and the network is ours (see REMOTE/CHAIN_ID) — demanding a remoteURL here
-  // made login throw on every GnoConnect sign-in.
+  // and the network is ours (see @gno/constants/networks) — demanding a
+  // remoteURL here made login throw on every GnoConnect sign-in.
   if (!bech32) {
     throw new Error('No bech32 address found for login')
   }
 
   // The wallet does report which chain it is on. If that is not our chain it
   // would sign for one network while we broadcast to another, so stop here
-  // rather than produce a signature that cannot land.
-  if (chainId && chainId !== CHAIN_ID) {
-    throw new Error(`Wallet is on chain "${chainId}", boards2 expects "${CHAIN_ID}"`)
+  // rather than produce a signature that cannot land. `connect` now names the
+  // network we expect, so a wallet that honours it should already have switched.
+  const expectedChainId = getActiveNetwork().chainId
+  if (chainId && chainId !== expectedChainId) {
+    throw new Error(
+      `Your wallet is on chain "${chainId}" but this app expects "${expectedChainId}". ` +
+        `Switch the wallet's network, or pick a matching one here from the network settings.`
+    )
   }
 
   const gnonative = thunkAPI.extra.gnonative as GnoNativeApi

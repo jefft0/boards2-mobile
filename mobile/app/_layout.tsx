@@ -4,14 +4,19 @@ import { Guard } from '@gno/components/auth/guard'
 import { GnoNativeProvider } from '@gnolang/gnonative'
 import { ReduxProvider } from '@gno/redux'
 import { LinkingProvider } from '@gno/provider/linking-provider'
-import { CHAIN_ID, REMOTE } from '@gno/constants/Constants'
+import { getActiveNetwork } from '@gno/utils/network-store'
 import { ThemeProvider, DefaultTheme } from '@berty/gnonative-ui'
+
+// Read once, before the first render: gnonative is configured from this. A later
+// switch goes through `switchNetwork`, which calls setRemote/setChainID itself
+// rather than waiting for a restart.
+const activeNetwork = getActiveNetwork()
 
 const gnoDefaultConfig = {
   // @ts-ignore
-  remote: REMOTE,
+  remote: activeNetwork.rpc,
   // @ts-ignore
-  chain_id: CHAIN_ID
+  chain_id: activeNetwork.chainId
 }
 
 const theme: DefaultTheme = {

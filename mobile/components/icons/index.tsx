@@ -22,6 +22,9 @@ const Icons = {
   Close,
   CheckMark,
   Add: ((props: IconProps) => <Ionicons name="add-circle-outline" size={props.size} color={props.color} />) as IconComponent,
+  Network: ((props: IconProps) => (
+    <Ionicons name="globe-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
+  )) as IconComponent,
   Exclamation,
   Home,
   Profile,
