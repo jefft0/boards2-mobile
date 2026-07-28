@@ -1,0 +1,65 @@
+import { isRejected } from '@reduxjs/toolkit'
+import { reportError } from '../features/feedbackSlice'
+import { setLinkingData } from '../features/linkingSlice'
+import { describeError, describeLinkingFailure } from '@gno/utils/describe-error'
+import { reloadAvatar } from '../features/accountSlice'
+
+/**
+ * Thunks whose failure the user should not be told about.
+ *
+ * Deliberately a deny-list rather than an allow-list: the app's problem was
+ * failures that reached nobody, so a thunk added later is reported by default
+ * and someone has to decide it is noise. Silence is the choice that needs
+ * justifying, not visibility.
+ */
+const SILENT = [
+  // Avatars are best-effort by design — a missing one falls back to the default
+  // and is not worth interrupting the user over.
+  reloadAvatar.typePrefix
+]
+
+const isSilent = (type: string) => SILENT.some((prefix) => type.startsWith(prefix))
+
+/**
+ * Routes every user-visible failure into the feedback queue.
+ *
+ * Two shapes reach the user, and before this they were handled in three
+ * different half-finished ways (per-slice `error` fields nothing read, a
+ * `linking.failure` nothing read, and per-screen `console.error`):
+ *
+ *  - a rejected thunk — a broadcast that failed, a query that could not load;
+ *  - a non-success wallet callback, which is a plain action rather than a
+ *    rejection because the wallet answered, it just did not answer `success`.
+ *
+ * Doing it here rather than in each screen means the report survives the screen:
+ * these actions round-trip through the wallet, and the OS may have evicted and
+ * relaunched the app by the time the answer arrives, so screen-local state is
+ * gone exactly when the error needs showing.
+ */
+// Typed structurally: this project's `redux` types do not resolve, so RTK's
+// re-exported `Middleware` is unusable here (the same reason `Reducer` is
+// avoided in redux-provider).
+type ReporterAction = { type: string; error?: unknown; meta?: { condition?: boolean } }
+
+export const errorReporter =
+  (store: { dispatch: (action: unknown) => unknown }) =>
+  (next: (action: ReporterAction) => unknown) =>
+  (action: ReporterAction) => {
+    const result = next(action)
+
+    if (setLinkingData.match(action)) {
+      const q = (action.payload as { queryParams?: Record<string, unknown> })?.queryParams ?? {}
+      if (q.status && q.status !== 'success') {
+        store.dispatch(reportError(describeLinkingFailure({ status: q.status as string, code: q.code as string | undefined })))
+      }
+      return result
+    }
+
+    if (isRejected(action) && !isSilent(action.type)) {
+      // `condition`-aborted thunks never ran; they are not failures.
+      if (action.meta?.condition) return result
+      store.dispatch(reportError(describeError(action.error)))
+    }
+
+    return result
+  }

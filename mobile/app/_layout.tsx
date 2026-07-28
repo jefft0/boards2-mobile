@@ -5,6 +5,7 @@ import { GnoNativeProvider } from '@gnolang/gnonative'
 import { ReduxProvider } from '@gno/redux'
 import { LinkingProvider } from '@gno/provider/linking-provider'
 import { getActiveNetwork } from '@gno/utils/network-store'
+import ErrorSnackbar from '@gno/components/feedback/ErrorSnackbar'
 import { ThemeProvider, DefaultTheme } from '@berty/gnonative-ui'
 
 // Read once, before the first render: gnonative is configured from this. A later
@@ -130,6 +131,10 @@ export default function AppLayout() {
                   headerBackVisible: false
                 }}
               />
+              {/* Outside the Stack so a failure reported during a navigation —
+                  or after the wallet relaunched us — still has somewhere to
+                  show. */}
+              <ErrorSnackbar />
             </Guard>
           </ThemeProvider>
         </LinkingProvider>

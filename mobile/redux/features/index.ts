@@ -1,4 +1,5 @@
 export * from './accountSlice'
+export * from './feedbackSlice'
 export * from './network'
 export * from './profileSlice'
 export * from './linkingSlice'

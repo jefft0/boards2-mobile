@@ -8,11 +8,16 @@ import { getActiveNetwork } from '@gno/utils/network-store'
 export interface CounterState {
   account?: User
   loading: boolean
+  /** Why the last sign-in failed, for the sign-in screen to show. Without it a
+   *  rejected `loggedIn` is silent in a release build: the user returns from the
+   *  wallet having approved, and nothing at all happens. */
+  error?: string
 }
 
 const initialState: CounterState = {
   account: undefined,
-  loading: false
+  loading: false,
+  error: undefined
 }
 
 export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/loggedIn', async (param, thunkAPI) => {
@@ -141,15 +146,18 @@ export const accountSlice = createSlice({
   extraReducers(builder) {
     builder.addCase(loggedIn.pending, (state) => {
       state.loading = true
+      state.error = undefined
       console.log('loggedIn.pending')
     })
     builder.addCase(loggedIn.fulfilled, (state, action) => {
       state.account = action.payload
       state.loading = false
+      state.error = undefined
       console.log('Logged in', action.payload)
     })
     builder.addCase(loggedIn.rejected, (state, action) => {
       state.loading = false
+      state.error = action.error.message ?? 'Sign-in failed.'
       console.error('loggedIn.rejected', action)
     })
     builder.addCase(reloadAvatar.fulfilled, (state, action) => {
@@ -165,10 +173,11 @@ export const accountSlice = createSlice({
   selectors: {
     selectAccount: (state) => state.account,
     selectAvatar: (state) => state.account?.avatar,
-    selectLoginLoading: (state) => state.loading
+    selectLoginLoading: (state) => state.loading,
+    selectLoginError: (state) => state.error
   }
 })
 
 export const { logedOut } = accountSlice.actions
 
-export const { selectAccount, selectAvatar, selectLoginLoading } = accountSlice.selectors
+export const { selectAccount, selectAvatar, selectLoginLoading, selectLoginError } = accountSlice.selectors

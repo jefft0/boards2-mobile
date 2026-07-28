@@ -11,9 +11,11 @@ import {
   threadReplySlice,
   threadsCreateSlice,
   threadDetailSlice,
+  feedbackSlice,
   switchNetwork
 } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
+import { errorReporter } from './middleware/error-reporter'
 import { useUserCache } from '@gno/hooks/use-user-cache'
 
 interface Props {
@@ -49,7 +51,8 @@ const reducer = {
   [boardsCreateSlice.reducerPath]: resetOnNetworkSwitch(boardsCreateSlice.reducer),
   [threadReplySlice.reducerPath]: resetOnNetworkSwitch(threadReplySlice.reducer),
   [threadsCreateSlice.reducerPath]: resetOnNetworkSwitch(threadsCreateSlice.reducer),
-  [threadDetailSlice.reducerPath]: resetOnNetworkSwitch(threadDetailSlice.reducer)
+  [threadDetailSlice.reducerPath]: resetOnNetworkSwitch(threadDetailSlice.reducer),
+  [feedbackSlice.reducerPath]: resetOnNetworkSwitch(feedbackSlice.reducer)
 }
 
 export type RootState = typeof reducer
@@ -77,7 +80,7 @@ const ReduxProvider: React.FC<Props> = ({ children }) => {
               userCache
             }
           }
-        })
+        }).concat(errorReporter)
     })
     setStore(storeInstance)
     // eslint-disable-next-line react-hooks/exhaustive-deps
