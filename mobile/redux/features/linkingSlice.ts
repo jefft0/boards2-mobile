@@ -31,16 +31,29 @@ const initialState: State = {
   remoteURL: undefined
 }
 
-export const requestLoginForGnokeyMobile = createAsyncThunk<boolean>('tx/requestLoginForGnokeyMobile', async () => {
-  // GnoConnect `connect`: display-level sign-in (no challenge/signature). The
-  // wallet returns the address to our callback; `state` correlates the response.
-  const state = issueState()
-  const url = new URL(`${GNOKEY_SCHEME}://connect`)
-  url.searchParams.append('callback', `${BOARDS2_CALLBACK}/signin-callback`)
-  url.searchParams.append('state', state)
-  console.log('redirecting to: ', url)
-  return await Linking.openURL(url.toString())
-})
+export const requestLoginForGnokeyMobile = createAsyncThunk<boolean, void, ThunkExtra>(
+  'tx/requestLoginForGnokeyMobile',
+  async (_, thunkAPI) => {
+    // GnoConnect `connect`: display-level sign-in (no challenge/signature). The
+    // wallet returns the address to our callback; `state` correlates the response.
+    const gnonative = thunkAPI.extra.gnonative
+    const state = issueState()
+    const url = new URL(`${GNOKEY_SCHEME}://connect`)
+    url.searchParams.append('callback', `${BOARDS2_CALLBACK}/signin-callback`)
+    url.searchParams.append('state', state)
+
+    // Name the network we expect. `connect` takes rpc/chainid so the wallet can
+    // offer to switch *before* answering; omitting them means it answers from
+    // whatever network it happens to be on, and the mismatch surfaces later as a
+    // refusal in `loggedIn` that the user has no way to act on from here. As the
+    // producer, boards2 owns the network — this is how the wallet learns it.
+    url.searchParams.append('rpc', await gnonative.getRemote())
+    url.searchParams.append('chainid', await gnonative.getChainID())
+
+    console.log('redirecting to: ', url.toString())
+    return await Linking.openURL(url.toString())
+  }
+)
 
 /**
  * Parameter names, in declaration order, for the realm functions we call —
@@ -106,7 +119,7 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   url.searchParams.append('callback', BOARDS2_CALLBACK + callbackPath)
   url.searchParams.append('state', state)
 
-  console.log('redirecting to: ', url)
+  console.log('redirecting to: ', url.toString())
   Linking.openURL(url.toString())
 }
 
