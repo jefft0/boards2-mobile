@@ -12,8 +12,11 @@ const GNOKEY_SCHEME = 'land.gno.gnokey'
 const BOARDS2_CALLBACK = 'land.gno.boards2:/'
 
 interface State {
-  /** Last non-success callback, so a screen can stop waiting and say why. */
-  failure: { status: string; message?: string } | undefined
+  /** Last non-success callback, so a screen can stop waiting and say why.
+   *  `code` is the wallet's enumerated, machine-readable reason (e.g.
+   *  `no_signer`, `signer_unavailable`, `tx_failed`, `network_declined`), never
+   *  human prose — branch on it, don't display it raw. */
+  failure: { status: string; code?: string } | undefined
   txJsonSigned: string | undefined
   bech32AddressSelected: string | undefined
   chainId: string | undefined
@@ -72,14 +75,16 @@ type MakeCallTxParams = {
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
   const { fnc, callerAddressBech32, args, packagePath = PACKAGE_PATH, callbackPath, send } = props
 
-  // GnoConnect `tx` launch link in sign-only mode (broadcast=false): gnokey
-  // builds the MsgCall from these params, the user reviews and signs, and
-  // returns the signed tx to our callback (`signedtx`) for us to broadcast.
-  // `signer` pins the account (from `connect`); `state` correlates the response
-  // and rejects forged callbacks.
+  // GnoConnect `signtx` launch link (the sign-only host): gnokey builds the
+  // MsgCall from these params, the user reviews and signs, and returns the signed
+  // tx to our callback (`signedtx`) for us to broadcast. Sign-only is its own
+  // host, not a `broadcast=false` flag, so a wallet that doesn't support it
+  // declines (`unsupported_host`) instead of broadcasting a tx we asked it only
+  // to sign. `signer` pins the account (from `connect`); `state` correlates the
+  // response and rejects forged callbacks.
   const state = issueState()
 
-  const url = new URL(`${GNOKEY_SCHEME}://tx`)
+  const url = new URL(`${GNOKEY_SCHEME}://signtx`)
   url.searchParams.append('path', packagePath)
   url.searchParams.append('func', fnc)
 
@@ -98,7 +103,6 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   url.searchParams.append('rpc', await gnonative.getRemote())
   url.searchParams.append('chainid', await gnonative.getChainID())
   url.searchParams.append('signer', callerAddressBech32)
-  url.searchParams.append('broadcast', 'false')
   url.searchParams.append('callback', BOARDS2_CALLBACK + callbackPath)
   url.searchParams.append('state', state)
 
@@ -175,7 +179,7 @@ export const linkingSlice = createSlice({
       // leave the rest untouched so no stale address/tx is picked up. Silently
       // swallowing this leaves the UI spinning on a request the user declined.
       if (q.status && q.status !== 'success') {
-        state.failure = { status: q.status as string, message: q.message as string | undefined }
+        state.failure = { status: q.status as string, code: q.code as string | undefined }
         return
       }
       state.failure = undefined
