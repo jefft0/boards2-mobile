@@ -1,4 +1,5 @@
 import { Stack } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
 
 import { Guard } from '@gno/components/auth/guard'
 import { GnoNativeProvider } from '@gnolang/gnonative'
@@ -124,6 +125,9 @@ export default function AppLayout() {
         <LinkingProvider>
           <ThemeProvider theme={theme}>
             <Guard>
+              {/* Every screen in this app paints a light background, so the
+                  system's light status-bar icons were invisible against it. */}
+              <StatusBar style="dark" />
               <Stack
                 screenOptions={{
                   headerShown: false,

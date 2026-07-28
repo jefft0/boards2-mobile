@@ -12,6 +12,7 @@ import {
 import { useEffect } from 'react'
 import { useRouter } from 'expo-router'
 import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTheme } from 'styled-components/native'
 import { HomeLayout, Button, Ruller, Text } from '@berty/gnonative-ui'
 import Icons from '@gno/components/icons'
 
@@ -19,6 +20,7 @@ export default function Root() {
   const dispatch = useAppDispatch()
   const route = useRouter()
   const insets = useSafeAreaInsets()
+  const theme = useTheme()
   const bech32AddressSelected = useAppSelector(selectBech32AddressSelected)
   const account = useAppSelector(selectAccount)
   const loading = useAppSelector(selectLoginLoading)
@@ -53,11 +55,16 @@ export default function Root() {
       // network has to be selectable *before* signing in — the profile screen is
       // behind the auth guard, which is the one place it cannot help.
       header={
-        // HomeLayout renders the header raw and only insets its footer, so the
-        // status bar has to be cleared here or the icon sits under it.
-        <View style={[styles.headerRow, { paddingTop: insets.top + 8 }]}>
+        // HomeLayout renders the header raw — outside the Content view that
+        // paints the page — and only insets its footer. So this has to clear the
+        // status bar itself, and paint its own background: without it the bare
+        // window colour (#F2F2F2) shows through and leaves a visible seam against
+        // the content below (#FDFDFD).
+        <View style={[styles.headerRow, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background }]}>
           <TouchableOpacity onPress={() => route.navigate('/network')} hitSlop={12} accessibilityLabel="Network settings">
-            <Icons.Network />
+            {/* 28 rather than the icon set's default 24: it is the only thing in
+                the header, against a 120dp logo and a large title. */}
+            <Icons.Network size={28} />
           </TouchableOpacity>
         </View>
       }
