@@ -28,10 +28,14 @@ export default function Search() {
         try {
           setLoading(true)
           await dispatch(clearLinking())
-          await dispatch(broadcastTxCommit(signedTx))
+          await dispatch(broadcastTxCommit(signedTx)).unwrap()
           router.back()
         } catch (error) {
+          // Stay put with the form still filled: going back would lose what was
+          // typed for a board that was never created. `.unwrap()` is what makes the
+          // rejection reach here — a plain dispatch resolves either way.
           console.error('on broadcastTxCommit', error)
+          setLoading(false)
         }
       }
     }

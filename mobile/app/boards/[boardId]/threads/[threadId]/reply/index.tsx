@@ -12,6 +12,7 @@ import {
 import { BREADCRUMBS } from '@gno/constants/Constants'
 import { ThreadsReplyTemplate } from '@gno/components/templates/ThreadsReplyTemplate'
 import ReplyThreadForm, { CreateReplyThreadFormData } from '@gno/components/threads/ReplyThreadForm'
+import { useWalletFailure } from '@gno/hooks/use-wallet-failure'
 
 export default function Page() {
   const [loading, setLoading] = useState(false)
@@ -32,16 +33,23 @@ export default function Page() {
         try {
           setLoading(true)
           await dispatch(clearLinking())
-          await dispatch(broadcastTxCommit(signedTx))
+          await dispatch(broadcastTxCommit(signedTx)).unwrap()
           router.back()
         } catch (error) {
+          // Stay put with the form still filled: going back would lose what was
+          // typed for a reply that was never created. `.unwrap()` is what makes the
+          // rejection reach here — a plain dispatch resolves either way.
           console.error('on broadcastTxCommit', error)
+          setLoading(false)
         }
       }
     }
     handleSignedTx()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [txJsonSigned])
+
+  // The wallet declined or failed: stop waiting. The snackbar says why.
+  useWalletFailure(() => setLoading(false))
 
   const onCreate = async (form: CreateReplyThreadFormData) => {
     if (!board) throw new Error('No active board')
