@@ -14,7 +14,7 @@ function useProtectedRoute(user: User | undefined) {
   const router = useRouter()
 
   // `network` is reachable signed out on purpose: `connect` names the network
-  // the wallet should switch to, so it has to be selectable *before* signing in.
+  // the wallet should switch to, so it must be selectable before signing in.
   const unauthSegments = ['sign-up', 'sign-in', 'network']
 
   React.useEffect(() => {

@@ -7,9 +7,9 @@ export type Feedback = {
 }
 
 interface FeedbackState {
-  /** Queue, not a single slot: one user action can fail more than once (a
-   *  broadcast rejects, then the reload behind it does too) and the second
-   *  message must not silently replace the first before it has been read. */
+  /** A queue, not one slot: a single action can fail twice (a broadcast
+   *  rejects, then the reload behind it) and the second message must not
+   *  replace the first before it has been read. */
   queue: Feedback[]
 }
 
@@ -18,10 +18,9 @@ const initialState: FeedbackState = { queue: [] }
 /**
  * The single channel for anything the user should be told about a failure.
  *
- * Nothing dispatches into this by hand from a screen: `errorReporter`
- * middleware feeds it from rejected thunks and wallet callbacks, so a new
- * failure path is reported without the screen that triggered it knowing this
- * exists. See redux/middleware/error-reporter.ts.
+ * No screen dispatches into it by hand: `errorReporter` feeds it from rejected
+ * thunks and wallet callbacks, so a new failure path is reported without the
+ * screen that triggered it knowing this exists.
  */
 export const feedbackSlice = createSlice({
   name: 'feedback',

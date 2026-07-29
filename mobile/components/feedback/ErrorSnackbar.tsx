@@ -11,14 +11,13 @@ const VISIBLE_MS = 6000
 /**
  * The one place a failure is shown to the user.
  *
- * Mounted once at the app root rather than per screen, because the failures it
- * reports arrive after a round trip through the wallet — by then the screen that
- * started the action may have been replaced, or the app relaunched. A snackbar
- * also does not block: these are things that went wrong, not decisions to make,
- * so it must not sit in front of a screen waiting to be acknowledged.
+ * Mounted at the app root, not per screen: these failures arrive after a round
+ * trip through the wallet, by which time the screen that started the action may
+ * be gone. A snackbar also does not block — they are things that went wrong, not
+ * decisions to make.
  *
- * Form-level validation stays inline next to its field; this is for the results
- * of an action the user has already committed to.
+ * Form validation stays inline next to its field; this is for the result of an
+ * action already committed to.
  */
 export default function ErrorSnackbar() {
   const feedback = useAppSelector(selectCurrentFeedback)
@@ -38,8 +37,8 @@ export default function ErrorSnackbar() {
   return (
     <View style={[styles.wrapper, { paddingBottom: Math.max(insets.bottom, 12) }]} pointerEvents="box-none">
       <View style={styles.snackbar}>
-        {/* Clamped: a long realm rejection must not grow the bar until it
-            covers the screen it is reporting on. */}
+        {/* Clamped: a long realm rejection must not grow the bar over the
+            screen it reports on. */}
         <Text.Body style={styles.message} numberOfLines={3}>
           {feedback.message}
         </Text.Body>

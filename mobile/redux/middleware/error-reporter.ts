@@ -7,10 +7,8 @@ import { reloadAvatar } from '../features/accountSlice'
 /**
  * Thunks whose failure the user should not be told about.
  *
- * Deliberately a deny-list rather than an allow-list: the app's problem was
- * failures that reached nobody, so a thunk added later is reported by default
- * and someone has to decide it is noise. Silence is the choice that needs
- * justifying, not visibility.
+ * A deny-list, not an allow-list: a thunk added later is reported by default,
+ * and silence is the choice that has to be justified.
  */
 const SILENT = [
   // Avatars are best-effort by design — a missing one falls back to the default
@@ -23,22 +21,16 @@ const isSilent = (type: string) => SILENT.some((prefix) => type.startsWith(prefi
 /**
  * Routes every user-visible failure into the feedback queue.
  *
- * Two shapes reach the user, and before this they were handled in three
- * different half-finished ways (per-slice `error` fields nothing read, a
- * `linking.failure` nothing read, and per-screen `console.error`):
+ * Two shapes reach the user: a rejected thunk, and a non-success wallet
+ * callback — a plain action rather than a rejection, because the wallet
+ * answered, just not `success`.
  *
- *  - a rejected thunk — a broadcast that failed, a query that could not load;
- *  - a non-success wallet callback, which is a plain action rather than a
- *    rejection because the wallet answered, it just did not answer `success`.
- *
- * Doing it here rather than in each screen means the report survives the screen:
- * these actions round-trip through the wallet, and the OS may have evicted and
- * relaunched the app by the time the answer arrives, so screen-local state is
- * gone exactly when the error needs showing.
+ * Here rather than in each screen, because these actions round-trip through the
+ * wallet: the OS may have evicted and relaunched the app by the time the answer
+ * arrives, so screen-local state is gone exactly when the error needs showing.
  */
 // Typed structurally: this project's `redux` types do not resolve, so RTK's
-// re-exported `Middleware` is unusable here (the same reason `Reducer` is
-// avoided in redux-provider).
+// `Middleware` is unusable here — as with `Reducer` in redux-provider.
 type ReporterAction = { type: string; error?: unknown; meta?: { condition?: boolean } }
 
 export const errorReporter =

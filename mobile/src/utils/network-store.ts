@@ -4,10 +4,9 @@ import { CUSTOM_NETWORK_ID, DEFAULT_NETWORK, findNetwork, Network } from '@gno/c
 /**
  * The network boards2 talks to, persisted across launches.
  *
- * boards2 is the GnoConnect *producer*: it owns the rpc/chainid it works against
- * and names them to the wallet on every launch link, so this is the single place
- * the app's network is decided. Reads are synchronous because the value is
- * needed to configure gnonative before the first render.
+ * As the GnoConnect producer, boards2 owns the rpc/chainid it names to the
+ * wallet on every launch link, so this is where its network is decided. Reads
+ * are synchronous: the value configures gnonative before the first render.
  */
 
 const STORE = 'boards2-network.json'
@@ -24,11 +23,9 @@ const readFromDisk = (): Network | undefined => {
     const parsed = JSON.parse(f.textSync()) as Partial<Network> | null
     if (!parsed || typeof parsed !== 'object') return undefined
 
-    // A preset is restored by id, not by its stored endpoint: if a preset's rpc
-    // changes (a testnet moves, the emulator alias above) the new value must
-    // reach a user who chose that preset long ago, rather than pinning them to
-    // whatever it happened to be on the day they selected it. An id that no
-    // longer exists falls through to the default.
+    // Presets are restored by id, not by stored endpoint: when a preset's rpc
+    // changes (a testnet moves) the new value must reach whoever chose it long
+    // ago. An id that no longer exists falls through to the default.
     if (parsed.id && parsed.id !== CUSTOM_NETWORK_ID) return findNetwork(parsed.id)
 
     const { label, rpc, chainId } = parsed
@@ -52,8 +49,7 @@ export const setActiveNetwork = (network: Network) => {
     if (!f.exists) f.create({ intermediates: true })
     f.write(JSON.stringify(network))
   } catch (e) {
-    // In-memory selection still applies for this run; it just won't survive a
-    // restart. Failing the switch outright would be the worse trade.
+    // The selection still applies for this run, it just won't survive a restart.
     console.warn('could not persist the selected network', e)
   }
 }

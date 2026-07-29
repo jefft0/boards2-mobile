@@ -85,9 +85,9 @@ const sameNetwork = (a: Network, b: Network) => a.rpc === b.rpc && a.chainId ===
 export default function NetworkForm({ onSwitched }: { onSwitched?: () => void }) {
   const dispatch = useAppDispatch()
 
-  // Held in state rather than read on each render: the active network lives
-  // outside redux, so nothing would otherwise re-render this after a switch and
-  // the old selection would stay highlighted, reading as a failed switch.
+  // In state rather than read per render: the active network lives outside
+  // redux, so nothing would re-render this after a switch and the old selection
+  // would stay highlighted, reading as a failed switch.
   const [active, setActive] = useState(getActiveNetwork())
   const [pending, setPending] = useState(false)
 

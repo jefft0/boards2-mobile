@@ -14,14 +14,11 @@ const LinkingProvider = ({ children }: { children: React.ReactNode }) => {
         const linkingParsedURL = Linking.parse(url)
         console.log('link url received', url)
 
-        // Reject unsolicited/forged callbacks: the callback scheme is public —
-        // anything installed can open `land.gno.boards2:/…` — so only accept a
-        // callback echoing a single-use `state` we issued.
-        //
-        // A missing `state` must be rejected too, not waved through: every link
-        // we open (connect and tx alike) sends one, so a callback without one
-        // cannot be a reply to us. Exempting them would let a forger bypass the
-        // whole check simply by omitting the parameter.
+        // The callback scheme is public — anything installed can open
+        // `land.gno.boards2:/…` — so accept only a callback echoing a single-use
+        // `state` we issued. A missing one is rejected too: every link we open
+        // sends one, and exempting them would let a forger skip the check by
+        // omitting the parameter.
         const state = linkingParsedURL.queryParams?.state as string | undefined
         if (!state || !consumeState(state)) {
           console.warn('ignoring gnokey callback with missing or unknown state')

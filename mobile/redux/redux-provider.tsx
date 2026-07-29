@@ -31,11 +31,9 @@ export interface ThunkExtra {
 
 /**
  * Clears a slice when the network changes (see `switchNetwork`): passing
- * `undefined` makes the wrapped reducer return its own initial state.
- *
- * Applied at the map below so that a slice is wrapped on the same line that
- * registers it — an unwrapped slice would silently keep another chain's data,
- * which surfaces as wrong content rather than as an error.
+ * `undefined` makes the wrapped reducer return its initial state. Applied where
+ * each slice is registered, since an unwrapped one silently keeps another
+ * chain's data and surfaces as wrong content rather than as an error.
  */
 const resetOnNetworkSwitch =
   <S, A extends { type: string }>(sliceReducer: (state: S | undefined, action: A) => S) =>

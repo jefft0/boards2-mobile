@@ -26,8 +26,8 @@ export default function Root() {
   const loading = useAppSelector(selectLoginLoading)
 
   useEffect(() => {
-    // The GnoConnect `connect` callback returns the address (not a remote URL) —
-    // boards2 already knows its own network — so login gates on the address only.
+    // The `connect` callback returns the address, not a remote URL — boards2
+    // knows its own network — so login gates on the address alone.
     if (loading || !bech32AddressSelected) return
     console.log('bech32AddressSelected on index', bech32AddressSelected)
 
@@ -51,19 +51,17 @@ export default function Root() {
 
   return (
     <HomeLayout
-      // `connect` names the network the wallet is asked to switch to, so the
-      // network has to be selectable *before* signing in — the profile screen is
-      // behind the auth guard, which is the one place it cannot help.
+      // `connect` names the network the wallet should switch to, so it has to be
+      // selectable before signing in — the profile screen is behind the guard.
       header={
-        // HomeLayout renders the header raw — outside the Content view that
-        // paints the page — and only insets its footer. So this has to clear the
-        // status bar itself, and paint its own background: without it the bare
-        // window colour (#F2F2F2) shows through and leaves a visible seam against
-        // the content below (#FDFDFD).
+        // HomeLayout renders the header outside the Content view that paints the
+        // page, and insets only its footer, so this clears the status bar and
+        // paints its own background — otherwise the window colour (#F2F2F2)
+        // shows through and seams against the content below (#FDFDFD).
         <View style={[styles.headerRow, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background }]}>
           <TouchableOpacity onPress={() => route.navigate('/network')} hitSlop={12} accessibilityLabel="Network settings">
-            {/* 28 rather than the icon set's default 24: it is the only thing in
-                the header, against a 120dp logo and a large title. */}
+            {/* 28 rather than the default 24: it is alone in the header,
+                against a 120dp logo and a large title. */}
             <Icons.Network size={28} />
           </TouchableOpacity>
         </View>

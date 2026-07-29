@@ -1,20 +1,17 @@
 import { Directory, File, Paths } from 'expo-file-system'
 
 /**
- * Single-use `state` tokens issued with each GnoConnect launch link and
- * expected back on the callback.
+ * Single-use `state` tokens issued with each GnoConnect launch link and expected
+ * back on the callback.
  *
- * A callback scheme is public — anything installed can open
- * `land.gno.boards2:/…?status=success&address=…` — so a callback is only
- * trustworthy if it echoes a token we issued. Without this, a forged callback
- * could set the signed-in address or feed us a transaction to broadcast.
+ * The callback scheme is public — anything installed can open
+ * `land.gno.boards2:/…?status=success&address=…` — so a callback is trustworthy
+ * only if it echoes a token we issued. Otherwise a forged one could set the
+ * signed-in address or feed us a transaction to broadcast.
  *
- * Tokens are persisted rather than kept in memory: the round trip leaves this
- * app for the wallet, and the OS may kill us while we are backgrounded. An
- * in-memory set would then be empty on the cold start that the callback itself
- * triggers, so every legitimate return after a low-memory eviction would be
- * rejected — the failure would be intermittent and look like the wallet was at
- * fault.
+ * Persisted, not held in memory: the round trip leaves the app, and the OS may
+ * evict us meanwhile. An in-memory set would be empty on the cold start the
+ * callback itself triggers, rejecting legitimate returns intermittently.
  */
 
 const STORE = 'gnoconnect-callback-states.json'
@@ -33,8 +30,8 @@ const read = (): Store => {
     const parsed = JSON.parse(f.textSync()) as unknown
     return parsed && typeof parsed === 'object' ? (parsed as Store) : {}
   } catch {
-    // A corrupt store must not wedge sign-in: start clean. The cost is that
-    // callbacks already in flight are rejected, which is the safe direction.
+    // A corrupt store must not wedge sign-in: start clean, rejecting callbacks
+    // already in flight — the safe direction.
     return {}
   }
 }
