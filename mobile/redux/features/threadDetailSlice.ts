@@ -1,7 +1,8 @@
+import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createAsyncThunk, createSlice, RootState } from '@reduxjs/toolkit'
+import { createSlice, RootState } from '@reduxjs/toolkit'
 import { ThunkExtra, fetchThreadComments, selectThreads, qEvalGetComments, enrichData, subtractOrZero } from '@gno/redux'
 
 interface ThreadDetailState {
@@ -66,7 +67,7 @@ export type LoadThreadDetailResult = {
   totalPosts: number
 }
 
-export const loadThreadDetail = createAsyncThunk<LoadThreadDetailResult | undefined, LoadThreadDetailRequest, ThunkExtra>(
+export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | undefined, LoadThreadDetailRequest, ThunkExtra>(
   'threadDetail/loadThreadDetail',
   async ({ boardId, threadId }, thunkAPI) => {
     const gnonative = thunkAPI.extra.gnonative as GnoNativeApi

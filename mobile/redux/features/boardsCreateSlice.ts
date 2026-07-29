@@ -1,4 +1,5 @@
-import { createAsyncThunk, createSlice, RootState } from '@reduxjs/toolkit'
+import { createAppAsyncThunk } from '../utils/async-thunk'
+import { createSlice, RootState } from '@reduxjs/toolkit'
 import { ThunkExtra, Board, makeCallTx } from '@gno/redux'
 
 export interface BoardsCreateState {
@@ -57,7 +58,7 @@ export interface BoardCreationData {
   isPublic: boolean
 }
 
-export const createBoard = createAsyncThunk<BoardsResult | undefined, BoardCreationData, ThunkExtra>(
+export const createBoard = createAppAsyncThunk<BoardsResult | undefined, BoardCreationData, ThunkExtra>(
   'boardsCreate/create',
   async (param, thunkAPI) => {
     const { boardName, isPublic } = param

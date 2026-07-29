@@ -1,4 +1,5 @@
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createAppAsyncThunk } from '../utils/async-thunk'
+import { createSlice } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
@@ -9,8 +10,8 @@ export interface CounterState {
   account?: User
   loading: boolean
   /** Why the last sign-in failed, for the sign-in screen to show. Without it a
-   *  rejected `loggedIn` is silent in a release build: the user returns from the
-   *  wallet having approved, and nothing at all happens. */
+   *  rejected `loggedIn` is silent in a release build: the user approves in the
+   *  wallet, comes back, and nothing happens. */
   error?: string
 }
 
@@ -20,7 +21,7 @@ const initialState: CounterState = {
   error: undefined
 }
 
-export const loggedIn = createAsyncThunk<User, void, ThunkExtra>('account/loggedIn', async (param, thunkAPI) => {
+export const loggedIn = createAppAsyncThunk<User, void, ThunkExtra>('account/loggedIn', async (param, thunkAPI) => {
   console.log('Logging in', param)
 
   const { bech32AddressSelected: bech32, chainId } = (thunkAPI.getState() as RootState).linking
@@ -67,7 +68,9 @@ export async function getAccountName(bech32: string, gnonative: GnoNativeApi): P
       name = match[1]
     }
   } catch (error) {
-    console.error('Error getting account name', error)
+    // Best-effort as well: the name falls back to the bech32 below, and
+    // `gno.land/r/sys/users` is not deployed on every chain either.
+    console.log('No registered name for', bech32, '— using the address:', error)
   }
   return name
 }
@@ -79,7 +82,7 @@ interface AvatarCallTxParams {
   callbackPath: string
 }
 
-export const avatarTxAndRedirectToSign = createAsyncThunk<void, AvatarCallTxParams, ThunkExtra>(
+export const avatarTxAndRedirectToSign = createAppAsyncThunk<void, AvatarCallTxParams, ThunkExtra>(
   'account/avatarTxAndRedirectToSign',
   async (props, thunkAPI) => {
     const { mimeType, base64, callerAddressBech32, callbackPath } = props
@@ -107,7 +110,7 @@ export const avatarTxAndRedirectToSign = createAsyncThunk<void, AvatarCallTxPara
   }
 )
 
-export const reloadAvatar = createAsyncThunk<string | undefined, void, ThunkExtra>(
+export const reloadAvatar = createAppAsyncThunk<string | undefined, void, ThunkExtra>(
   'account/reloadAvatar',
   async (param, thunkAPI) => {
     const state = (await thunkAPI.getState()) as CounterState
@@ -129,7 +132,10 @@ const loadBech32AvatarFromChain = async (bech32: string, thunkAPI: ThunkExtra) =
     const response = await gnonative.qEval('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
     return response.substring(2, response.length - '" string)'.length)
   } catch (error) {
-    console.warn('Avatar unavailable, using default for', bech32, error)
+    // Same as use-user-cache: expected wherever the profile realm is not
+    // deployed, and the default is returned just below. console.warn raises a
+    // LogBox too, so this stays at log level.
+    console.log('No avatar for', bech32, '— using the default:', error)
   }
   return DEFAULT_AVATAR
 }

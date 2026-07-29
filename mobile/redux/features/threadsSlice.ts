@@ -1,7 +1,8 @@
+import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, Board } from '@gno/redux'
 import { countThreadPosts, fetchThreadPosts, subtractOrZero } from '@gno/redux'
 
@@ -69,7 +70,7 @@ type LoadThreadsRequest = {
   board: Board
 }
 
-export const loadThreads = createAsyncThunk<LoadResult | undefined, LoadThreadsRequest, ThunkExtra>(
+export const loadThreads = createAppAsyncThunk<LoadResult | undefined, LoadThreadsRequest, ThunkExtra>(
   'threads/loadThreads',
   async ({ board }, thunkAPI) => {
     const gnonative = thunkAPI.extra.gnonative as GnoNativeApi

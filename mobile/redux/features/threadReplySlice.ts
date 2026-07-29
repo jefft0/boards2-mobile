@@ -1,4 +1,5 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit'
+import { createAppAsyncThunk } from '../utils/async-thunk'
+import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { Post } from '@gno/types'
 import { ThunkExtra, RootState, selectThreadBoard, selectAccount } from '@gno/redux'
@@ -32,7 +33,7 @@ interface CreateReplyRequestParams {
   callbackPath: string
 }
 
-export const threadReplyAndRedirectToSign = createAsyncThunk<void, CreateReplyRequestParams, ThunkExtra>(
+export const threadReplyAndRedirectToSign = createAppAsyncThunk<void, CreateReplyRequestParams, ThunkExtra>(
   'threadReply/CreateReply',
   async (props, thunkAPI) => {
     try {

@@ -30,7 +30,11 @@ export const useUserCache = () => {
       )
       bech32Image = response.substring(2, response.length - '" string)'.length)
     } catch (error) {
-      console.error('Error loading avatar for', bech32, error)
+      // Not an error: the avatar is best-effort and falls back below.
+      // `gno.land/r/demo/profile` is not deployed on every chain — a local
+      // gnodev usually lacks it — and console.error would raise a LogBox on
+      // every render.
+      console.log('No avatar for', bech32, '— using the default:', error)
     }
 
     const user = {

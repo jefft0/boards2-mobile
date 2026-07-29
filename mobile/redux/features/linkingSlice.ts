@@ -1,7 +1,8 @@
+import { createAppAsyncThunk } from '../utils/async-thunk'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { Buffer } from 'buffer'
 import * as Linking from 'expo-linking'
 import { ThunkExtra } from '@gno/redux'
@@ -13,9 +14,8 @@ const BOARDS2_CALLBACK = 'land.gno.boards2:/'
 
 interface State {
   /** Last non-success callback, so a screen can stop waiting and say why.
-   *  `code` is the wallet's enumerated, machine-readable reason (e.g.
-   *  `no_signer`, `signer_unavailable`, `tx_failed`, `network_declined`), never
-   *  human prose — branch on it, don't display it raw. */
+   *  `code` is the wallet's enumerated reason (`no_signer`, `tx_failed`, …),
+   *  never prose — branch on it, don't display it raw. */
   failure: { status: string; code?: string } | undefined
   txJsonSigned: string | undefined
   bech32AddressSelected: string | undefined
@@ -31,22 +31,21 @@ const initialState: State = {
   remoteURL: undefined
 }
 
-export const requestLoginForGnokeyMobile = createAsyncThunk<boolean, void, ThunkExtra>(
+export const requestLoginForGnokeyMobile = createAppAsyncThunk<boolean, void, ThunkExtra>(
   'tx/requestLoginForGnokeyMobile',
   async (_, thunkAPI) => {
-    // GnoConnect `connect`: display-level sign-in (no challenge/signature). The
-    // wallet returns the address to our callback; `state` correlates the response.
+    // GnoConnect `connect`: display-level sign-in, no challenge or signature.
+    // The wallet returns the address; `state` correlates the response.
     const gnonative = thunkAPI.extra.gnonative
     const state = issueState()
     const url = new URL(`${GNOKEY_SCHEME}://connect`)
     url.searchParams.append('callback', `${BOARDS2_CALLBACK}/signin-callback`)
     url.searchParams.append('state', state)
 
-    // Name the network we expect. `connect` takes rpc/chainid so the wallet can
-    // offer to switch *before* answering; omitting them means it answers from
-    // whatever network it happens to be on, and the mismatch surfaces later as a
-    // refusal in `loggedIn` that the user has no way to act on from here. As the
-    // producer, boards2 owns the network — this is how the wallet learns it.
+    // Name the network we expect: `connect` takes rpc/chainid so the wallet can
+    // offer to switch *before* answering. Omitted, it answers from whatever
+    // network it is on and the mismatch surfaces later as a refusal in
+    // `loggedIn` the user cannot act on from here.
     url.searchParams.append('rpc', await gnonative.getRemote())
     url.searchParams.append('chainid', await gnonative.getChainID())
 
@@ -56,14 +55,13 @@ export const requestLoginForGnokeyMobile = createAsyncThunk<boolean, void, Thunk
 )
 
 /**
- * Parameter names, in declaration order, for the realm functions we call —
- * taken from the realm sources, not guessed: a wrong name would be bound as an
- * unknown argument while the real parameter went out empty.
+ * Parameter names, in declaration order, taken from the realm sources rather
+ * than guessed: a wrong name binds as an unknown argument while the real
+ * parameter goes out empty.
  *
- * `AddReaction` and `RepostThread` are deliberately absent: neither is an
- * exported function of `gno.land/r/gnoland/boards2/v1` (the realm only has a
- * `renderRepostThread` *render* route), so there is no signature to name them
- * from. Those calls fall back to positional `args=`.
+ * `AddReaction` and `RepostThread` are absent because neither is an exported
+ * function of the realm — only a `renderRepostThread` render route — so they
+ * fall back to positional `args=`.
  */
 const ARG_NAMES: Record<string, string[]> = {
   CreateBoard: ['name', 'listed', 'open'],
@@ -88,24 +86,21 @@ type MakeCallTxParams = {
 export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeApi): Promise<void> => {
   const { fnc, callerAddressBech32, args, packagePath = PACKAGE_PATH, callbackPath, send } = props
 
-  // GnoConnect `signtx` launch link (the sign-only host): gnokey builds the
-  // MsgCall from these params, the user reviews and signs, and returns the signed
-  // tx to our callback (`signedtx`) for us to broadcast. Sign-only is its own
-  // host, not a `broadcast=false` flag, so a wallet that doesn't support it
-  // declines (`unsupported_host`) instead of broadcasting a tx we asked it only
-  // to sign. `signer` pins the account (from `connect`); `state` correlates the
-  // response and rejects forged callbacks.
+  // GnoConnect `signtx`, the sign-only host: gnokey builds the MsgCall, the user
+  // signs, and the tx comes back on `signedtx` for us to broadcast. Sign-only is
+  // its own host rather than a `broadcast=false` flag, so a wallet without it
+  // declines (`unsupported_host`) instead of broadcasting what we asked it only
+  // to sign. `signer` pins the account; `state` rejects forged callbacks.
   const state = issueState()
 
   const url = new URL(`${GNOKEY_SCHEME}://signtx`)
   url.searchParams.append('path', packagePath)
   url.searchParams.append('func', fnc)
 
-  // Prefer named `arg.<name>` params (the encoding the standard asks producers
-  // to emit). Positional `args=` is only a back-compat alias, and it binds by
-  // position: if our order ever diverges from the realm's declaration order the
-  // values land in the wrong parameters silently. Fall back to it only for
-  // functions whose signature we don't have.
+  // Named `arg.<name>` params are what the standard asks producers to emit.
+  // Positional `args=` is a back-compat alias that binds by position, so any
+  // divergence from the realm's declaration order lands values in the wrong
+  // parameters silently — use it only where we lack the signature.
   const names = ARG_NAMES[fnc]
   if (names && names.length === args.length) {
     args.forEach((value, i) => url.searchParams.append(`arg.${names[i]}`, value))
@@ -123,16 +118,15 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   Linking.openURL(url.toString())
 }
 
-export const broadcastTxCommit = createAsyncThunk<void, string, ThunkExtra>(
+export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
   async (signedTx, thunkAPI) => {
     console.log('broadcasting tx: ', signedTx)
     const gnonative = thunkAPI.extra.gnonative
 
-    // `broadcastTxCommit` returns a *stream* (Promise<AsyncIterable<…>>), so
-    // awaiting it only hands back the iterator — the call is never driven and
-    // the transaction never leaves the device. It logged an empty object and
-    // looked like a success while nothing reached the chain. Iterate it.
+    // `broadcastTxCommit` returns a stream, so awaiting it only hands back the
+    // iterator: unless it is driven, the transaction never leaves the device and
+    // the empty result looks like success. Iterate it.
     const stream = await gnonative.broadcastTxCommit(signedTx)
     let delivered = false
     for await (const res of stream) {
@@ -151,7 +145,7 @@ interface GnodCallTxParams {
   callbackPath: string
 }
 
-export const gnodTxAndRedirectToSign = createAsyncThunk<void, GnodCallTxParams, ThunkExtra>(
+export const gnodTxAndRedirectToSign = createAppAsyncThunk<void, GnodCallTxParams, ThunkExtra>(
   'tx/gnodTxAndRedirectToSign',
   async (props, thunkAPI) => {
     console.log('gnodding post: ', props.post)
@@ -187,23 +181,21 @@ export const linkingSlice = createSlice({
     setLinkingData: (state, action) => {
       const q = action.payload.queryParams ?? {}
 
-      // A failed sign-in / signing (user cancelled or wallet error): record it
-      // so the screen that opened the wallet can stop waiting and explain, and
-      // leave the rest untouched so no stale address/tx is picked up. Silently
-      // swallowing this leaves the UI spinning on a request the user declined.
+      // A cancelled or failed request: record it so the screen that opened the
+      // wallet can stop waiting and explain, and leave the rest untouched so no
+      // stale address or tx is picked up.
       if (q.status && q.status !== 'success') {
         state.failure = { status: q.status as string, code: q.code as string | undefined }
         return
       }
       state.failure = undefined
 
-      // connect: the user's address (display-level identity; the address is
-      // untrusted — authority comes from the on-chain tx gnokey signs).
+      // connect: display-level identity only — the address is untrusted,
+      // authority comes from the on-chain tx gnokey signs.
       if (q.address) state.bech32AddressSelected = q.address as string
 
-      // tx sign-only: the signed tx is returned base64-encoded (amino-JSON);
-      // decode it for broadcastTxCommit. `tx` stays supported for the legacy
-      // tosign flow.
+      // sign-only returns the tx base64-encoded (amino-JSON); `tx` stays
+      // supported for the legacy tosign flow.
       if (q.signedtx) {
         state.txJsonSigned = Buffer.from(q.signedtx as string, 'base64').toString('utf-8')
       } else if (q.tx) {

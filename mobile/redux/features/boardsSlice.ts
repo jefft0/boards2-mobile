@@ -1,7 +1,8 @@
+import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, selectAccount, RootState } from '@gno/redux'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
 
@@ -80,7 +81,7 @@ type BoardsRequest = {
   endIndex: number
 }
 
-export const getListedBoards = createAsyncThunk<BoardsResult | undefined, BoardsRequest, ThunkExtra>(
+export const getListedBoards = createAppAsyncThunk<BoardsResult | undefined, BoardsRequest, ThunkExtra>(
   'boards/getListedBoards',
   async (param, thunkAPI) => {
     console.log('Loading Boards', param)
