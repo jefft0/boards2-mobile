@@ -124,7 +124,33 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
 }
 
 /**
- * Broadcasts a `signtx` result straight to the chain's RPC.
+ * A tm2 JSON-RPC call against the node we are configured for.
+ *
+ * `error.message` is useless on tm2 — every failure comes back as the JSON-RPC
+ * generic "Internal error" (-32603) and the real cause is in `error.data`
+ * ("Could not find tx result for hash …", and so on). Reading `message` alone
+ * turns every distinct failure into the same three words.
+ */
+async function rpc(endpoint: string, method: string, params: unknown[]): Promise<any> {
+  const response = await fetch(endpoint, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    // A string id, matching what tm2's own clients send.
+    body: JSON.stringify({ jsonrpc: '2.0', id: `boards2-${Date.now()}`, method, params })
+  })
+  if (!response.ok) {
+    throw new Error(`${method} failed: ${response.status} ${response.statusText}`)
+  }
+  const body = await response.json()
+  if (body.error) {
+    const detail = body.error.data ?? body.error.message ?? JSON.stringify(body.error)
+    throw new Error(`${method} rejected: ${detail}`)
+  }
+  return body.result
+}
+
+/**
+ * Broadcasts a `signtx` result straight to the chain's RPC, then confirms it.
  *
  * Deliberately *not* `gnonative.broadcastTxCommit`, whose parameter is
  * `signedTxJson` — feeding it this blob would mean decoding the amino-binary the
@@ -132,10 +158,21 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
  * forbids. A session key or multisig signature carries fields a generic client
  * drops on that round trip, producing a well-formed-looking but invalid
  * transaction that fails at the last step and looks like the wallet's fault.
+ * `signedtx` is already the base64 amino-binary these endpoints take, so the
+ * bytes go over untouched and we never need to understand the signature.
  *
- * `broadcast_tx_commit` takes base64 amino-binary as its single parameter, which
- * is precisely what `signedtx` already is, so the bytes go over untouched and we
- * never need to understand the signature at all.
+ * **`broadcast_tx_sync`, not `_commit`.** `_commit` holds the request open until
+ * the transaction is in a block, and when that wait fails — a timeout, an
+ * event-subscription problem — the RPC returns an error for a transaction that
+ * was already delivered and goes on to commit perfectly well. Reporting failure
+ * for a transaction that succeeded is the worst answer available. `_sync`
+ * returns once the node has accepted it into the mempool, which is the part the
+ * node can actually be definitive about.
+ *
+ * Acceptance is not landing, so we then poll `tx` by hash — the standard's own
+ * guidance, that a broadcast result is a hint and a producer should confirm on
+ * its own RPC. That also gives the caller a real "it is on chain" signal to
+ * refetch against, which is what `_commit` was being used for.
  */
 export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
@@ -144,33 +181,39 @@ export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
     const remote = await gnonative.getRemote()
     const endpoint = /^https?:\/\//i.test(remote) ? remote : `http://${remote}`
 
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        jsonrpc: '2.0',
-        id: Date.now(),
-        method: 'broadcast_tx_commit',
-        params: [signedTx]
-      })
-    })
-    if (!response.ok) {
-      throw new Error(`Broadcast failed: ${response.status} ${response.statusText}`)
+    const accepted = await rpc(endpoint, 'broadcast_tx_sync', [signedTx])
+    // CheckTx ran and refused it: bad signature, bad sequence, insufficient
+    // funds. Nothing was committed and nothing will be.
+    if (accepted?.error) {
+      throw new Error(`Transaction rejected: ${JSON.stringify(accepted.error)}`)
+    }
+    const hash = accepted?.hash
+    if (!hash) {
+      throw new Error('Broadcast returned no transaction hash.')
     }
 
-    const body = await response.json()
-    if (body.error) {
-      throw new Error(`Broadcast rejected: ${body.error.message ?? JSON.stringify(body.error)}`)
+    // Poll rather than assume. Until it appears in a block it has not happened,
+    // and a screen that refetches before then shows the user their own change
+    // missing.
+    for (let attempt = 0; attempt < 10; attempt++) {
+      await new Promise((resolve) => setTimeout(resolve, 500))
+      let committed
+      try {
+        committed = await rpc(endpoint, 'tx', [hash])
+      } catch {
+        continue // not indexed yet; `tx` reports a miss as an error
+      }
+      // Accepted into a block and still failed on execution — out of gas, a
+      // realm that refused the call. The user is owed that difference.
+      const failure = committed?.tx_result?.ResponseBase?.Error
+      if (failure) {
+        throw new Error(`Transaction failed on chain: ${JSON.stringify(failure)}`)
+      }
+      console.log('broadcast committed: height=%s hash=%s', String(committed?.height), hash)
+      return
     }
-    // A transaction can be accepted by the node and still fail on-chain, and the
-    // user is owed the difference: check_tx rejects before execution, deliver_tx
-    // after it. Either non-zero code means nothing landed the way they asked.
-    const result = body.result
-    const failure = [result?.check_tx, result?.deliver_tx].find((r) => r && r.ResponseBase?.Error)
-    if (failure) {
-      throw new Error(`Transaction failed: ${JSON.stringify(failure.ResponseBase.Error)}`)
-    }
-    console.log('broadcast result: height=%s hash=%s', String(result?.height), String(result?.hash))
+
+    throw new Error(`Transaction ${hash} was accepted but has not appeared in a block. It may still land.`)
   }
 )
 
