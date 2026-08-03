@@ -3,7 +3,6 @@ import { PACKAGE_PATH } from '@gno/constants/Constants'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice } from '@reduxjs/toolkit'
-import { Buffer } from 'buffer'
 import * as Linking from 'expo-linking'
 import { ThunkExtra } from '@gno/redux'
 import { issueState } from '@gno/utils/callback-state'
@@ -17,7 +16,7 @@ interface State {
    *  `code` is the wallet's enumerated reason (`no_signer`, `tx_failed`, …),
    *  never prose — branch on it, don't display it raw. */
   failure: { status: string; code?: string } | undefined
-  txJsonSigned: string | undefined
+  signedTx: string | undefined
   bech32AddressSelected: string | undefined
   chainId: string | undefined
   remoteURL: string | undefined
@@ -25,7 +24,7 @@ interface State {
 
 const initialState: State = {
   failure: undefined,
-  txJsonSigned: undefined,
+  signedTx: undefined,
   bech32AddressSelected: undefined,
   chainId: undefined,
   remoteURL: undefined
@@ -97,10 +96,16 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   url.searchParams.append('path', packagePath)
   url.searchParams.append('func', fnc)
 
-  // Named `arg.<name>` params are what the standard asks producers to emit.
-  // Positional `args=` is a back-compat alias that binds by position, so any
-  // divergence from the realm's declaration order lands values in the wrong
-  // parameters silently — use it only where we lack the signature.
+  // The standard's two argument forms, and a link uses one or the other —
+  // mixing them is `invalid_request`.
+  //
+  // Named `arg.<name>` says nothing about order, so the wallet resolves it from
+  // the realm's signature via `vm/qdoc`; that is the safe default and what we
+  // emit whenever we know the parameter names. Positional `args=` asserts the
+  // order ourselves, which is only sound where ARG_NAMES has no entry because
+  // the function is not an exported realm function to look up. A wrong order
+  // there lands values in the wrong parameters silently: every MsgCall argument
+  // is a string, so nothing downstream catches it.
   const names = ARG_NAMES[fnc]
   if (names && names.length === args.length) {
     args.forEach((value, i) => url.searchParams.append(`arg.${names[i]}`, value))
@@ -118,24 +123,54 @@ export const makeCallTx = async (props: MakeCallTxParams, gnonative: GnoNativeAp
   Linking.openURL(url.toString())
 }
 
+/**
+ * Broadcasts a `signtx` result straight to the chain's RPC.
+ *
+ * Deliberately *not* `gnonative.broadcastTxCommit`, whose parameter is
+ * `signedTxJson` — feeding it this blob would mean decoding the amino-binary the
+ * wallet returned and re-encoding it as JSON, which is exactly what the standard
+ * forbids. A session key or multisig signature carries fields a generic client
+ * drops on that round trip, producing a well-formed-looking but invalid
+ * transaction that fails at the last step and looks like the wallet's fault.
+ *
+ * `broadcast_tx_commit` takes base64 amino-binary as its single parameter, which
+ * is precisely what `signedtx` already is, so the bytes go over untouched and we
+ * never need to understand the signature at all.
+ */
 export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
   async (signedTx, thunkAPI) => {
-    console.log('broadcasting tx: ', signedTx)
     const gnonative = thunkAPI.extra.gnonative
+    const remote = await gnonative.getRemote()
+    const endpoint = /^https?:\/\//i.test(remote) ? remote : `http://${remote}`
 
-    // `broadcastTxCommit` returns a stream, so awaiting it only hands back the
-    // iterator: unless it is driven, the transaction never leaves the device and
-    // the empty result looks like success. Iterate it.
-    const stream = await gnonative.broadcastTxCommit(signedTx)
-    let delivered = false
-    for await (const res of stream) {
-      delivered = true
-      console.log('broadcast result: height=%s hash=%s', String(res.height), Buffer.from(res.hash).toString('base64'))
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        jsonrpc: '2.0',
+        id: Date.now(),
+        method: 'broadcast_tx_commit',
+        params: [signedTx]
+      })
+    })
+    if (!response.ok) {
+      throw new Error(`Broadcast failed: ${response.status} ${response.statusText}`)
     }
-    if (!delivered) {
-      throw new Error('Broadcast produced no response; the transaction was not sent.')
+
+    const body = await response.json()
+    if (body.error) {
+      throw new Error(`Broadcast rejected: ${body.error.message ?? JSON.stringify(body.error)}`)
     }
+    // A transaction can be accepted by the node and still fail on-chain, and the
+    // user is owed the difference: check_tx rejects before execution, deliver_tx
+    // after it. Either non-zero code means nothing landed the way they asked.
+    const result = body.result
+    const failure = [result?.check_tx, result?.deliver_tx].find((r) => r && r.ResponseBase?.Error)
+    if (failure) {
+      throw new Error(`Transaction failed: ${JSON.stringify(failure.ResponseBase.Error)}`)
+    }
+    console.log('broadcast result: height=%s hash=%s', String(result?.height), String(result?.hash))
   }
 )
 
@@ -171,7 +206,7 @@ export const linkingSlice = createSlice({
   extraReducers: (builder) => {
     builder.addCase(broadcastTxCommit.fulfilled, (state) => {
       state.failure = undefined
-      state.txJsonSigned = undefined
+      state.signedTx = undefined
       state.bech32AddressSelected = undefined
       state.chainId = undefined
       state.remoteURL = undefined
@@ -194,12 +229,15 @@ export const linkingSlice = createSlice({
       // authority comes from the on-chain tx gnokey signs.
       if (q.address) state.bech32AddressSelected = q.address as string
 
-      // sign-only returns the tx base64-encoded (amino-JSON); `tx` stays
-      // supported for the legacy tosign flow.
+      // `signedtx` is base64 amino-binary — the exact parameter
+      // broadcast_tx_commit takes. The standard requires we treat it as opaque
+      // and broadcast it unmodified: decoding and re-encoding needs a client
+      // able to represent whatever scheme the wallet signed with, and a session
+      // key or multisig carries fields a generic client drops, producing a
+      // well-formed-looking but invalid transaction that fails at the last step
+      // and looks like the wallet's fault. So it is stored exactly as received.
       if (q.signedtx) {
-        state.txJsonSigned = Buffer.from(q.signedtx as string, 'base64').toString('utf-8')
-      } else if (q.tx) {
-        state.txJsonSigned = q.tx as string
+        state.signedTx = q.signedtx as string
       }
 
       if (q.chainid || q.chain_id) state.chainId = (q.chainid ?? q.chain_id) as string
@@ -208,7 +246,7 @@ export const linkingSlice = createSlice({
     clearLinking: (state) => {
       console.log('clearing linking data')
       state.failure = undefined
-      state.txJsonSigned = undefined
+      state.signedTx = undefined
       state.bech32AddressSelected = undefined
       state.chainId = undefined
       state.remoteURL = undefined
@@ -216,7 +254,7 @@ export const linkingSlice = createSlice({
   },
   selectors: {
     selectLinkingFailure: (state: State) => state.failure,
-    selectQueryParamsTxJsonSigned: (state: State) => state.txJsonSigned as string | undefined,
+    selectSignedTx: (state: State) => state.signedTx as string | undefined,
     selectBech32AddressSelected: (state: State) => state.bech32AddressSelected as string | undefined,
     selectChainId: (state: State) => state.chainId as string | undefined,
     selectRemoteURL: (state: State) => state.remoteURL as string | undefined
@@ -225,10 +263,5 @@ export const linkingSlice = createSlice({
 
 export const { clearLinking, setLinkingData } = linkingSlice.actions
 
-export const {
-  selectLinkingFailure,
-  selectQueryParamsTxJsonSigned,
-  selectBech32AddressSelected,
-  selectChainId,
-  selectRemoteURL
-} = linkingSlice.selectors
+export const { selectLinkingFailure, selectSignedTx, selectBech32AddressSelected, selectChainId, selectRemoteURL } =
+  linkingSlice.selectors

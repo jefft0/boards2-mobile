@@ -5,7 +5,7 @@ import {
   broadcastTxCommit,
   clearLinking,
   createBoard,
-  selectQueryParamsTxJsonSigned,
+  selectSignedTx,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
@@ -16,14 +16,13 @@ export default function Search() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   // hook to handle the signed tx from Gnokey and broadcast it
   useEffect(() => {
     const handleSignedTx = async () => {
-      if (txJsonSigned) {
-        const signedTx = txJsonSigned as string // already decoded amino-JSON from setLinkingData
-        console.log('signedTx: ', signedTx)
+      if (signedTxFromWallet) {
+        const signedTx = signedTxFromWallet as string // opaque base64 amino-binary; broadcast unmodified
 
         try {
           setLoading(true)
@@ -41,7 +40,7 @@ export default function Search() {
     }
     handleSignedTx()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txJsonSigned])
+  }, [signedTxFromWallet])
 
   const onCreate = async (board: BoardCreationData) => {
     dispatch(createBoard(board))

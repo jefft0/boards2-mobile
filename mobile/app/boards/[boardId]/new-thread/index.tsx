@@ -4,7 +4,7 @@ import {
   broadcastTxCommit,
   clearLinking,
   selectAccount,
-  selectQueryParamsTxJsonSigned,
+  selectSignedTx,
   selectThreadBoard,
   threadCreate,
   useAppDispatch,
@@ -23,13 +23,13 @@ export default function Search() {
   const account = useAppSelector(selectAccount)
   const board = useAppSelector(selectThreadBoard)
 
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   // hook to handle the signed tx from the Gnokey and broadcast it
   useEffect(() => {
     const handleSignedTx = async () => {
-      if (txJsonSigned) {
-        const signedTx = txJsonSigned as string // already decoded amino-JSON from setLinkingData
+      if (signedTxFromWallet) {
+        const signedTx = signedTxFromWallet as string // opaque base64 amino-binary; broadcast unmodified
         console.log('signedTx: ', signedTx)
 
         try {
@@ -48,7 +48,7 @@ export default function Search() {
     }
     handleSignedTx()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txJsonSigned])
+  }, [signedTxFromWallet])
 
   // The wallet declined or failed: stop waiting. The snackbar says why.
   useWalletFailure(() => setLoading(false))

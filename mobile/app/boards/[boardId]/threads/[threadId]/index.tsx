@@ -5,7 +5,7 @@ import styled from 'styled-components/native'
 import {
   broadcastTxCommit,
   clearLinking,
-  selectQueryParamsTxJsonSigned,
+  selectSignedTx,
   selectThreadBoard,
   selectThreadById,
   selectThreadReplies,
@@ -101,7 +101,7 @@ export default function ThreadDetailScreen() {
   const replies = useAppSelector(selectThreadReplies)
   const loading = useAppSelector(selectThreadDetailLoading)
   const board = useAppSelector(selectThreadBoard)
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   const { boardId, threadId } = useLocalSearchParams<{ boardId: string; threadId: string }>()
   // Use the cache to avoid name flashes when refreshing
@@ -144,8 +144,8 @@ export default function ThreadDetailScreen() {
   // hook to handle the signed tx from the Gnokey and broadcast it
   useEffect(() => {
     const handleSignedTx = async () => {
-      if (txJsonSigned) {
-        const signedTx = txJsonSigned as string // already decoded amino-JSON from setLinkingData
+      if (signedTxFromWallet) {
+        const signedTx = signedTxFromWallet as string // opaque base64 amino-binary; broadcast unmodified
         console.log('signedTx: ', signedTx)
 
         try {
@@ -162,7 +162,7 @@ export default function ThreadDetailScreen() {
     }
     handleSignedTx()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txJsonSigned])
+  }, [signedTxFromWallet])
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>

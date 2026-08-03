@@ -8,7 +8,7 @@ import {
   logedOut,
   reloadAvatar,
   selectAccount,
-  selectQueryParamsTxJsonSigned,
+  selectSignedTx,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
@@ -30,7 +30,7 @@ export default function Page() {
   const navigation = useNavigation()
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   const userCache = useUserCache()
 
@@ -89,10 +89,8 @@ export default function Page() {
 
   useEffect(() => {
     ;(async () => {
-      if (txJsonSigned) {
-        console.log('txJsonSigned: ', txJsonSigned)
-
-        const signedTx = txJsonSigned as string // already decoded amino-JSON from setLinkingData
+      if (signedTxFromWallet) {
+        const signedTx = signedTxFromWallet as string // opaque base64 amino-binary; broadcast unmodified
         try {
           await dispatch(broadcastTxCommit(signedTx)).unwrap()
         } catch (error) {
@@ -109,7 +107,7 @@ export default function Page() {
       }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txJsonSigned])
+  }, [signedTxFromWallet])
 
   return (
     <>
