@@ -75,6 +75,7 @@ export default function ThreadsPage() {
             thread={thread}
             onReply={() => handleReply(thread)}
             onOpen={() => router.push(`/boards/${thread.boardId}/threads/${thread.id}`)}
+            onOpenOriginal={() => router.push(`/boards/${thread.originalBoardId}/threads/${thread.originalThreadId}`)}
           />
         )}
         emptyComponent={<ListEmptyView message={loading ? '' : 'No Threads yet.'} />}

@@ -3,7 +3,15 @@ import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice, RootState } from '@reduxjs/toolkit'
-import { ThunkExtra, fetchThreadComments, selectThreads, qEvalGetComments, enrichData, subtractOrZero } from '@gno/redux'
+import {
+  ThunkExtra,
+  fetchThread,
+  fetchThreadComments,
+  selectThreads,
+  qEvalGetComments,
+  enrichData,
+  subtractOrZero
+} from '@gno/redux'
 
 interface ThreadDetailState {
   loading: boolean
@@ -80,8 +88,14 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
 
       const res = await fetchThreadComments(userCache, gnonative, boardId, threadId, startIndex, totalPosts)
 
+      // The thread is missing from the list when it belongs to another board,
+      // like the thread a repost points at.
+      const thread =
+        threads.find((t) => t.boardId === Number(boardId) && t.id === Number(threadId)) ??
+        (await fetchThread(userCache, gnonative, boardId, threadId))
+
       return {
-        thread: threads.find((t) => t.id === Number(threadId)),
+        thread,
         replies: res.data,
         totalPosts
       }
