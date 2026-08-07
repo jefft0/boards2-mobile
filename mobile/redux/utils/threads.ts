@@ -32,15 +32,26 @@ async function addRepostOriginals(userCache: UserCacheApi, gnonative: GnoNativeA
 
     const key = `${post.originalBoardId}/${post.originalThreadId}`
     if (!originals.has(key)) {
-      // The original is gone when its board or thread was deleted or hidden.
-      const original = await qEvalGetThread(gnonative, post.originalBoardId, post.originalThreadId)
-      originals.set(key, original ? convertToPost(original, await userCache.getUser(original.creator)) : undefined)
+      originals.set(key, await fetchThread(userCache, gnonative, post.originalBoardId, post.originalThreadId))
     }
 
     result.push({ ...post, repost_parent: originals.get(key) })
   }
 
   return result
+}
+
+// Return a single top-level post, or undefined if the board or thread is gone.
+export async function fetchThread(
+  userCache: UserCacheApi,
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number
+): Promise<Post | undefined> {
+  const thread = await qEvalGetThread(gnonative, boardId, threadId)
+  if (!thread) return undefined
+
+  return convertToPost(thread, await userCache.getUser(thread.creator))
 }
 
 // Return the "comment" posts in a specific thread.

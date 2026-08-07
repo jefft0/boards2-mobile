@@ -53,7 +53,9 @@ export const threadsSlice = createSlice({
     selectThreadBoard: (state: ThreadsState) => state.board,
     selectThreads: (state: ThreadsState) => state.threads,
     selectThreadLoading: (state: ThreadsState) => state.loading,
-    selectThreadById: (state: ThreadsState, id: number | string) => state.threads.find((thread) => thread.id === Number(id))
+    // Thread IDs restart on every board, so the board is part of the identity.
+    selectThreadById: (state: ThreadsState, boardId: number | string, id: number | string) =>
+      state.threads.find((thread) => thread.boardId === Number(boardId) && thread.id === Number(id))
   }
 })
 

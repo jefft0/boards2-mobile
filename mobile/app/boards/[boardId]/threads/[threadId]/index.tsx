@@ -104,8 +104,10 @@ export default function ThreadDetailScreen() {
   const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   const { boardId, threadId } = useLocalSearchParams<{ boardId: string; threadId: string }>()
-  // Use the cache to avoid name flashes when refreshing
-  const threadCache = useAppSelector((state) => selectThreadById(state, threadId))
+  // Use the cache to avoid name flashes when refreshing. It misses for a thread
+  // of another board, like the one a repost points at.
+  const threadCache = useAppSelector((state) => selectThreadById(state, boardId, threadId))
+  const summary = threadCache ?? thread
 
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -167,6 +169,8 @@ export default function ThreadDetailScreen() {
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }}>
       <Container>
+        {/* TODO: board is the board we navigated from, so a thread of another board,
+            like the one a repost points at, shows the wrong name and creator here. */}
         <ThreadHeaderSmall
           breadcrumbItems={[...BREADCRUMBS, board?.name || '', threadId]}
           title={`Thread ${threadId}`}
@@ -185,11 +189,11 @@ export default function ThreadDetailScreen() {
             <ThreadCardDetails
               loading={loading}
               threadId={threadId}
-              threadTitle={threadCache?.title || ''}
-              threadBody={threadCache?.body || ''}
+              threadTitle={summary?.title || ''}
+              threadBody={summary?.body || ''}
               threadReplyCount={thread?.n_replies || 0}
-              threadCreatorName={threadCache?.user.name || ''}
-              threadCreatedAt={threadCache?.createdAt || ''}
+              threadCreatorName={summary?.user.name || ''}
+              threadCreatedAt={summary?.createdAt || ''}
               thread={thread!}
               onReply={navigateToReplyScreen}
             />
