@@ -194,8 +194,11 @@ export default function ThreadDetailScreen() {
               threadReplyCount={thread?.n_replies || 0}
               threadCreatorName={summary?.user.name || ''}
               threadCreatedAt={summary?.createdAt || ''}
+              isRepost={!!summary?.originalBoardId}
+              threadOriginal={summary?.repost_parent}
               thread={thread!}
               onReply={navigateToReplyScreen}
+              onOpenOriginal={() => router.push(`/boards/${summary?.originalBoardId}/threads/${summary?.originalThreadId}`)}
             />
 
             {/* Replies Section */}

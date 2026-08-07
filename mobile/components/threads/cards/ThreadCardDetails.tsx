@@ -1,4 +1,4 @@
-import { Post } from '@gno/types'
+import { ParentPost, Post } from '@gno/types'
 import { useTheme } from 'styled-components/native'
 import CardFooter from '../../cards/CardFooter'
 import GnodLikeButton from '../../button/GnodLikeButton'
@@ -8,6 +8,7 @@ import { Spacer } from '@berty/gnonative-ui'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
 import TextCreateDate from '@gno/components/text/TextCreateDate'
+import RepostQuote from './RepostQuote'
 
 interface Props {
   loading?: boolean
@@ -18,8 +19,11 @@ interface Props {
   threadReplyCount?: number
   threadCreatorName?: string
   threadCreatedAt?: string
+  isRepost?: boolean
+  threadOriginal?: ParentPost
   onReply: () => void
   onOpen?: () => void
+  onOpenOriginal?: () => void
 }
 
 const ThreadCardDetails = ({
@@ -30,8 +34,11 @@ const ThreadCardDetails = ({
   threadReplyCount,
   threadCreatorName,
   threadCreatedAt,
+  isRepost,
+  threadOriginal,
   onReply,
   onOpen,
+  onOpenOriginal,
   loading
 }: Props) => {
   const theme = useTheme()
@@ -52,10 +59,17 @@ const ThreadCardDetails = ({
         </UserInfo>
       </ThreadHeader>
 
-      <ThreadTitle>{threadTitle}</ThreadTitle>
-      <Spacer space={8} />
+      {/* A repost's own title and body are optional. */}
+      {threadTitle ? (
+        <>
+          <ThreadTitle>{threadTitle}</ThreadTitle>
+          <Spacer space={8} />
+        </>
+      ) : null}
 
-      <ThreadContent>{threadBody}</ThreadContent>
+      {threadBody ? <ThreadContent>{threadBody}</ThreadContent> : null}
+
+      {isRepost && <RepostQuote original={threadOriginal} onOpen={onOpenOriginal} />}
 
       <CardFooter.Footer>
         <CardFooter.Meta>
