@@ -15,7 +15,32 @@ export async function fetchThreadPosts(
 ): Promise<ThreadPosts> {
   const result = await qEvalGetPosts(gnonative, boardId, startIndex, endIndex)
   const json = await enrichData(userCache, gnonative, result)
-  return json
+  return { ...json, data: await addRepostOriginals(userCache, gnonative, json.data) }
+}
+
+// A repost's own title and body are usually empty, so attach the thread it was
+// reposted from as repost_parent and let the caller show that summary instead.
+async function addRepostOriginals(userCache: UserCacheApi, gnonative: GnoNativeApi, posts: Post[]): Promise<Post[]> {
+  const originals = new Map<string, Post | undefined>()
+  const result: Post[] = []
+
+  for (const post of posts) {
+    if (!post.originalBoardId) {
+      result.push(post)
+      continue
+    }
+
+    const key = `${post.originalBoardId}/${post.originalThreadId}`
+    if (!originals.has(key)) {
+      // The original is gone when its board or thread was deleted or hidden.
+      const original = await qEvalGetThread(gnonative, post.originalBoardId, post.originalThreadId)
+      originals.set(key, original ? convertToPost(original, await userCache.getUser(original.creator)) : undefined)
+    }
+
+    result.push({ ...post, repost_parent: originals.get(key) })
+  }
+
+  return result
 }
 
 // Return the "comment" posts in a specific thread.
@@ -36,6 +61,45 @@ export async function countThreadPosts(userCache: UserCacheApi, gnonative: GnoNa
   const result = await qEvalGetPosts(gnonative, boardId, 0, 0)
   const { n_posts } = await enrichData(userCache, gnonative, result)
   return n_posts
+}
+
+// Return a single thread, or undefined if the board or thread doesn't exist.
+export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
+  const threadInfo = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  const threadRegex =
+    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
+  const match = threadRegex.exec(threadInfo)
+  if (!match) return undefined
+
+  const id = Number(match[1])
+  const originalBoardId = Number(match[2])
+  const originalThreadId = Number(match[3])
+  const threadBoardId = Number(match[4])
+  const title = match[5]
+  const body = match[6]
+  const hidden = match[7] === 'true'
+  const readOnly = match[8] === 'true'
+  const n_replies = Number(match[9])
+  const creator = match[10]
+  const createdAtUnix = Number(match[11])
+  const createdAt = new Date(createdAtUnix * 1000).toISOString()
+  const updatedAtUnix = Number(match[12])
+  const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
+  return {
+    id,
+    originalBoardId,
+    originalThreadId,
+    boardId: threadBoardId,
+    title,
+    body,
+    hidden,
+    readOnly,
+    n_replies,
+    n_gnods: 0,
+    creator,
+    createdAt,
+    updatedAt
+  }
 }
 
 export async function qEvalGetPosts(
@@ -110,7 +174,7 @@ export async function qEvalGetComments(
   )
   const threadCommentCount = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
   const totalRegex =
-    /\(struct{\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\("[^"]+" string\),\("[^"]+" string\),\(\w+ bool\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("\w+" \.uverse\.address\),\(\d+ int64\),\(\d+ int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
+    /\(struct{\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\("[^"]*" string\),\("[^"]*" string\),\(\w+ bool\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("\w+" \.uverse\.address\),\(\d+ int64\),\(\d+ int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
   const totalMatch = totalRegex.exec(threadCommentCount)
   if (!totalMatch) throw new Error("Can't find comment count in GetThread response")
   const total = Number(totalMatch![1])
