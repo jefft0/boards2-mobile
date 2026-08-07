@@ -15,6 +15,12 @@ export const ThreadContainer = styled.TouchableOpacity`
   active-opacity: 0.7;
 `
 
+export const RepostNote = styled(Text.Body)`
+  font-size: 13px;
+  padding-bottom: 4px;
+  color: #9ca3af;
+`
+
 export const ThreadHeader = styled.View`
   flex-direction: row;
   justify-content: space-between;
