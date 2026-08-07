@@ -4,7 +4,8 @@ import CardFooter from '../cards/CardFooter'
 import GnodLikeButton from '../button/GnodLikeButton'
 import { useState } from 'react'
 import ReplyIconButton from '../button/ReplyIconButton'
-import { ThreadContainer, ThreadTitle, ThreadContent, QuotedThread, RepostNote } from './cards/atoms'
+import { ThreadContainer, ThreadTitle, ThreadContent } from './cards/atoms'
+import RepostQuote from './cards/RepostQuote'
 import { Spacer } from '@berty/gnonative-ui'
 
 interface Props {
@@ -40,21 +41,7 @@ const ThreadCard = ({ thread, onReply, onOpen, onOpenOriginal }: Props) => {
 
       {thread.body ? <ThreadContent>{thread.body}</ThreadContent> : null}
 
-      {isRepost && (
-        <QuotedThread activeOpacity={0.7} onPress={onOpenOriginal} disabled={!original}>
-          {original ? (
-            <>
-              <RepostNote>⟳ Reposted from @{original.user.name}</RepostNote>
-              <ThreadTitle>{original.title}</ThreadTitle>
-              <Spacer space={8} />
-
-              <ThreadContent>{original.body}</ThreadContent>
-            </>
-          ) : (
-            <RepostNote>⚠ The reposted thread is no longer available</RepostNote>
-          )}
-        </QuotedThread>
-      )}
+      {isRepost && <RepostQuote original={original} onOpen={onOpenOriginal} />}
 
       <CardFooter.Footer style={stacked ? { flexDirection: 'column', alignItems: 'flex-start' } : undefined}>
         <CardFooter.MetaItem style={stacked ? undefined : { minWidth: 120 }}>

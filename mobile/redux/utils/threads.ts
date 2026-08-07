@@ -51,7 +51,14 @@ export async function fetchThread(
   const thread = await qEvalGetThread(gnonative, boardId, threadId)
   if (!thread) return undefined
 
-  return convertToPost(thread, await userCache.getUser(thread.creator))
+  const post = convertToPost(thread, await userCache.getUser(thread.creator))
+  if (!post.originalBoardId) return post
+
+  // The realm refuses to repost a repost, so this recurses only once.
+  return {
+    ...post,
+    repost_parent: await fetchThread(userCache, gnonative, post.originalBoardId, post.originalThreadId)
+  }
 }
 
 // Return the "comment" posts in a specific thread.
