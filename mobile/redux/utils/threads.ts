@@ -4,6 +4,8 @@ import { ParentPost, Post, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
+const threadRegex =
+  /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/
 
 // Return the user's top-level posts. (Like render args "board".)
 export async function fetchThreadPosts(
@@ -84,8 +86,6 @@ export async function countThreadPosts(userCache: UserCacheApi, gnonative: GnoNa
 // Return a single thread, or undefined if the board or thread doesn't exist.
 export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
   const threadInfo = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const threadRegex =
-    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
   const match = threadRegex.exec(threadInfo)
   if (!match) return undefined
 
@@ -134,8 +134,7 @@ export async function qEvalGetPosts(
   if (!totalMatch) throw new Error("Can't find thread count in GetBoard response")
   const total = Number(totalMatch![1])
 
-  const postRegex =
-    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
+  const postRegex = new RegExp(threadRegex.source, 'g')
   let posts = []
   let index = 0
   let match
@@ -191,11 +190,9 @@ export async function qEvalGetComments(
     `GetComments(${boardId},${threadId},${startIndex},${endIndex - startIndex})`
   )
   const threadCommentCount = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const totalRegex =
-    /\(struct{\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\("[^"]*" string\),\("[^"]*" string\),\(\w+ bool\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("\w+" \.uverse\.address\),\(\d+ int64\),\(\d+ int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
-  const totalMatch = totalRegex.exec(threadCommentCount)
+  const totalMatch = threadRegex.exec(threadCommentCount)
   if (!totalMatch) throw new Error("Can't find comment count in GetThread response")
-  const total = Number(totalMatch![1])
+  const total = Number(totalMatch![9])
 
   const commentRegex =
     /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Comment\)/g
