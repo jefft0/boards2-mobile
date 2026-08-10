@@ -1,3 +1,5 @@
+// GnodLikeButton is not currently used, but we keep this file for future use.
+
 import React, { useRef, useState } from 'react'
 import { Animated, View, StyleSheet } from 'react-native'
 import Icons from '../icons'

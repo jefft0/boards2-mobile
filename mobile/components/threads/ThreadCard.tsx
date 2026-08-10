@@ -1,8 +1,6 @@
 import { Post } from '@gno/types'
 import { useTheme } from 'styled-components/native'
 import CardFooter from '../cards/CardFooter'
-import GnodLikeButton from '../button/GnodLikeButton'
-import { useState } from 'react'
 import ReplyIconButton from '../button/ReplyIconButton'
 import { ThreadContainer, ThreadTitle, ThreadContent } from './cards/atoms'
 import RepostQuote from './cards/RepostQuote'
@@ -17,13 +15,6 @@ interface Props {
 
 const ThreadCard = ({ thread, onReply, onOpen, onOpenOriginal }: Props) => {
   const theme = useTheme()
-  const [likes, setLikes] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
-
-  const handleLike = (liked: boolean) => {
-    setIsLiked(liked)
-    setLikes((prev) => (liked ? prev + 1 : prev - 1))
-  }
 
   const isRepost = thread.originalBoardId !== 0
   const original = thread.repost_parent
@@ -51,16 +42,6 @@ const ThreadCard = ({ thread, onReply, onOpen, onOpenOriginal }: Props) => {
         <CardFooter.Meta style={stacked ? { marginLeft: 136 } : undefined}>
           <CardFooter.MetaItem>
             <ReplyIconButton onPress={onReply} count={thread.n_replies} />
-          </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <GnodLikeButton
-              isLiked={isLiked}
-              onPress={handleLike}
-              size={16}
-              likedColor={theme.colors.primary}
-              unlikedColor="#9ca3af"
-              gnodCount={likes}
-            />
           </CardFooter.MetaItem>
         </CardFooter.Meta>
       </CardFooter.Footer>
