@@ -1,6 +1,7 @@
 import { ParentPost, Post } from '@gno/types'
 import CardFooter from '../../cards/CardFooter'
 import ReplyIconButton from '../../button/ReplyIconButton'
+import RepostIconButton from '../../button/RepostIconButton'
 import { Spacer } from '@berty/gnonative-ui'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
@@ -14,6 +15,7 @@ interface Props {
   threadTitle: string
   threadBody?: string
   threadReplyCount?: number
+  threadRepostCount?: number
   threadCreatorName?: string
   threadCreatedAt?: string
   isRepost?: boolean
@@ -21,6 +23,7 @@ interface Props {
   onReply: () => void
   onOpen?: () => void
   onOpenOriginal?: () => void
+  onRepost?: () => void
 }
 
 const ThreadCardDetails = ({
@@ -29,6 +32,7 @@ const ThreadCardDetails = ({
   threadTitle,
   threadBody,
   threadReplyCount,
+  threadRepostCount,
   threadCreatorName,
   threadCreatedAt,
   isRepost,
@@ -36,6 +40,7 @@ const ThreadCardDetails = ({
   onReply,
   onOpen,
   onOpenOriginal,
+  onRepost,
   loading
 }: Props) => {
   return (
@@ -63,6 +68,9 @@ const ThreadCardDetails = ({
         <CardFooter.Meta>
           <CardFooter.MetaItem>
             <ReplyIconButton onPress={onReply} count={threadReplyCount} loading={loading} />
+          </CardFooter.MetaItem>
+          <CardFooter.MetaItem>
+            <RepostIconButton onPress={onRepost} count={threadRepostCount} loading={loading} />
           </CardFooter.MetaItem>
         </CardFooter.Meta>
       </CardFooter.Footer>

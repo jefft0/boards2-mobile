@@ -192,6 +192,7 @@ export default function ThreadDetailScreen() {
               threadTitle={summary?.title || ''}
               threadBody={summary?.body || ''}
               threadReplyCount={thread?.n_replies || 0}
+              threadRepostCount={thread?.n_reposts || 0}
               threadCreatorName={summary?.user.name || ''}
               threadCreatedAt={summary?.createdAt || ''}
               isRepost={!!summary?.originalBoardId}
