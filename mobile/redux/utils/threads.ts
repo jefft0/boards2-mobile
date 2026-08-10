@@ -5,7 +5,7 @@ import { GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
 const threadRegex =
-  /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/
+  /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/
 
 // Return the user's top-level posts. (Like render args "board".)
 export async function fetchThreadPosts(
@@ -98,10 +98,11 @@ export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, t
   const hidden = match[7] === 'true'
   const readOnly = match[8] === 'true'
   const n_replies = Number(match[9])
-  const creator = match[10]
-  const createdAtUnix = Number(match[11])
+  const n_reposts = Number(match[10])
+  const creator = match[12]
+  const createdAtUnix = Number(match[13])
   const createdAt = new Date(createdAtUnix * 1000).toISOString()
-  const updatedAtUnix = Number(match[12])
+  const updatedAtUnix = Number(match[14])
   const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
   return {
     id,
@@ -113,6 +114,7 @@ export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, t
     hidden,
     readOnly,
     n_replies,
+    n_reposts,
     n_gnods: 0,
     creator,
     createdAt,
@@ -148,10 +150,11 @@ export async function qEvalGetPosts(
     const hidden = match[7] === 'true'
     const readOnly = match[8] === 'true'
     const n_replies = Number(match[9])
-    const creator = match[10]
-    const createdAtUnix = Number(match[11])
+    const n_reposts = Number(match[10])
+    const creator = match[12]
+    const createdAtUnix = Number(match[13])
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[12])
+    const updatedAtUnix = Number(match[14])
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     posts.push({
       index,
@@ -165,6 +168,7 @@ export async function qEvalGetPosts(
         hidden,
         readOnly,
         n_replies,
+        n_reposts,
         n_gnods: 0,
         creator,
         createdAt,
@@ -302,6 +306,7 @@ function convertToPost(jsonPost: any, creator: User, repost_parent?: ParentPost)
     hidden: jsonPost.hidden,
     readOnly: jsonPost.readOnly,
     n_replies: jsonPost.n_replies,
+    n_reposts: jsonPost.n_reposts,
     n_gnods: jsonPost.n_gnods,
     createdAt: jsonPost.createdAt,
     updatedAt: jsonPost.updatedAt,
