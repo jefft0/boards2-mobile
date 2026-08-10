@@ -9,7 +9,8 @@ import {
   useAppSelector,
   useAppDispatch,
   loadThreads,
-  setThreadToReply
+  setThreadToReply,
+  setThreadToRepost
 } from '@gno/redux'
 import { Post } from '@gno/types'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -51,6 +52,11 @@ export default function ThreadsPage() {
     router.push(`/boards/${thread.boardId}/threads/${thread.id}/reply?title=${thread.title}`)
   }
 
+  const handleRepost = (thread: Post) => {
+    dispatch(setThreadToRepost(thread))
+    router.push(`/boards/${thread.boardId}/threads/${thread.id}/repost`)
+  }
+
   return (
     <Container>
       <ThreadHeader
@@ -74,6 +80,7 @@ export default function ThreadsPage() {
           <ThreadCard
             thread={thread}
             onReply={() => handleReply(thread)}
+            onRepost={() => handleRepost(thread)}
             onOpen={() => router.push(`/boards/${thread.boardId}/threads/${thread.id}`)}
             onOpenOriginal={() => router.push(`/boards/${thread.originalBoardId}/threads/${thread.originalThreadId}`)}
           />

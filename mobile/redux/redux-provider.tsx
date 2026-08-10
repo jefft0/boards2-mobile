@@ -9,6 +9,7 @@ import {
   threadsSlice,
   boardsCreateSlice,
   threadReplySlice,
+  threadRepostSlice,
   threadsCreateSlice,
   threadDetailSlice,
   feedbackSlice,
@@ -48,6 +49,7 @@ const reducer = {
   [boardsSlice.reducerPath]: resetOnNetworkSwitch(boardsSlice.reducer),
   [boardsCreateSlice.reducerPath]: resetOnNetworkSwitch(boardsCreateSlice.reducer),
   [threadReplySlice.reducerPath]: resetOnNetworkSwitch(threadReplySlice.reducer),
+  [threadRepostSlice.reducerPath]: resetOnNetworkSwitch(threadRepostSlice.reducer),
   [threadsCreateSlice.reducerPath]: resetOnNetworkSwitch(threadsCreateSlice.reducer),
   [threadDetailSlice.reducerPath]: resetOnNetworkSwitch(threadDetailSlice.reducer),
   [feedbackSlice.reducerPath]: resetOnNetworkSwitch(feedbackSlice.reducer)

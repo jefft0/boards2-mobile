@@ -12,7 +12,7 @@ interface Props {
   onReply: () => void
   onOpen?: () => void
   onOpenOriginal?: () => void
-  onRepost?: () => void
+  onRepost: () => void
 }
 
 const ThreadCard = ({ thread, onReply, onOpen, onOpenOriginal, onRepost }: Props) => {

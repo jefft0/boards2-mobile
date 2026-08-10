@@ -10,6 +10,7 @@ import {
   selectThreadById,
   selectThreadReplies,
   setThreadToReply,
+  setThreadToRepost,
   threadReplyAndRedirectToSign,
   useAppDispatch,
   useAppSelector
@@ -143,6 +144,12 @@ export default function ThreadDetailScreen() {
     router.push(`/boards/${thread.boardId}/threads/${thread.id}/reply?title=${thread.title}`)
   }
 
+  const handleRepost = () => {
+    if (!thread) return
+    dispatch(setThreadToRepost(thread))
+    router.push(`/boards/${thread.boardId}/threads/${thread.id}/repost`)
+  }
+
   // hook to handle the signed tx from the Gnokey and broadcast it
   useEffect(() => {
     const handleSignedTx = async () => {
@@ -199,6 +206,7 @@ export default function ThreadDetailScreen() {
               threadOriginal={summary?.repost_parent}
               thread={thread!}
               onReply={navigateToReplyScreen}
+              onRepost={handleRepost}
               onOpenOriginal={() => router.push(`/boards/${summary?.originalBoardId}/threads/${summary?.originalThreadId}`)}
             />
 
