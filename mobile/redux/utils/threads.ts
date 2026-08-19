@@ -1,4 +1,5 @@
 import { PACKAGE_PATH } from '@gno/constants/Constants'
+import { boardRegex } from '../features/boardsSlice'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { ParentPost, Post, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
@@ -130,11 +131,9 @@ export async function qEvalGetPosts(
 ): Promise<string> {
   const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
   const boardThreadCount = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const totalRegex =
-    /\(struct{\(\d+ uint64\),\("[^"]+" string\),\(nil \[\]string\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\("\w+" \.uverse\.address\),\(\d+ int64\),\(\d+ int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Board\)/g
-  const totalMatch = totalRegex.exec(boardThreadCount)
+  const totalMatch = boardRegex.exec(boardThreadCount)
   if (!totalMatch) throw new Error("Can't find thread count in GetBoard response")
-  const total = Number(totalMatch![1])
+  const total = Number(totalMatch![4])
 
   const postRegex = new RegExp(threadRegex.source, 'g')
   let posts = []

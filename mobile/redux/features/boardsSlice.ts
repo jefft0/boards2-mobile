@@ -6,6 +6,9 @@ import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, selectAccount, RootState } from '@gno/redux'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
 
+export const boardRegex =
+  /\(struct{\((\d+) uint64\),\("([^"]+)" string\),\(nil \[\]string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Board\)/
+
 export interface BoardsState {
   boards: Board[]
   loading: boolean
@@ -121,12 +124,11 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   if (!totalMatch) throw new Error("Can't find total in BoardCount response")
   const total = Number(totalMatch![1])
 
-  const boardRegex =
-    /\(struct{\((\d+) uint64\),\("([^"]+)" string\),\(nil \[\]string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Board\)/g
+  const boardListRegex = new RegExp(boardRegex.source, 'g')
   let boards = []
   let index = 0
   let match
-  while ((match = boardRegex.exec(boardInfos)) !== null) {
+  while ((match = boardListRegex.exec(boardInfos)) !== null) {
     const boardId = Number(match[1])
     const name = match[2]
     // TODO: aliases
