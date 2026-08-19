@@ -57,7 +57,12 @@ export default function Page() {
     if (!board) throw new Error('No active board')
     setLoading(true)
     dispatch(
-      threadRepostAndRedirectToSign({ callbackPath: currentPath, repostTitle: form.repostTitle, repostBody: form.repostBody })
+      threadRepostAndRedirectToSign({
+        callbackPath: currentPath,
+        destinationBoardId: form.destinationBoardId,
+        repostTitle: form.repostTitle,
+        repostBody: form.repostBody
+      })
     )
   }
 

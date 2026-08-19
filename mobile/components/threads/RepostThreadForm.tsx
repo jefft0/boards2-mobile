@@ -1,7 +1,9 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { View, StyleSheet } from 'react-native'
 import styled from 'styled-components/native'
 import { Button, Text as GnoText } from '@berty/gnonative-ui'
+import { useGnoNativeContext } from '@gnolang/gnonative'
+import { maybeFetchBoardName } from '@gno/redux'
 
 const Container = styled.View`
   flex: 1;
@@ -46,9 +48,16 @@ const FooterText = styled.Text`
 `
 
 export interface CreateRepostThreadFormData {
+  destinationBoardId: string
   repostTitle: string
   repostBody: string
 }
+
+// Shown until the typed ID resolves to a board.
+const DEFAULT_BOARD_HELPER_TEXT = 'Enter the board ID'
+
+// Long enough that a burst of keystrokes makes a single GetBoard query.
+const BOARD_LOOKUP_DEBOUNCE_MS = 400
 
 interface Props {
   onCreate: (form: CreateRepostThreadFormData) => void
@@ -59,18 +68,60 @@ interface Props {
 }
 
 export default function RepostThreadForm({ onCreate, onCancel, loading, initialTitle = '' }: Props) {
+  const [destinationBoardId, setDestinationBoardId] = useState('')
+  const [destinationBoardName, setDestinationBoardName] = useState<string | undefined>(undefined)
   const [repostTitle, setRepostTitle] = useState(initialTitle)
   const [repostBody, setRepostBody] = useState('')
 
+  const { gnonative } = useGnoNativeContext()
+
+  const boardIdIsValid = /^\d+$/.test(destinationBoardId.trim())
+
+  // Name the board while the ID is being typed. `cancelled` drops the answer of a
+  // query the user has already typed past, so a slow reply can't overwrite a newer one.
+  useEffect(() => {
+    if (!boardIdIsValid) {
+      setDestinationBoardName(undefined)
+      return
+    }
+
+    let cancelled = false
+    const timer = setTimeout(async () => {
+      const name = await maybeFetchBoardName(gnonative, Number(destinationBoardId.trim()))
+      if (!cancelled) setDestinationBoardName(name)
+    }, BOARD_LOOKUP_DEBOUNCE_MS)
+
+    return () => {
+      cancelled = true
+      clearTimeout(timer)
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [destinationBoardId, boardIdIsValid])
+
   const handleCreate = () => {
-    if (repostBody.trim()) {
-      onCreate({ repostTitle, repostBody } as CreateRepostThreadFormData)
+    if (repostBody.trim() && boardIdIsValid) {
+      onCreate({ destinationBoardId: destinationBoardId.trim(), repostTitle, repostBody } as CreateRepostThreadFormData)
     }
   }
 
   return (
     <>
       <Container>
+        <FormGroup>
+          <GnoText.Label>Board ID where to repost</GnoText.Label>
+          <Input
+            value={destinationBoardId}
+            onChangeText={setDestinationBoardId}
+            placeholder="Board ID"
+            placeholderTextColor="#9ca3af"
+            keyboardType="number-pad"
+            autoCapitalize="none"
+            autoComplete="off"
+            autoCorrect={false}
+          />
+          <HelperText>{destinationBoardName ? `Repost to: ${destinationBoardName}` : DEFAULT_BOARD_HELPER_TEXT}</HelperText>
+        </FormGroup>
+
         <FormGroup>
           <GnoText.Label>Repost Thread Title</GnoText.Label>
           <Input
@@ -102,7 +153,12 @@ export default function RepostThreadForm({ onCreate, onCancel, loading, initialT
 
         <View style={{ flexGrow: 1 }} />
         <ButtonContainer>
-          <Button onPress={handleCreate} disabled={!repostBody.trim() || loading} color="tertirary" activeOpacity={0.8}>
+          <Button
+            onPress={handleCreate}
+            disabled={!repostBody.trim() || !boardIdIsValid || loading}
+            color="tertirary"
+            activeOpacity={0.8}
+          >
             {loading ? 'Loading' : 'Repost'}
           </Button>
           <Button onPress={onCancel} color="secondary" activeOpacity={0.8}>

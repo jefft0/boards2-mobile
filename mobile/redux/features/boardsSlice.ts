@@ -102,6 +102,19 @@ export const getListedBoards = createAppAsyncThunk<BoardsResult | undefined, Boa
   }
 )
 
+// Look up a board's name with GetBoard. Returns undefined when the ID matches no
+// board, so callers can fall back to a placeholder.
+export async function maybeFetchBoardName(gnonative: GnoNativeApi, boardId: number): Promise<string | undefined> {
+  try {
+    const boardInfo = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
+    const match = boardRegex.exec(boardInfo)
+    return match ? match[2] : undefined
+  } catch (error) {
+    console.log('Error in maybeFetchBoardName:', error)
+    return undefined
+  }
+}
+
 async function checkBoardCreatePermission(gnonative: GnoNativeApi, address: string): Promise<boolean> {
   try {
     const res = await gnonative.qEval(PACKAGE_PATH, `IsMember(0,"${address}")`)
