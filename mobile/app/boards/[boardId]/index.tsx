@@ -27,7 +27,7 @@ const Container = styled.View`
 export default function ThreadsPage() {
   // TODO: implement sortBy functionality
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortBy, setSortBy] = useState('newest')
+  const [sortBy, setSortBy] = useState('newest first')
   const router = useRouter()
   const board = useAppSelector(selectThreadBoard)
   const loading = useAppSelector(selectThreadLoading)
