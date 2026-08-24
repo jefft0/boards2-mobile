@@ -29,7 +29,7 @@ const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
             <CardFooter.MetaValue>Flag</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Reply</CardFooter.MetaValue>
+            <CardFooter.MetaValue>{post && post.n_replies > 0 ? `Reply [${post.n_replies}]` : 'Reply'}</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
             <CardFooter.MetaValue>Edit</CardFooter.MetaValue>
