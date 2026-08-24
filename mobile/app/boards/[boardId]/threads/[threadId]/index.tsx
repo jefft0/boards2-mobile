@@ -222,7 +222,7 @@ export default function ThreadDetailScreen() {
             )}
 
             {replies.map((reply) => (
-              <ThreadCardReply key={reply.id} loading={false} thread={reply} onReply={() => {}} />
+              <ThreadCardReply key={reply.id} loading={false} post={reply} onReply={() => {}} />
             ))}
           </ScrollView>
 

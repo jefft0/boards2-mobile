@@ -6,22 +6,22 @@ import TextCreateDate from '../../text/TextCreateDate'
 
 interface Props {
   loading?: boolean
-  thread?: Post
+  post?: Post
   onReply: () => void
   onOpen?: () => void
 }
 
-const ThreadCardReply = ({ thread, onReply, onOpen, loading }: Props) => {
+const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
   return (
-    <ThreadContainer key={thread?.id} activeOpacity={0.7} onPress={onOpen}>
+    <ThreadContainer activeOpacity={0.7} onPress={onOpen}>
       <ThreadHeader>
         <UserInfo>
-          <TextUsername value={thread?.user.name} />
-          <TextCreateDate value={thread?.createdAt} />
+          <TextUsername value={post?.user.name} />
+          <TextCreateDate value={post?.createdAt} postId={post?.id} />
         </UserInfo>
       </ThreadHeader>
 
-      <ThreadContent>{thread?.body}</ThreadContent>
+      <ThreadContent>{post?.body}</ThreadContent>
 
       <CardFooter.Footer>
         <CardFooter.Meta>
