@@ -3,15 +3,8 @@ import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice, RootState } from '@reduxjs/toolkit'
-import {
-  ThunkExtra,
-  fetchThread,
-  fetchThreadComments,
-  selectThreads,
-  qEvalGetComments,
-  enrichData,
-  subtractOrZero
-} from '@gno/redux'
+import { ThunkExtra, fetchThread, fetchThreadComments, selectThreads, threadRegex, subtractOrZero } from '@gno/redux'
+import { PACKAGE_PATH } from '@gno/constants/Constants'
 
 interface ThreadDetailState {
   loading: boolean
@@ -83,7 +76,7 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
 
     try {
       const threads = selectThreads(thunkAPI.getState() as RootState)
-      const totalPosts = await countPosts(userCache, gnonative, boardId, threadId)
+      const totalPosts = await countPosts(gnonative, boardId, threadId)
       const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
       const res = await fetchThreadComments(userCache, gnonative, boardId, threadId, startIndex, totalPosts)
@@ -106,8 +99,10 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
   }
 )
 
-async function countPosts(userCache: UserCacheApi, gnonative: GnoNativeApi, boardId: number, threadId: number): Promise<number> {
-  const result = await qEvalGetComments(gnonative, boardId, threadId, 0, 0)
-  const { n_posts } = await enrichData(userCache, gnonative, result)
-  return n_posts
+async function countPosts(gnonative: GnoNativeApi, boardId: number, threadId: number): Promise<number> {
+  // Get the count from GetThread, the same as done in qEvalGetComments.
+  const threadInfo = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  const match = threadRegex.exec(threadInfo)
+  if (!match) throw new Error("Can't find comment count in GetThread response")
+  return Number(match[9])
 }

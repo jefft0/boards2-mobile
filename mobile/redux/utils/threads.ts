@@ -5,7 +5,7 @@ import { ParentPost, Post, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
-const threadRegex =
+export const threadRegex =
   /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/
 
 // Return the user's top-level posts. (Like render args "board".)
@@ -78,10 +78,12 @@ export async function fetchThreadComments(
   return json
 }
 
-export async function countThreadPosts(userCache: UserCacheApi, gnonative: GnoNativeApi, boardId: number): Promise<number> {
-  const result = await qEvalGetPosts(gnonative, boardId, 0, 0)
-  const { n_posts } = await enrichData(userCache, gnonative, result)
-  return n_posts
+export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
+  // Get the count from GetBoard, the same as done in qEvalGetPosts.
+  const boardInfo = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
+  const match = boardRegex.exec(boardInfo)
+  if (!match) throw new Error("Can't find thread count in GetBoard response")
+  return Number(match[4])
 }
 
 // Return a single thread, or undefined if the board or thread doesn't exist.

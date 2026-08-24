@@ -79,7 +79,7 @@ export const loadThreads = createAppAsyncThunk<LoadResult | undefined, LoadThrea
     const userCache = thunkAPI.extra.userCache as UserCacheApi
 
     try {
-      const totalPosts = await countThreadPosts(userCache, gnonative, board.id)
+      const totalPosts = await countThreadPosts(gnonative, board.id)
       const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
       const postsRes = await fetchThreadPosts(userCache, gnonative, board.id, startIndex, totalPosts)
