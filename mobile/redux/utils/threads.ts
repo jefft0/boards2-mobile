@@ -5,8 +5,12 @@ import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
+// The capture groups follow the fields of hubexts.Thread.
 export const threadRegex =
   /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/
+// The capture groups follow the fields of hubexts.Comment.
+export const commentRegex =
+  /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Comment\)/
 
 // Return the user's top-level posts. (Like render args "board".)
 export async function fetchThreadPosts(
@@ -75,6 +79,34 @@ export async function fetchThreadComments(
 ): Promise<ThreadComments> {
   const result = await qEvalGetComments(gnonative, boardId, threadId, startIndex, endIndex)
   return await enrichComments(userCache, result)
+}
+
+// Return the direct replies of a comment or reply.
+export async function fetchCommentReplies(
+  userCache: UserCacheApi,
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number,
+  commentId: number,
+  startIndex: number,
+  endIndex: number
+): Promise<ThreadComments> {
+  const result = await qEvalGetReplies(gnonative, boardId, threadId, commentId, startIndex, endIndex)
+  return await enrichComments(userCache, result)
+}
+
+// Return a single comment or reply, or undefined if it is gone.
+export async function fetchComment(
+  userCache: UserCacheApi,
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number,
+  commentId: number
+): Promise<Comment | undefined> {
+  const comment = await qEvalGetComment(gnonative, boardId, threadId, commentId)
+  if (!comment) return undefined
+
+  return convertToComment(comment, await userCache.getUser(comment.creator))
 }
 
 export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
@@ -198,41 +230,74 @@ export async function qEvalGetComments(
   if (!totalMatch) throw new Error("Can't find comment count in GetThread response")
   const total = Number(totalMatch![9])
 
-  // The capture groups follow the fields of hubexts.Comment.
-  const commentRegex =
-    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Comment\)/g
+  return encodeComments(total, parseComments(commentInfos))
+}
+
+// Return the direct replies of a comment or reply. `commentId` can be the ID of
+// a top level comment or of a nested reply.
+export async function qEvalGetReplies(
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number,
+  commentId: number,
+  startIndex: number,
+  endIndex: number
+): Promise<string> {
+  const replyInfos = await gnonative.qEval(
+    PACKAGE_PATH,
+    `GetReplies(${boardId},${threadId},${commentId},${startIndex},${endIndex - startIndex})`
+  )
+  // Get the count from GetComment, the same as qEvalGetComments does with GetThread.
+  const commentReplyCount = await gnonative.qEval(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
+  const totalMatch = commentRegex.exec(commentReplyCount)
+  if (!totalMatch) throw new Error("Can't find reply count in GetComment response")
+  const total = Number(totalMatch[7])
+
+  return encodeComments(total, parseComments(replyInfos))
+}
+
+// Return a single comment or reply, or undefined if it doesn't exist.
+export async function qEvalGetComment(gnonative: GnoNativeApi, boardId: number, threadId: number, commentId: number) {
+  const commentInfo = await gnonative.qEval(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
+  const match = commentRegex.exec(commentInfo)
+  if (!match) return undefined
+
+  return parseComment(match)
+}
+
+// Parse every comment in a GetComments or GetReplies response.
+function parseComments(commentInfos: string) {
+  const commentListRegex = new RegExp(commentRegex.source, 'g')
   let comments = []
   let match
-  while ((match = commentRegex.exec(commentInfos)) !== null) {
-    const id = Number(match[1])
-    const commentBoardId = Number(match[2])
-    const commentThreadId = Number(match[3])
-    const parentId = Number(match[4])
-    const body = match[5]
-    const hidden = match[6] === 'true'
-    const n_replies = Number(match[7])
-    const n_flags = Number(match[8])
-    const creator = match[9]
-    const createdAtUnix = Number(match[10])
-    const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[11])
-    const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
-    comments.push({
-      id,
-      boardId: commentBoardId,
-      threadId: commentThreadId,
-      parentId,
-      body,
-      hidden,
-      n_replies,
-      n_flags,
-      creator,
-      createdAt,
-      updatedAt
-    })
+  while ((match = commentListRegex.exec(commentInfos)) !== null) {
+    comments.push(parseComment(match))
   }
 
-  let data = { n_comments: total, comments }
+  return comments
+}
+
+function parseComment(match: RegExpExecArray) {
+  const createdAtUnix = Number(match[10])
+  const updatedAtUnix = Number(match[11])
+  return {
+    id: Number(match[1]),
+    boardId: Number(match[2]),
+    threadId: Number(match[3]),
+    parentId: Number(match[4]),
+    body: match[5],
+    hidden: match[6] === 'true',
+    n_replies: Number(match[7]),
+    n_flags: Number(match[8]),
+    creator: match[9],
+    createdAt: new Date(createdAtUnix * 1000).toISOString(),
+    updatedAt: new Date(updatedAtUnix * 1000).toISOString()
+  }
+}
+
+// Encode comments the way enrichComments decodes them.
+function encodeComments(total: number, comments: ReturnType<typeof parseComment>[]) {
+  const data = { n_comments: total, comments }
   return '(' + JSON.stringify(JSON.stringify(data)) + ' string)'
 }
 

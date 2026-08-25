@@ -1,4 +1,4 @@
-import { ParentPost, Post } from '@gno/types'
+import { ParentPost } from '@gno/types'
 import CardFooter from '../../cards/CardFooter'
 import ReplyIconButton from '../../button/ReplyIconButton'
 import RepostIconButton from '../../button/RepostIconButton'
@@ -10,7 +10,6 @@ import RepostQuote from './RepostQuote'
 
 interface Props {
   loading?: boolean
-  thread?: Post
   threadId: string
   threadTitle: string
   threadBody?: string
@@ -27,7 +26,6 @@ interface Props {
 }
 
 const ThreadCardDetails = ({
-  thread,
   threadId,
   threadTitle,
   threadBody,

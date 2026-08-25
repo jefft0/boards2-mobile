@@ -15,7 +15,7 @@ import {
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
-import { loadThreadDetail, selectThreadDetailLoading, selectThreadDetail } from '@gno/redux'
+import { detailKey, loadThreadDetail, selectThreadDetailLoading, selectThreadDetail } from '@gno/redux'
 import { useLocalSearchParams, usePathname, useRouter } from 'expo-router'
 import { BREADCRUMBS } from '@gno/constants/Constants'
 import { ThreadHeaderSmall } from '@gno/components/threads/ThreadHeaderSmall'
@@ -98,13 +98,15 @@ const SectionTitle = styled.Text`
 `
 
 export default function ThreadDetailScreen() {
-  const thread = useAppSelector(selectThreadDetail)
-  const replies = useAppSelector(selectThreadReplies)
-  const loading = useAppSelector(selectThreadDetailLoading)
+  const { boardId, threadId } = useLocalSearchParams<{ boardId: string; threadId: string }>()
+  const key = detailKey(boardId, threadId)
+
+  const thread = useAppSelector((state) => selectThreadDetail(state, key))
+  const replies = useAppSelector((state) => selectThreadReplies(state, key))
+  const loading = useAppSelector((state) => selectThreadDetailLoading(state, key))
   const board = useAppSelector(selectThreadBoard)
   const signedTxFromWallet = useAppSelector(selectSignedTx)
 
-  const { boardId, threadId } = useLocalSearchParams<{ boardId: string; threadId: string }>()
   // Use the cache to avoid name flashes when refreshing. It misses for a thread
   // of another board, like the one a repost points at.
   const threadCache = useAppSelector((state) => selectThreadById(state, boardId, threadId))
@@ -204,7 +206,6 @@ export default function ThreadDetailScreen() {
               threadCreatedAt={summary?.createdAt || ''}
               isRepost={!!summary?.originalBoardId}
               threadOriginal={summary?.repost_parent}
-              thread={thread!}
               onReply={navigateToReplyScreen}
               onRepost={handleRepost}
               onOpenOriginal={() => router.push(`/boards/${summary?.originalBoardId}/threads/${summary?.originalThreadId}`)}
