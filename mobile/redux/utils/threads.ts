@@ -1,7 +1,7 @@
 import { PACKAGE_PATH } from '@gno/constants/Constants'
 import { boardRegex } from '../features/boardsSlice'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
-import { ParentPost, Post, ThreadPosts, User } from '@gno/types'
+import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
@@ -17,7 +17,7 @@ export async function fetchThreadPosts(
   endIndex: number
 ): Promise<ThreadPosts> {
   const result = await qEvalGetPosts(gnonative, boardId, startIndex, endIndex)
-  const json = await enrichData(userCache, gnonative, result)
+  const json = await enrichData(userCache, result)
   return { ...json, data: await addRepostOriginals(userCache, gnonative, json.data) }
 }
 
@@ -64,7 +64,7 @@ export async function fetchThread(
   }
 }
 
-// Return the "comment" posts in a specific thread.
+// Return the top level comments of a specific thread.
 export async function fetchThreadComments(
   userCache: UserCacheApi,
   gnonative: GnoNativeApi,
@@ -72,10 +72,9 @@ export async function fetchThreadComments(
   threadId: number,
   startIndex: number,
   endIndex: number
-): Promise<ThreadPosts> {
+): Promise<ThreadComments> {
   const result = await qEvalGetComments(gnonative, boardId, threadId, startIndex, endIndex)
-  const json = await enrichData(userCache, gnonative, result)
-  return json
+  return await enrichComments(userCache, result)
 }
 
 export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
@@ -199,82 +198,90 @@ export async function qEvalGetComments(
   if (!totalMatch) throw new Error("Can't find comment count in GetThread response")
   const total = Number(totalMatch![9])
 
+  // The capture groups follow the fields of hubexts.Comment.
   const commentRegex =
-    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Comment\)/g
+    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Comment\)/g
   let comments = []
-  let index = 0
   let match
   while ((match = commentRegex.exec(commentInfos)) !== null) {
     const id = Number(match[1])
-    const boardId = Number(match[2])
-    const originalThreadId = Number(match[3])
-    const originalBoardId = Number(match[4])
-    const title = ''
+    const commentBoardId = Number(match[2])
+    const commentThreadId = Number(match[3])
+    const parentId = Number(match[4])
     const body = match[5]
     const hidden = match[6] === 'true'
-    const readOnly = false
     const n_replies = Number(match[7])
-    const creator = match[8]
-    const createdAtUnix = Number(match[9])
+    const n_flags = Number(match[8])
+    const creator = match[9]
+    const createdAtUnix = Number(match[10])
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[10])
+    const updatedAtUnix = Number(match[11])
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     comments.push({
-      index,
-      post: {
-        id,
-        originalBoardId,
-        originalThreadId,
-        boardId,
-        title,
-        body,
-        hidden,
-        readOnly,
-        n_replies,
-        n_gnods: 0,
-        creator,
-        createdAt,
-        updatedAt
-      }
+      id,
+      boardId: commentBoardId,
+      threadId: commentThreadId,
+      parentId,
+      body,
+      hidden,
+      n_replies,
+      n_flags,
+      creator,
+      createdAt,
+      updatedAt
     })
-    ++index
   }
 
-  let data = { n_threads: total, posts: comments }
+  let data = { n_comments: total, comments }
   return '(' + JSON.stringify(JSON.stringify(data)) + ' string)'
 }
 
-export async function enrichData(userCache: UserCacheApi, gnonative: GnoNativeApi, result: string, nHomePosts?: number) {
-  const jsonResult = toJson(result)
-  // If isThread then jsonResult is {n_threads: number, posts: array<{index: number, post: Post}>} from GetPosts.
-  const isThread = 'n_threads' in jsonResult
-  const jsonPosts = isThread ? jsonResult.posts : jsonResult
-  const n_posts = isThread ? jsonResult.n_threads : nHomePosts
-
+export async function enrichData(userCache: UserCacheApi, result: string): Promise<ThreadPosts> {
+  const jsonResult = toJson<GetPostsJson>(result)
   const posts: Post[] = []
 
-  for (const jsonPost of jsonPosts) {
-    const post = isThread ? jsonPost.post : jsonPost
+  for (const jsonPost of jsonResult.posts) {
+    const post = jsonPost.post
     const creator = await userCache.getUser(post.creator)
-
-    let repost_parent: Post | undefined
-
-    if (post.repost_user && post.parent_id) {
-      const parent_user = await userCache.getUser(post.repost_user as string)
-      const repost = await fetchParentPost(gnonative, post.parent_id, post.repost_user as string)
-      repost_parent = convertToPost(repost, parent_user)
-    }
-
-    posts.push(convertToPost(post, creator, repost_parent))
+    posts.push(convertToPost(post, creator))
   }
 
   return {
     data: posts.reverse(),
-    n_posts
+    n_posts: jsonResult.n_threads
   }
 }
 
-const toJson = (data?: string) => {
+// The Comment counterpart of enrichData. A Comment is never a repost, so this
+// only has to attach the creator of each comment.
+export async function enrichComments(userCache: UserCacheApi, result: string): Promise<ThreadComments> {
+  const jsonResult = toJson<GetCommentsJson>(result)
+  const comments: Comment[] = []
+
+  for (const jsonComment of jsonResult.comments) {
+    const creator = await userCache.getUser(jsonComment.creator)
+    comments.push(convertToComment(jsonComment, creator))
+  }
+
+  return {
+    data: comments.reverse(),
+    n_posts: jsonResult.n_comments
+  }
+}
+
+// The JSON that qEvalGetPosts encodes and enrichData decodes.
+type GetPostsJson = {
+  n_threads: number
+  posts: { index: number; post: any }[]
+}
+
+// The JSON that qEvalGetComments encodes and enrichComments decodes.
+type GetCommentsJson = {
+  n_comments: number
+  comments: any[]
+}
+
+const toJson = <T = any>(data?: string): T => {
   if (!data || !(data.startsWith('(') && data.endsWith(' string)'))) throw new Error('Malformed GetPosts response')
   const quoted = data.substring(1, data.length - ' string)'.length)
   const json = JSON.parse(quoted)
@@ -283,14 +290,7 @@ const toJson = (data?: string) => {
   return jsonPosts
 }
 
-async function fetchParentPost(gnonative: GnoNativeApi, postId: number, address: string) {
-  const payload = `[]UserAndPostID{{\"${address}\", ${postId}},}`
-  const result = await gnonative.qEval('gno.land/r/berty/social', `GetJsonTopPostsByID(${payload})`)
-  const jsonResult = toJson(result)
-  return jsonResult[0]
-}
-
-function convertToPost(jsonPost: any, creator: User, repost_parent?: ParentPost): Post {
+function convertToPost(jsonPost: any, creator: User): Post {
   const post: Post = {
     user: {
       name: creator.name,
@@ -310,9 +310,31 @@ function convertToPost(jsonPost: any, creator: User, repost_parent?: ParentPost)
     n_reposts: jsonPost.n_reposts,
     n_gnods: jsonPost.n_gnods,
     createdAt: jsonPost.createdAt,
-    updatedAt: jsonPost.updatedAt,
-    repost_parent
+    updatedAt: jsonPost.updatedAt
   }
 
   return post
+}
+
+function convertToComment(jsonComment: any, creator: User): Comment {
+  const comment: Comment = {
+    user: {
+      name: creator.name,
+      address: creator.address,
+      avatar: creator.avatar,
+      bech32: ''
+    },
+    id: jsonComment.id,
+    boardId: jsonComment.boardId,
+    threadId: jsonComment.threadId,
+    parentId: jsonComment.parentId,
+    body: jsonComment.body,
+    hidden: jsonComment.hidden,
+    n_replies: jsonComment.n_replies,
+    n_flags: jsonComment.n_flags,
+    createdAt: jsonComment.createdAt,
+    updatedAt: jsonComment.updatedAt
+  }
+
+  return comment
 }

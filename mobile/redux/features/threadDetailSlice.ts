@@ -1,6 +1,6 @@
 import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
-import { Post } from '@gno/types'
+import { Comment, Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice, RootState } from '@reduxjs/toolkit'
 import { ThunkExtra, fetchThread, fetchThreadComments, selectThreads, threadRegex, subtractOrZero } from '@gno/redux'
@@ -10,7 +10,7 @@ interface ThreadDetailState {
   loading: boolean
   error?: string
   thread?: Post
-  replies: Post[]
+  replies: Comment[]
   totalPosts?: number
 }
 
@@ -64,7 +64,7 @@ export type LoadThreadDetailRequest = {
 
 export type LoadThreadDetailResult = {
   thread?: Post
-  replies: Post[]
+  replies: Comment[]
   totalPosts: number
 }
 

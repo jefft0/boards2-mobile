@@ -1,4 +1,4 @@
-import { Post } from '@gno/types'
+import { PostBase } from '@gno/types'
 import CardFooter from '../../cards/CardFooter'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
@@ -6,7 +6,8 @@ import TextCreateDate from '../../text/TextCreateDate'
 
 interface Props {
   loading?: boolean
-  post?: Post
+  // PostBase, so that this can show a thread or a comment.
+  post?: PostBase
   onReply: () => void
   onOpen?: () => void
 }
