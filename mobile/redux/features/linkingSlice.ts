@@ -173,49 +173,66 @@ async function rpc(endpoint: string, method: string, params: unknown[]): Promise
  * guidance, that a broadcast result is a hint and a producer should confirm on
  * its own RPC. That also gives the caller a real "it is on chain" signal to
  * refetch against, which is what `_commit` was being used for.
+ *
+ * **Broadcast once per signed transaction.** The wallet's callback puts a single
+ * `signedTx` in shared state and every mounted screen watching it dispatches
+ * this: the screen that opened the wallet, the screen below it in the stack, and
+ * the profile tab kept alive underneath them. The node refuses the second
+ * broadcast of the same bytes with "Tx already exists in cache", so those extra
+ * callers would report a failure for a transaction that succeeded. Later callers
+ * for the same bytes therefore wait on the first broadcast rather than sending
+ * it again, and every one of them gets its real outcome.
  */
+let inFlight: { signedTx: string; result: Promise<void> } | undefined
+
 export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
   async (signedTx, thunkAPI) => {
-    const gnonative = thunkAPI.extra.gnonative
-    const remote = await gnonative.getRemote()
-    const endpoint = /^https?:\/\//i.test(remote) ? remote : `http://${remote}`
-
-    const accepted = await rpc(endpoint, 'broadcast_tx_sync', [signedTx])
-    // CheckTx ran and refused it: bad signature, bad sequence, insufficient
-    // funds. Nothing was committed and nothing will be.
-    if (accepted?.error) {
-      throw new Error(`Transaction rejected: ${JSON.stringify(accepted.error)}`)
+    if (inFlight?.signedTx !== signedTx) {
+      inFlight = { signedTx, result: broadcast(signedTx, thunkAPI.extra.gnonative) }
     }
-    const hash = accepted?.hash
-    if (!hash) {
-      throw new Error('Broadcast returned no transaction hash.')
-    }
-
-    // Poll rather than assume. Until it appears in a block it has not happened,
-    // and a screen that refetches before then shows the user their own change
-    // missing.
-    for (let attempt = 0; attempt < 10; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      let committed
-      try {
-        committed = await rpc(endpoint, 'tx', [hash])
-      } catch {
-        continue // not indexed yet; `tx` reports a miss as an error
-      }
-      // Accepted into a block and still failed on execution — out of gas, a
-      // realm that refused the call. The user is owed that difference.
-      const failure = committed?.tx_result?.ResponseBase?.Error
-      if (failure) {
-        throw new Error(`Transaction failed on chain: ${JSON.stringify(failure)}`)
-      }
-      console.log('broadcast committed: height=%s hash=%s', String(committed?.height), hash)
-      return
-    }
-
-    throw new Error(`Transaction ${hash} was accepted but has not appeared in a block. It may still land.`)
+    return await inFlight.result
   }
 )
+
+async function broadcast(signedTx: string, gnonative: GnoNativeApi): Promise<void> {
+  const remote = await gnonative.getRemote()
+  const endpoint = /^https?:\/\//i.test(remote) ? remote : `http://${remote}`
+
+  const accepted = await rpc(endpoint, 'broadcast_tx_sync', [signedTx])
+  // CheckTx ran and refused it: bad signature, bad sequence, insufficient
+  // funds. Nothing was committed and nothing will be.
+  if (accepted?.error) {
+    throw new Error(`Transaction rejected: ${JSON.stringify(accepted.error)}`)
+  }
+  const hash = accepted?.hash
+  if (!hash) {
+    throw new Error('Broadcast returned no transaction hash.')
+  }
+
+  // Poll rather than assume. Until it appears in a block it has not happened,
+  // and a screen that refetches before then shows the user their own change
+  // missing.
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    let committed
+    try {
+      committed = await rpc(endpoint, 'tx', [hash])
+    } catch {
+      continue // not indexed yet; `tx` reports a miss as an error
+    }
+    // Accepted into a block and still failed on execution — out of gas, a
+    // realm that refused the call. The user is owed that difference.
+    const failure = committed?.tx_result?.ResponseBase?.Error
+    if (failure) {
+      throw new Error(`Transaction failed on chain: ${JSON.stringify(failure)}`)
+    }
+    console.log('broadcast committed: height=%s hash=%s', String(committed?.height), hash)
+    return
+  }
+
+  throw new Error(`Transaction ${hash} was accepted but has not appeared in a block. It may still land.`)
+}
 
 interface GnodCallTxParams {
   post: Post
