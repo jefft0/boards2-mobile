@@ -1,32 +1,39 @@
 import { createAppAsyncThunk } from '../utils/async-thunk'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
-import { Post } from '@gno/types'
-import { ThunkExtra, RootState, selectThreadBoard, selectAccount } from '@gno/redux'
+import { ThunkExtra, RootState, selectAccount } from '@gno/redux'
+
+// What a new reply answers. The realm's CreateReply takes a zero replyId to
+// reply to the thread itself, or the ID of the comment or reply being answered.
+export interface ReplyTarget {
+  boardId: number
+  threadId: number
+  replyId: number
+}
 
 export interface State {
-  threadToReply: Post | undefined
+  replyTarget: ReplyTarget | undefined
 }
 
 const initialState: State = {
-  threadToReply: undefined
+  replyTarget: undefined
 }
 
 export const threadReplySlice = createSlice({
   name: 'reply',
   initialState,
   reducers: {
-    setThreadToReply: (state, action: PayloadAction<Post>) => {
-      state.threadToReply = action.payload
+    setReplyTarget: (state, action: PayloadAction<ReplyTarget>) => {
+      state.replyTarget = action.payload
     }
   },
   selectors: {
-    selectThreadToReply: (state) => state.threadToReply
+    selectReplyTarget: (state) => state.replyTarget
   }
 })
 
-export const { setThreadToReply } = threadReplySlice.actions
-export const { selectThreadToReply } = threadReplySlice.selectors
+export const { setReplyTarget } = threadReplySlice.actions
+export const { selectReplyTarget } = threadReplySlice.selectors
 
 interface CreateReplyRequestParams {
   replyBody: string
@@ -37,18 +44,17 @@ export const threadReplyAndRedirectToSign = createAppAsyncThunk<void, CreateRepl
   'threadReply/CreateReply',
   async (props, thunkAPI) => {
     try {
-      const board = selectThreadBoard(thunkAPI.getState() as RootState)
-      const thread = selectThreadToReply(thunkAPI.getState() as RootState)
+      const target = selectReplyTarget(thunkAPI.getState() as RootState)
       const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
 
-      if (!board || !thread) throw new Error('No active board or thread')
+      if (!target) throw new Error('No reply target')
 
       const { replyBody, callbackPath } = props
 
       const fnc = 'CreateReply'
       const gasFee = '1000000ugnot'
       const gasWanted = BigInt(50000000)
-      const args: string[] = [String(board.id), String(thread.id), '0', replyBody]
+      const args: string[] = [String(target.boardId), String(target.threadId), String(target.replyId), replyBody]
       const reason = 'Reply a message'
 
       await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)

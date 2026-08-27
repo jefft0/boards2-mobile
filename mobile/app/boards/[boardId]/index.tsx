@@ -9,7 +9,7 @@ import {
   useAppSelector,
   useAppDispatch,
   loadThreads,
-  setThreadToReply,
+  setReplyTarget,
   setThreadToRepost
 } from '@gno/redux'
 import { Post } from '@gno/types'
@@ -48,7 +48,8 @@ export default function ThreadsPage() {
   // )
 
   const handleReply = (thread: Post) => {
-    dispatch(setThreadToReply(thread))
+    // A reply from the list answers the thread itself, so it has no parent comment.
+    dispatch(setReplyTarget({ boardId: thread.boardId, threadId: thread.id, replyId: 0 }))
     router.push(`/boards/${thread.boardId}/threads/${thread.id}/reply?title=${thread.title}`)
   }
 

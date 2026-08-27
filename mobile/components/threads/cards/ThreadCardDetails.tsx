@@ -22,7 +22,8 @@ interface Props {
   onReply: () => void
   onOpen?: () => void
   onOpenOriginal?: () => void
-  onRepost: () => void
+  // Left out when showing a comment, which cannot be reposted.
+  onRepost?: () => void
 }
 
 const ThreadCardDetails = ({
@@ -67,9 +68,12 @@ const ThreadCardDetails = ({
           <CardFooter.MetaItem>
             <ReplyIconButton onPress={onReply} count={threadReplyCount} loading={loading} />
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <RepostIconButton onPress={onRepost} count={threadRepostCount} loading={loading} />
-          </CardFooter.MetaItem>
+          {/* Only a thread can be reposted, so a caller showing a comment omits onRepost. */}
+          {onRepost ? (
+            <CardFooter.MetaItem>
+              <RepostIconButton onPress={onRepost} count={threadRepostCount} loading={loading} />
+            </CardFooter.MetaItem>
+          ) : null}
         </CardFooter.Meta>
       </CardFooter.Footer>
     </ThreadContainer>
