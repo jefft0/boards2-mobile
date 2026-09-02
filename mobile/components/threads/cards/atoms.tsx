@@ -4,7 +4,7 @@ import styled from 'styled-components/native'
 export const ThreadContent = styled(Text.Body)`
   font-size: 15px;
   padding-bottom: 12px;
-  color: #6b7280;
+  color: #000000;
 `
 
 export const ThreadContainer = styled.TouchableOpacity`
