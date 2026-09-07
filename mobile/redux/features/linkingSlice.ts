@@ -150,6 +150,15 @@ async function rpc(endpoint: string, method: string, params: unknown[]): Promise
 }
 
 /**
+ * UncommittedTxError is used by broadcast() for failures where the transaction didn't 
+ * make it into the mempool cache (so it's safe to re-try the broadcast). This is
+ * distinguished from errors coming from the node where the transaction should not be re-broadcast.
+ */
+class UncommittedTxError extends Error {
+  name = 'UncommittedTxError'
+}
+
+/**
  * Broadcasts a `signtx` result straight to the chain's RPC, then confirms it.
  *
  * Deliberately *not* `gnonative.broadcastTxCommit`, whose parameter is
@@ -173,49 +182,75 @@ async function rpc(endpoint: string, method: string, params: unknown[]): Promise
  * guidance, that a broadcast result is a hint and a producer should confirm on
  * its own RPC. That also gives the caller a real "it is on chain" signal to
  * refetch against, which is what `_commit` was being used for.
+ *
+ * The callback from the transaction-signing app puts a single `signedTx` in shared
+ * state. Many screens watch for this and call broadcastTxCommit. Use inFlight to
+ * prevent re-broadcast.
  */
+let inFlight: { signedTx: string; result: Promise<void> } | undefined
+
 export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
   'tx/broadcastTxCommit',
   async (signedTx, thunkAPI) => {
-    const gnonative = thunkAPI.extra.gnonative
-    const remote = await gnonative.getRemote()
-    const endpoint = /^https?:\/\//i.test(remote) ? remote : `http://${remote}`
-
-    const accepted = await rpc(endpoint, 'broadcast_tx_sync', [signedTx])
-    // CheckTx ran and refused it: bad signature, bad sequence, insufficient
-    // funds. Nothing was committed and nothing will be.
-    if (accepted?.error) {
-      throw new Error(`Transaction rejected: ${JSON.stringify(accepted.error)}`)
+    if (inFlight?.signedTx !== signedTx) {
+      const attempt = { signedTx, result: broadcast(signedTx, thunkAPI.extra.gnonative) }
+      // Only UncommittedTxError can be forgotten. Otherwise, keep inFlight (even if broadcast
+      // succeeds) until a new transaction replaces it.
+      void attempt.result.catch((error) => {
+        if (!(error instanceof UncommittedTxError)) return
+        if (inFlight === attempt) inFlight = undefined
+      })
+      inFlight = attempt
     }
-    const hash = accepted?.hash
-    if (!hash) {
-      throw new Error('Broadcast returned no transaction hash.')
-    }
-
-    // Poll rather than assume. Until it appears in a block it has not happened,
-    // and a screen that refetches before then shows the user their own change
-    // missing.
-    for (let attempt = 0; attempt < 10; attempt++) {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      let committed
-      try {
-        committed = await rpc(endpoint, 'tx', [hash])
-      } catch {
-        continue // not indexed yet; `tx` reports a miss as an error
-      }
-      // Accepted into a block and still failed on execution — out of gas, a
-      // realm that refused the call. The user is owed that difference.
-      const failure = committed?.tx_result?.ResponseBase?.Error
-      if (failure) {
-        throw new Error(`Transaction failed on chain: ${JSON.stringify(failure)}`)
-      }
-      console.log('broadcast committed: height=%s hash=%s', String(committed?.height), hash)
-      return
-    }
-
-    throw new Error(`Transaction ${hash} was accepted but has not appeared in a block. It may still land.`)
+    return await inFlight.result
   }
 )
+
+async function broadcast(signedTx: string, gnonative: GnoNativeApi): Promise<void> {
+  const remote = await gnonative.getRemote()
+  const endpoint = /^https?:\/\//i.test(remote) ? remote : `http://${remote}`
+
+  let accepted
+  try {
+    accepted = await rpc(endpoint, 'broadcast_tx_sync', [signedTx])
+  } catch (error) {
+    // No answer came back, so nothing is known to have reached the node and
+    // the transaction can be sent again.
+    throw new UncommittedTxError(error instanceof Error ? error.message : String(error))
+  }
+  // CheckTx ran and refused it: bad signature, bad sequence, insufficient
+  // funds. Nothing was committed and nothing will be.
+  if (accepted?.error) {
+    throw new UncommittedTxError(`Transaction rejected: ${JSON.stringify(accepted.error)}`)
+  }
+  const hash = accepted?.hash
+  if (!hash) {
+    throw new UncommittedTxError('Broadcast returned no transaction hash.')
+  }
+
+  // Poll rather than assume. Until it appears in a block it has not happened,
+  // and a screen that refetches before then shows the user their own change
+  // missing.
+  for (let attempt = 0; attempt < 10; attempt++) {
+    await new Promise((resolve) => setTimeout(resolve, 500))
+    let committed
+    try {
+      committed = await rpc(endpoint, 'tx', [hash])
+    } catch {
+      continue // not indexed yet; `tx` reports a miss as an error
+    }
+    // Accepted into a block and still failed on execution — out of gas, a
+    // realm that refused the call. The user is owed that difference.
+    const failure = committed?.tx_result?.ResponseBase?.Error
+    if (failure) {
+      throw new Error(`Transaction failed on chain: ${JSON.stringify(failure)}`)
+    }
+    console.log('broadcast committed: height=%s hash=%s', String(committed?.height), hash)
+    return
+  }
+
+  throw new Error(`Transaction ${hash} was accepted but has not appeared in a block. It may still land.`)
+}
 
 interface GnodCallTxParams {
   post: Post
