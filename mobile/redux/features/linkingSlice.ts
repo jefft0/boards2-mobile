@@ -150,23 +150,11 @@ async function rpc(endpoint: string, method: string, params: unknown[]): Promise
 }
 
 /**
- * A failure that left nothing behind on the chain, so these bytes can be sent
- * again: the request never got an answer, or the node refused it before its
- * mempool. The one inexact case is a lost response — the send may have arrived
- * and only its reply gone missing — and it is counted here deliberately, since
- * an offline send is a far more common cause and refusing every retry is a worse
- * answer than a re-send the node meets with its mempool cache.
- *
- * Everything thrown after the node returns a hash is a plain `Error`: the
- * transaction is the chain's now, whatever became of it, and nothing the user
- * does with these bytes can change that.
+ * UncommittedTxError is used by broadcast() for failures where the transaction didn't 
+ * make it into the mempool cache (so it's safe to re-try the broadcast). This is
+ * distinguished from errors coming from the node where the transaction should not be re-broadcast.
  */
 class UncommittedTxError extends Error {
-  // Set explicitly: `name` is otherwise inherited as "Error", and it is the only
-  // part of the class a screen can still see. RTK serialises a rejection to
-  // `{name, message, stack, code}`, so `instanceof` is gone by the time
-  // `.unwrap()` rethrows, and this is what a caller branches on to offer a retry
-  // and keep what the user typed.
   name = 'UncommittedTxError'
 }
 
@@ -195,14 +183,9 @@ class UncommittedTxError extends Error {
  * its own RPC. That also gives the caller a real "it is on chain" signal to
  * refetch against, which is what `_commit` was being used for.
  *
- * **Broadcast once per signed transaction.** The wallet's callback puts a single
- * `signedTx` in shared state and every mounted screen watching it dispatches
- * this: the screen that opened the wallet, the screen below it in the stack, and
- * the profile tab kept alive underneath them. The node refuses the second
- * broadcast of the same bytes with "Tx already exists in cache", so those extra
- * callers would report a failure for a transaction that succeeded. Later callers
- * for the same bytes therefore wait on the first broadcast rather than sending
- * it again, and every one of them gets its real outcome.
+ * The callback from the transaction-signing app puts a single `signedTx` in shared
+ * state. Many screens watch for this and call broadcastTxCommit. Use inFlight to
+ * prevent re-broadcast.
  */
 let inFlight: { signedTx: string; result: Promise<void> } | undefined
 
@@ -211,15 +194,8 @@ export const broadcastTxCommit = createAppAsyncThunk<void, string, ThunkExtra>(
   async (signedTx, thunkAPI) => {
     if (inFlight?.signedTx !== signedTx) {
       const attempt = { signedTx, result: broadcast(signedTx, thunkAPI.extra.gnonative) }
-      // Forget only what can be sent again, so a dropped connection does not
-      // answer every later dispatch with the same stale rejection. Everything
-      // else is kept, a success and an on-chain failure alike: the screens do
-      // not all dispatch in the same tick and a broadcast takes seconds to
-      // confirm, so a late one would re-send bytes the node already has and
-      // report that instead of the real outcome. This `catch` only forgets —
-      // the caller below still awaits `result` and gets the rejection — and
-      // forgets only its own attempt, so a slow failure cannot evict newer
-      // bytes that replaced it.
+      // Only UncommittedTxError can be forgotten. Otherwise, keep inFlight (even if broadcast
+      // succeeds) until a new transaction replaces it.
       void attempt.result.catch((error) => {
         if (!(error instanceof UncommittedTxError)) return
         if (inFlight === attempt) inFlight = undefined
@@ -239,8 +215,7 @@ async function broadcast(signedTx: string, gnonative: GnoNativeApi): Promise<voi
     accepted = await rpc(endpoint, 'broadcast_tx_sync', [signedTx])
   } catch (error) {
     // No answer came back, so nothing is known to have reached the node and
-    // these bytes can be sent again. Typed here rather than inside `rpc`, which
-    // the poll loop below shares and whose throws there mean "not indexed yet".
+    // the transaction can be sent again.
     throw new UncommittedTxError(error instanceof Error ? error.message : String(error))
   }
   // CheckTx ran and refused it: bad signature, bad sequence, insufficient
