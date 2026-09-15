@@ -42,7 +42,7 @@ export const ThreadHeader = ({
         <ThreadCount loading={loading} count={threadCount || 0} readOnly={readOnly || false} />
       </View>
       <View style={styles.actions}>
-        <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" />
+        <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" disabled={readOnly || false} />
         {/* TODO: Implement dynamic action renderer */}
       </View>
     </View>
