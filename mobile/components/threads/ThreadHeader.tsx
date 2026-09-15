@@ -12,6 +12,7 @@ interface ThreadHeaderProps {
   title?: string
   creatorName: string
   threadCount?: number
+  readOnly?: boolean
   onBackPress: () => void
   loading?: boolean
 }
@@ -22,6 +23,7 @@ export const ThreadHeader = ({
   title,
   creatorName,
   threadCount,
+  readOnly,
   onBackPress,
   loading
 }: ThreadHeaderProps) => {
@@ -37,7 +39,7 @@ export const ThreadHeader = ({
         <Text.Body color="#ccc" style={styles.divider}>
           •
         </Text.Body>
-        <ThreadCount loading={loading} count={threadCount || 0} />
+        <ThreadCount loading={loading} count={threadCount || 0} readOnly={readOnly || false} />
       </View>
       <View style={styles.actions}>
         <ActionButton label="Create Thread" onPress={onCreateThread} icon="Add" />

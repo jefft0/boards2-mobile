@@ -67,6 +67,7 @@ export default function ThreadsPage() {
         onBackPress={() => router.back()}
         creatorName={board?.creatorName?.name || 'unknown'}
         threadCount={board?.n_threads || 0}
+        readOnly={board?.readOnly}
         loading={loading}
       />
 
