@@ -32,14 +32,15 @@ const ThreadCardReply = ({ post, onReply, onOpen, onDelete, loading }: Props) =>
 
       <CardFooter.Footer>
         <CardFooter.Meta>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Flag</CardFooter.MetaValue>
+          <CardFooter.MetaItem accessibilityLabel="Flag">
+            <Icons.Flag size={16} color={theme.text.textMuted} />
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>{post && post.n_replies > 0 ? `Reply [${post.n_replies}]` : 'Reply'}</CardFooter.MetaValue>
+          <CardFooter.MetaItem accessibilityLabel="Reply">
+            <Icons.Reply size={16} color={theme.text.textMuted} />
+            {post && post.n_replies > 0 ? <CardFooter.MetaValue>{` [${post.n_replies}]`}</CardFooter.MetaValue> : null}
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Edit</CardFooter.MetaValue>
+          <CardFooter.MetaItem accessibilityLabel="Edit">
+            <Icons.Edit size={16} color={theme.text.textMuted} />
           </CardFooter.MetaItem>
           {onDelete ? (
             <CardFooter.MetaItem>
