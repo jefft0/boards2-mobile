@@ -26,6 +26,9 @@ const Icons = {
     <Ionicons name="globe-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
   )) as IconComponent,
   Exclamation,
+  Trash: ((props: IconProps) => (
+    <Ionicons name="trash-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
+  )) as IconComponent,
   Home,
   Profile,
   Gnod,

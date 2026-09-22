@@ -65,6 +65,7 @@ const ARG_NAMES: Record<string, string[]> = {
   CreateBoard: ['name', 'listed', 'open'],
   CreateThread: ['boardID', 'title', 'body'],
   CreateReply: ['boardID', 'threadID', 'replyID', 'body'],
+  DeleteReply: ['boardID', 'threadID', 'replyID'],
   CreateRepost: ['boardID', 'threadID', 'destinationBoardID', 'title', 'body'],
   SetStringField: ['field', 'value']
 }
@@ -150,7 +151,7 @@ async function rpc(endpoint: string, method: string, params: unknown[]): Promise
 }
 
 /**
- * UncommittedTxError is used by broadcast() for failures where the transaction didn't 
+ * UncommittedTxError is used by broadcast() for failures where the transaction didn't
  * make it into the mempool cache (so it's safe to re-try the broadcast). This is
  * distinguished from errors coming from the node where the transaction should not be re-broadcast.
  */
