@@ -1,10 +1,11 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ScrollView, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native'
+import { Alert, ScrollView, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import styled from 'styled-components/native'
 import {
   broadcastTxCommit,
   clearLinking,
+  deleteReplyAndRedirectToSign,
   detailKey,
   loadThreadDetail,
   selectCommentDetail,
@@ -176,6 +177,26 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
     )
   }
 
+  // This app cannot tell in advance if Delete is allowed. Must attempt to broadcast.
+  const handleDelete = (replyId: number) => {
+    Alert.alert('Delete reply?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () =>
+          dispatch(
+            deleteReplyAndRedirectToSign({
+              boardId: Number(boardId),
+              threadId: Number(threadId),
+              replyId,
+              callbackPath
+            })
+          )
+      }
+    ])
+  }
+
   const handleRepost = () => {
     if (!threadSummary) return
     dispatch(setThreadToRepost(threadSummary))
@@ -261,6 +282,7 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
                 post={reply}
                 onReply={() => {}}
                 onOpen={() => router.push(`/boards/${boardId}/threads/${threadId}/${reply.id}`)}
+                onDelete={() => handleDelete(reply.id)}
               />
             ))}
           </ScrollView>

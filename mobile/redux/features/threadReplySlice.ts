@@ -63,3 +63,34 @@ export const threadReplyAndRedirectToSign = createAppAsyncThunk<void, CreateRepl
     }
   }
 )
+
+interface DeleteReplyRequestParams {
+  boardId: number
+  threadId: number
+  // The comment or (nested) reply to delete.
+  replyId: number
+  callbackPath: string
+}
+
+export const deleteReplyAndRedirectToSign = createAppAsyncThunk<void, DeleteReplyRequestParams, ThunkExtra>(
+  'threadReply/DeleteReply',
+  async (props, thunkAPI) => {
+    try {
+      const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
+
+      const { boardId, threadId, replyId, callbackPath } = props
+
+      // If a reply that has sub-replies, it replaces the body with a notice rather than
+      // removing it, so the post can survive the call and come back changed.
+      const fnc = 'DeleteReply'
+      const gasFee = '1000000ugnot'
+      const gasWanted = BigInt(50000000)
+      const args: string[] = [String(boardId), String(threadId), String(replyId)]
+      const reason = 'Delete a message'
+
+      await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
+    } catch (error) {
+      console.error('Error in deleteReplyAndRedirectToSign thunk:', error)
+    }
+  }
+)

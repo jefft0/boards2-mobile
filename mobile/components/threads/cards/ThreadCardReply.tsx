@@ -1,5 +1,8 @@
 import { PostBase } from '@gno/types'
+import { TouchableOpacity } from 'react-native'
+import { useTheme } from 'styled-components/native'
 import CardFooter from '../../cards/CardFooter'
+import Icons from '../../icons'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
 import TextCreateDate from '../../text/TextCreateDate'
@@ -10,9 +13,12 @@ interface Props {
   post?: PostBase
   onReply: () => void
   onOpen?: () => void
+  onDelete?: () => void
 }
 
-const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
+const ThreadCardReply = ({ post, onReply, onOpen, onDelete, loading }: Props) => {
+  const theme = useTheme()
+
   return (
     <ThreadContainer activeOpacity={0.7} onPress={onOpen}>
       <ThreadHeader>
@@ -35,9 +41,13 @@ const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
           <CardFooter.MetaItem>
             <CardFooter.MetaValue>Edit</CardFooter.MetaValue>
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Delete</CardFooter.MetaValue>
-          </CardFooter.MetaItem>
+          {onDelete ? (
+            <CardFooter.MetaItem>
+              <TouchableOpacity onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete">
+                <Icons.Trash size={16} color={theme.text.textMuted} />
+              </TouchableOpacity>
+            </CardFooter.MetaItem>
+          ) : null}
         </CardFooter.Meta>
       </CardFooter.Footer>
     </ThreadContainer>
