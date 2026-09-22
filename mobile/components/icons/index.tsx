@@ -26,6 +26,15 @@ const Icons = {
     <Ionicons name="globe-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
   )) as IconComponent,
   Exclamation,
+  Edit: ((props: IconProps) => (
+    <Ionicons name="create-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
+  )) as IconComponent,
+  Flag: ((props: IconProps) => (
+    <Ionicons name="flag-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
+  )) as IconComponent,
+  Reply: ((props: IconProps) => (
+    <Ionicons name="arrow-undo-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
+  )) as IconComponent,
   Trash: ((props: IconProps) => (
     <Ionicons name="trash-outline" size={props.size ?? 24} color={props.color ?? '#667386'} />
   )) as IconComponent,
