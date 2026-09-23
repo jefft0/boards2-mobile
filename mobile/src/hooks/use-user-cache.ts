@@ -43,7 +43,7 @@ export const useUserCache = () => {
       pubKey: '',
       address: await gnonative.addressFromBech32(bech32),
       avatar: bech32Image,
-      bech32: ''
+      bech32
     }
 
     usersCache.set(bech32, user)

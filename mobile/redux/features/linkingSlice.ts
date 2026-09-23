@@ -66,6 +66,7 @@ const ARG_NAMES: Record<string, string[]> = {
   CreateThread: ['boardID', 'title', 'body'],
   CreateReply: ['boardID', 'threadID', 'replyID', 'body'],
   DeleteReply: ['boardID', 'threadID', 'replyID'],
+  EditReply: ['boardID', 'threadID', 'replyID', 'body'],
   CreateRepost: ['boardID', 'threadID', 'destinationBoardID', 'title', 'body'],
   SetStringField: ['field', 'value']
 }
