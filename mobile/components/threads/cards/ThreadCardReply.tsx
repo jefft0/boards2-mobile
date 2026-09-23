@@ -14,9 +14,13 @@ interface Props {
   onReply: () => void
   onOpen?: () => void
   onDelete?: () => void
+  onEdit?: () => void
+  // The realm lets only a reply's own creator edit it, so the control is hidden
+  // for everyone else rather than offering an action that cannot succeed.
+  canEdit?: boolean
 }
 
-const ThreadCardReply = ({ post, onReply, onOpen, onDelete, loading }: Props) => {
+const ThreadCardReply = ({ post, onReply, onOpen, onDelete, onEdit, canEdit = true, loading }: Props) => {
   const theme = useTheme()
 
   return (
@@ -39,13 +43,17 @@ const ThreadCardReply = ({ post, onReply, onOpen, onDelete, loading }: Props) =>
             <Icons.Reply size={16} color={theme.text.textMuted} />
             {post && post.n_replies > 0 ? <CardFooter.MetaValue>{` [${post.n_replies}]`}</CardFooter.MetaValue> : null}
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem accessibilityLabel="Edit">
-            <Icons.Edit size={16} color={theme.text.textMuted} />
-          </CardFooter.MetaItem>
           {onDelete ? (
             <CardFooter.MetaItem>
               <TouchableOpacity onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete">
                 <Icons.Trash size={16} color={theme.text.textMuted} />
+              </TouchableOpacity>
+            </CardFooter.MetaItem>
+          ) : null}
+          {onEdit && canEdit ? (
+            <CardFooter.MetaItem>
+              <TouchableOpacity onPress={onEdit} accessibilityRole="button" accessibilityLabel="Edit">
+                <Icons.Edit size={16} color={theme.text.textMuted} />
               </TouchableOpacity>
             </CardFooter.MetaItem>
           ) : null}
