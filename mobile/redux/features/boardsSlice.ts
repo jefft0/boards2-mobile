@@ -7,7 +7,7 @@ import { ThunkExtra, selectAccount, RootState } from '@gno/redux'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
 
 export const boardRegex =
-  /\(struct{\((\d+) uint64\),\("([^"]+)" string\),\(nil \[\]string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Board\)/
+  /\(struct{\((\d+) uint64\),\("([^"]+)" string\),\(nil \[\]string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\/v0\.Board\)/
 
 export interface BoardsState {
   boards: Board[]
