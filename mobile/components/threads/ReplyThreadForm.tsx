@@ -55,10 +55,21 @@ interface Props {
   loading: boolean
   // Whether the reply answers a comment or reply instead of the thread itself.
   isComment?: boolean
+  initialBody?: string
+  submitLabel?: string
+  helperText?: string
 }
 
-export default function ReplyThreadForm({ onCreate, onCancel, loading, isComment }: Props) {
-  const [replyBody, setReplyBody] = useState('')
+export default function ReplyThreadForm({
+  onCreate,
+  onCancel,
+  loading,
+  isComment,
+  initialBody = '',
+  submitLabel = 'Reply',
+  helperText
+}: Props) {
+  const [replyBody, setReplyBody] = useState(initialBody)
 
   const handleCreate = () => {
     if (replyBody.trim()) {
@@ -81,13 +92,15 @@ export default function ReplyThreadForm({ onCreate, onCancel, loading, isComment
             textAlignVertical="top"
             style={styles.textArea}
           />
-          <HelperText>{isComment ? 'Write your reply to this comment' : 'Write your reply to this thread'}</HelperText>
+          <HelperText>
+            {helperText ?? (isComment ? 'Write your reply to this comment' : 'Write your reply to this thread')}
+          </HelperText>
         </FormGroup>
 
         <View style={{ flexGrow: 1 }} />
         <ButtonContainer>
           <Button onPress={handleCreate} disabled={!replyBody.trim() || loading} color="tertirary" activeOpacity={0.8}>
-            {loading ? 'Loading' : 'Reply'}
+            {loading ? 'Loading' : submitLabel}
           </Button>
           <Button onPress={onCancel} color="secondary" activeOpacity={0.8}>
             Cancel
