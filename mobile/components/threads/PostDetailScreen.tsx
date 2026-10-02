@@ -191,7 +191,7 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
 
         try {
           await dispatch(clearLinking())
-          await dispatch(broadcastTxCommit(signedTx))
+          await dispatch(broadcastTxCommit(signedTx)).unwrap()
           setReplyText('')
           setTimeout(() => {
             onRefresh()
