@@ -98,8 +98,9 @@ export default function RepostThreadForm({ onCreate, onCancel, loading, initialT
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [destinationBoardId, boardIdIsValid])
 
+  const canRepost = Boolean(repostTitle.trim() && destinationBoardName)
   const handleCreate = () => {
-    if (repostBody.trim() && boardIdIsValid) {
+    if (canRepost) {
       onCreate({ destinationBoardId: destinationBoardId.trim(), repostTitle, repostBody } as CreateRepostThreadFormData)
     }
   }
@@ -148,17 +149,12 @@ export default function RepostThreadForm({ onCreate, onCancel, loading, initialT
             textAlignVertical="top"
             style={styles.textArea}
           />
-          <HelperText>Write the content of your repost message</HelperText>
+          <HelperText>Optionally add a comment to your repost</HelperText>
         </FormGroup>
 
         <View style={{ flexGrow: 1 }} />
         <ButtonContainer>
-          <Button
-            onPress={handleCreate}
-            disabled={!repostBody.trim() || !boardIdIsValid || loading}
-            color="tertirary"
-            activeOpacity={0.8}
-          >
+          <Button onPress={handleCreate} disabled={!canRepost || loading} color="tertirary" activeOpacity={0.8}>
             {loading ? 'Loading' : 'Repost'}
           </Button>
           <Button onPress={onCancel} color="secondary" activeOpacity={0.8}>
