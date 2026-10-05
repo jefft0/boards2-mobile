@@ -2,7 +2,7 @@ import { createAppAsyncThunk } from '../utils/async-thunk'
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
 import { makeCallTx } from './linkingSlice'
 import { Post } from '@gno/types'
-import { ThunkExtra, RootState, selectThreadBoard, selectAccount } from '@gno/redux'
+import { ThunkExtra, RootState, selectAccount } from '@gno/redux'
 
 // Not exported, unlike threadReplySlice's: the barrel in features/index.ts
 // re-exports both slices, and two `State` names there collide.
@@ -41,11 +41,10 @@ export const threadRepostAndRedirectToSign = createAppAsyncThunk<void, CreateRep
   'threadRepost/CreateRepost',
   async (props, thunkAPI) => {
     try {
-      const board = selectThreadBoard(thunkAPI.getState() as RootState)
       const thread = selectThreadToRepost(thunkAPI.getState() as RootState)
       const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
 
-      if (!board || !thread) throw new Error('No active board or thread')
+      if (!thread) throw new Error('No thread to repost')
 
       const { destinationBoardId, repostTitle, repostBody, callbackPath } = props
 
@@ -54,7 +53,7 @@ export const threadRepostAndRedirectToSign = createAppAsyncThunk<void, CreateRep
       const fnc = 'CreateRepost'
       const gasFee = '1000000ugnot'
       const gasWanted = BigInt(50000000)
-      const args: string[] = [String(board.id), String(thread.id), destinationBoardId, repostTitle, repostBody]
+      const args: string[] = [String(thread.boardId), String(thread.id), destinationBoardId, repostTitle, repostBody]
       const reason = 'Repost a message'
 
       await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
