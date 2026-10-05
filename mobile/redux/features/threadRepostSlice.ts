@@ -40,25 +40,21 @@ interface CreateRepostRequestParams {
 export const threadRepostAndRedirectToSign = createAppAsyncThunk<void, CreateRepostRequestParams, ThunkExtra>(
   'threadRepost/CreateRepost',
   async (props, thunkAPI) => {
-    try {
-      const thread = selectThreadToRepost(thunkAPI.getState() as RootState)
-      const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
+    const thread = selectThreadToRepost(thunkAPI.getState() as RootState)
+    const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
 
-      if (!thread) throw new Error('No thread to repost')
+    if (!thread) throw new Error('No thread to repost')
 
-      const { destinationBoardId, repostTitle, repostBody, callbackPath } = props
+    const { destinationBoardId, repostTitle, repostBody, callbackPath } = props
 
-      // Matches the realm signature:
-      //   CreateRepost(cur realm, boardID, threadID, destinationBoardID boards.ID, title, body string)
-      const fnc = 'CreateRepost'
-      const gasFee = '1000000ugnot'
-      const gasWanted = BigInt(50000000)
-      const args: string[] = [String(thread.boardId), String(thread.id), destinationBoardId, repostTitle, repostBody]
-      const reason = 'Repost a message'
+    // Matches the realm signature:
+    //   CreateRepost(cur realm, boardID, threadID, destinationBoardID boards.ID, title, body string)
+    const fnc = 'CreateRepost'
+    const gasFee = '1000000ugnot'
+    const gasWanted = BigInt(50000000)
+    const args: string[] = [String(thread.boardId), String(thread.id), destinationBoardId, repostTitle, repostBody]
+    const reason = 'Repost a message'
 
-      await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
-    } catch (error) {
-      console.error('Error in threadRepostAndRedirectToSign thunk:', error)
-    }
+    await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
   }
 )

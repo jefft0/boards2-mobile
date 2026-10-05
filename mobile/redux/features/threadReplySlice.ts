@@ -43,23 +43,19 @@ interface CreateReplyRequestParams {
 export const threadReplyAndRedirectToSign = createAppAsyncThunk<void, CreateReplyRequestParams, ThunkExtra>(
   'threadReply/CreateReply',
   async (props, thunkAPI) => {
-    try {
-      const target = selectReplyTarget(thunkAPI.getState() as RootState)
-      const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
+    const target = selectReplyTarget(thunkAPI.getState() as RootState)
+    const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
 
-      if (!target) throw new Error('No reply target')
+    if (!target) throw new Error('No reply target')
 
-      const { replyBody, callbackPath } = props
+    const { replyBody, callbackPath } = props
 
-      const fnc = 'CreateReply'
-      const gasFee = '1000000ugnot'
-      const gasWanted = BigInt(50000000)
-      const args: string[] = [String(target.boardId), String(target.threadId), String(target.replyId), replyBody]
-      const reason = 'Reply a message'
+    const fnc = 'CreateReply'
+    const gasFee = '1000000ugnot'
+    const gasWanted = BigInt(50000000)
+    const args: string[] = [String(target.boardId), String(target.threadId), String(target.replyId), replyBody]
+    const reason = 'Reply a message'
 
-      await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
-    } catch (error) {
-      console.error('Error in threadReplyAndRedirectToSign thunk:', error)
-    }
+    await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
   }
 )

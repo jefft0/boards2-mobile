@@ -54,7 +54,14 @@ export default function Page() {
   const onCreate = async (form: CreateReplyThreadFormData) => {
     if (!board) throw new Error('No active board')
     setLoading(true)
-    dispatch(threadReplyAndRedirectToSign({ callbackPath: currentPath, replyBody: form.replyBody }))
+    try {
+      await dispatch(threadReplyAndRedirectToSign({ callbackPath: currentPath, replyBody: form.replyBody })).unwrap()
+    } catch (error) {
+      // Nothing reached the wallet, so no callback will arrive to stop the
+      // spinner. `.unwrap()` is what makes the rejection reach here.
+      console.error('on threadReplyAndRedirectToSign', error)
+      setLoading(false)
+    }
   }
 
   return (
