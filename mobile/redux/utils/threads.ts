@@ -28,24 +28,22 @@ export async function fetchThreadPosts(
 // A repost's own title and body are usually empty, so attach the thread it was
 // reposted from as repost_parent and let the caller show that summary instead.
 async function addRepostOriginals(userCache: UserCacheApi, gnonative: GnoNativeApi, posts: Post[]): Promise<Post[]> {
-  const originals = new Map<string, Post | undefined>()
-  const result: Post[] = []
+  const keyOf = (post: Post) => `${post.originalBoardId}/${post.originalThreadId}`
+  const reposts = posts.filter((post) => post.originalBoardId)
+  if (reposts.length === 0) return posts
 
-  for (const post of posts) {
-    if (!post.originalBoardId) {
-      result.push(post)
-      continue
-    }
+  // Fetch each original once, however many reposts of it the page holds, and all
+  // of them at the same time: one page can hold a screenful of reposts.
+  const keys = [...new Set(reposts.map(keyOf))]
+  const fetched = await Promise.all(
+    keys.map((key) => {
+      const [originalBoardId, originalThreadId] = key.split('/').map(Number)
+      return fetchThread(userCache, gnonative, originalBoardId, originalThreadId)
+    })
+  )
+  const originals = new Map(keys.map((key, i) => [key, fetched[i]]))
 
-    const key = `${post.originalBoardId}/${post.originalThreadId}`
-    if (!originals.has(key)) {
-      originals.set(key, await fetchThread(userCache, gnonative, post.originalBoardId, post.originalThreadId))
-    }
-
-    result.push({ ...post, repost_parent: originals.get(key) })
-  }
-
-  return result
+  return posts.map((post) => (post.originalBoardId ? { ...post, repost_parent: originals.get(keyOf(post)) } : post))
 }
 
 // Return a single top-level post, or undefined if the board or thread is gone.
@@ -68,20 +66,23 @@ export async function fetchThread(
   }
 }
 
-// Return the top level comments of a specific thread.
+// Return the top level comments of a specific thread. `total` is the thread's
+// comment count, which the caller already read from the thread it fetched.
 export async function fetchThreadComments(
   userCache: UserCacheApi,
   gnonative: GnoNativeApi,
   boardId: number,
   threadId: number,
   startIndex: number,
-  endIndex: number
+  endIndex: number,
+  total: number
 ): Promise<ThreadComments> {
-  const result = await qEvalGetComments(gnonative, boardId, threadId, startIndex, endIndex)
+  const result = await qEvalGetComments(gnonative, boardId, threadId, startIndex, endIndex, total)
   return await enrichComments(userCache, result)
 }
 
-// Return the direct replies of a comment or reply.
+// Return the direct replies of a comment or reply. `total` is the reply count of
+// the comment the caller fetched.
 export async function fetchCommentReplies(
   userCache: UserCacheApi,
   gnonative: GnoNativeApi,
@@ -89,9 +90,10 @@ export async function fetchCommentReplies(
   threadId: number,
   commentId: number,
   startIndex: number,
-  endIndex: number
+  endIndex: number,
+  total: number
 ): Promise<ThreadComments> {
-  const result = await qEvalGetReplies(gnonative, boardId, threadId, commentId, startIndex, endIndex)
+  const result = await qEvalGetReplies(gnonative, boardId, threadId, commentId, startIndex, endIndex, total)
   return await enrichComments(userCache, result)
 }
 
@@ -219,16 +221,13 @@ export async function qEvalGetComments(
   boardId: number,
   threadId: number,
   startIndex: number,
-  endIndex: number
+  endIndex: number,
+  total: number
 ): Promise<string> {
   const commentInfos = await gnonative.qEval(
     PACKAGE_PATH,
     `GetComments(${boardId},${threadId},${startIndex},${endIndex - startIndex})`
   )
-  const threadCommentCount = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const totalMatch = threadRegex.exec(threadCommentCount)
-  if (!totalMatch) throw new Error("Can't find comment count in GetThread response")
-  const total = Number(totalMatch![9])
 
   return encodeComments(total, parseComments(commentInfos))
 }
@@ -241,17 +240,13 @@ export async function qEvalGetReplies(
   threadId: number,
   commentId: number,
   startIndex: number,
-  endIndex: number
+  endIndex: number,
+  total: number
 ): Promise<string> {
   const replyInfos = await gnonative.qEval(
     PACKAGE_PATH,
     `GetReplies(${boardId},${threadId},${commentId},${startIndex},${endIndex - startIndex})`
   )
-  // Get the count from GetComment, the same as qEvalGetComments does with GetThread.
-  const commentReplyCount = await gnonative.qEval(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
-  const totalMatch = commentRegex.exec(commentReplyCount)
-  if (!totalMatch) throw new Error("Can't find reply count in GetComment response")
-  const total = Number(totalMatch[7])
 
   return encodeComments(total, parseComments(replyInfos))
 }

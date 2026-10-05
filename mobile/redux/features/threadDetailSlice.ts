@@ -2,18 +2,8 @@ import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Comment, Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createSlice, RootState } from '@reduxjs/toolkit'
-import {
-  ThunkExtra,
-  fetchComment,
-  fetchCommentReplies,
-  fetchThread,
-  fetchThreadComments,
-  selectThreads,
-  threadRegex,
-  subtractOrZero
-} from '@gno/redux'
-import { PACKAGE_PATH } from '@gno/constants/Constants'
+import { createSlice } from '@reduxjs/toolkit'
+import { ThunkExtra, fetchComment, fetchCommentReplies, fetchThread, fetchThreadComments, subtractOrZero } from '@gno/redux'
 
 // What one detail screen shows: a thread with its comments, or a comment with
 // its replies.
@@ -117,7 +107,18 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
         const totalPosts = comment?.n_replies ?? 0
         const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
-        const res = await fetchCommentReplies(userCache, gnonative, boardId, threadId, commentId, startIndex, totalPosts)
+        // endIndex and total are the same value here: the screen opens on the
+        // last page, which ends at the last reply.
+        const res = await fetchCommentReplies(
+          userCache,
+          gnonative,
+          boardId,
+          threadId,
+          commentId,
+          startIndex,
+          totalPosts,
+          totalPosts
+        )
 
         return {
           comment,
@@ -125,18 +126,17 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
           totalPosts
         }
       } else {
-        // Show the thread and its top level comments.
-        const threads = selectThreads(thunkAPI.getState() as RootState)
-        const totalPosts = await countPosts(gnonative, boardId, threadId)
+        // Show the thread and its top level comments. Fetching the thread rather
+        // than taking it from the list of the board we came from serves two
+        // purposes: the list has nothing for a thread of another board, like the
+        // one a repost points at, and paging needs a comment count as fresh as
+        // the comments themselves.
+        const thread = await fetchThread(userCache, gnonative, boardId, threadId)
+        const totalPosts = thread?.n_replies ?? 0
         const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
-        const res = await fetchThreadComments(userCache, gnonative, boardId, threadId, startIndex, totalPosts)
-
-        // The thread is missing from the list when it belongs to another board,
-        // like the thread a repost points at.
-        const thread =
-          threads.find((t) => t.boardId === Number(boardId) && t.id === Number(threadId)) ??
-          (await fetchThread(userCache, gnonative, boardId, threadId))
+        // endIndex and total are the same value here, as in the branch above.
+        const res = await fetchThreadComments(userCache, gnonative, boardId, threadId, startIndex, totalPosts, totalPosts)
 
         return {
           thread,
@@ -150,11 +150,3 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
     }
   }
 )
-
-async function countPosts(gnonative: GnoNativeApi, boardId: number, threadId: number): Promise<number> {
-  // Get the count from GetThread, the same as done in qEvalGetComments.
-  const threadInfo = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const match = threadRegex.exec(threadInfo)
-  if (!match) throw new Error("Can't find comment count in GetThread response")
-  return Number(match[9])
-}
