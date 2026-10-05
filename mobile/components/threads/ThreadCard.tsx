@@ -45,9 +45,12 @@ const ThreadCard = ({ thread, onReply, onOpen, onOpenOriginal, onRepost }: Props
           <CardFooter.MetaItem>
             <ReplyIconButton onPress={onReply} count={thread.n_replies} />
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <RepostIconButton onPress={onRepost} count={thread.n_reposts} />
-          </CardFooter.MetaItem>
+          {/* The realm refuses to repost a repost (boards.NewRepost), so don't offer it. */}
+          {!isRepost && (
+            <CardFooter.MetaItem>
+              <RepostIconButton onPress={onRepost} count={thread.n_reposts} />
+            </CardFooter.MetaItem>
+          )}
         </CardFooter.Meta>
       </CardFooter.Footer>
     </ThreadContainer>

@@ -128,6 +128,8 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
   // shown at the top of the screen, which is a thread or a comment.
   const threadSummary = commentId ? undefined : (threadCache ?? thread)
   const head: PostBase | undefined = commentId ? comment : threadSummary
+  // The realm refuses to repost a repost (boards.NewRepost), so don't offer it.
+  const isRepost = !!threadSummary?.originalBoardId
 
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -234,10 +236,10 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
               threadRepostCount={threadSummary?.n_reposts || 0}
               threadCreatorName={head?.user.name || ''}
               threadCreatedAt={head?.createdAt || ''}
-              isRepost={!!threadSummary?.originalBoardId}
+              isRepost={isRepost}
               threadOriginal={threadSummary?.repost_parent}
               onReply={navigateToReplyScreen}
-              onRepost={commentId ? undefined : handleRepost}
+              onRepost={commentId || isRepost ? undefined : handleRepost}
               onOpenOriginal={() =>
                 router.push(`/boards/${threadSummary?.originalBoardId}/threads/${threadSummary?.originalThreadId}`)
               }

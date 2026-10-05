@@ -22,7 +22,7 @@ interface Props {
   onReply: () => void
   onOpen?: () => void
   onOpenOriginal?: () => void
-  // Left out when showing a comment, which cannot be reposted.
+  // Left out for a post the realm will not repost: a comment, or a repost itself.
   onRepost?: () => void
 }
 
