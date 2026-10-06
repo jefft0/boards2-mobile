@@ -70,17 +70,17 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
     <>
       <Container>
         <FormGroup>
-          <GnoText.Label>Thread Name *</GnoText.Label>
+          <GnoText.Label>Thread Title *</GnoText.Label>
           <Input
             value={threadName}
             onChangeText={setThreadName}
-            placeholder="Enter thread name"
+            placeholder="Enter thread title"
             placeholderTextColor="#9ca3af"
             autoCapitalize="none"
             autoComplete="off"
             autoCorrect={false}
           />
-          <HelperText>Choose a descriptive name for your thread</HelperText>
+          <HelperText>Choose a descriptive title for your thread</HelperText>
         </FormGroup>
 
         <FormGroup>

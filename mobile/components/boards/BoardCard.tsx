@@ -14,7 +14,9 @@ export const BoardCard = ({ board, onPress }: BoardCardProps) => {
       <Text.Title3 style={styles.boardTitle}>{board.name}</Text.Title3>
       <CreatedBy creatorName={board?.creatorName?.name || 'unknown'} createdAt={board.createdAt} boardId={board.id.toString()} />
       <View style={styles.replyRepostContainer}>
-        <Text.Caption style={styles.threadCount}>{board.n_threads > 0 ? board.n_threads : 0} threads</Text.Caption>
+        <Text.Caption style={styles.threadCount}>
+          {board.n_threads > 0 ? board.n_threads : 0} threads{board.readOnly ? ', read-only' : ''}
+        </Text.Caption>
         <Text.Body color="#ccc" style={styles.divider}>
           •
         </Text.Body>

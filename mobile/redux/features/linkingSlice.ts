@@ -58,14 +58,14 @@ export const requestLoginForGnokeyMobile = createAppAsyncThunk<boolean, void, Th
  * than guessed: a wrong name binds as an unknown argument while the real
  * parameter goes out empty.
  *
- * `AddReaction` and `RepostThread` are absent because neither is an exported
- * function of the realm — only a `renderRepostThread` render route — so they
- * fall back to positional `args=`.
+ * `AddReaction` is absent because it is not an exported function of the realm —
+ * only a render route — so it falls back to positional `args=`.
  */
 const ARG_NAMES: Record<string, string[]> = {
   CreateBoard: ['name', 'listed', 'open'],
   CreateThread: ['boardID', 'title', 'body'],
   CreateReply: ['boardID', 'threadID', 'replyID', 'body'],
+  CreateRepost: ['boardID', 'threadID', 'destinationBoardID', 'title', 'body'],
   SetStringField: ['field', 'value']
 }
 

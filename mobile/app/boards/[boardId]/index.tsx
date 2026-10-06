@@ -9,7 +9,8 @@ import {
   useAppSelector,
   useAppDispatch,
   loadThreads,
-  setThreadToReply
+  setReplyTarget,
+  setThreadToRepost
 } from '@gno/redux'
 import { Post } from '@gno/types'
 import { useLocalSearchParams, useRouter } from 'expo-router'
@@ -26,7 +27,7 @@ const Container = styled.View`
 export default function ThreadsPage() {
   // TODO: implement sortBy functionality
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const [sortBy, setSortBy] = useState('newest')
+  const [sortBy, setSortBy] = useState('newest first')
   const router = useRouter()
   const board = useAppSelector(selectThreadBoard)
   const loading = useAppSelector(selectThreadLoading)
@@ -47,8 +48,14 @@ export default function ThreadsPage() {
   // )
 
   const handleReply = (thread: Post) => {
-    dispatch(setThreadToReply(thread))
+    // A reply from the list answers the thread itself, so it has no parent comment.
+    dispatch(setReplyTarget({ boardId: thread.boardId, threadId: thread.id, replyId: 0 }))
     router.push(`/boards/${thread.boardId}/threads/${thread.id}/reply?title=${thread.title}`)
+  }
+
+  const handleRepost = (thread: Post) => {
+    dispatch(setThreadToRepost(thread))
+    router.push(`/boards/${thread.boardId}/threads/${thread.id}/repost`)
   }
 
   return (
@@ -60,6 +67,7 @@ export default function ThreadsPage() {
         onBackPress={() => router.back()}
         creatorName={board?.creatorName?.name || 'unknown'}
         threadCount={board?.n_threads || 0}
+        readOnly={board?.readOnly}
         loading={loading}
       />
 
@@ -74,7 +82,9 @@ export default function ThreadsPage() {
           <ThreadCard
             thread={thread}
             onReply={() => handleReply(thread)}
+            onRepost={() => handleRepost(thread)}
             onOpen={() => router.push(`/boards/${thread.boardId}/threads/${thread.id}`)}
+            onOpenOriginal={() => router.push(`/boards/${thread.originalBoardId}/threads/${thread.originalThreadId}`)}
           />
         )}
         emptyComponent={<ListEmptyView message={loading ? '' : 'No Threads yet.'} />}

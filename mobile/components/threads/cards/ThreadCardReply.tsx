@@ -1,4 +1,4 @@
-import { Post } from '@gno/types'
+import { PostBase } from '@gno/types'
 import CardFooter from '../../cards/CardFooter'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
@@ -6,22 +6,23 @@ import TextCreateDate from '../../text/TextCreateDate'
 
 interface Props {
   loading?: boolean
-  thread?: Post
+  // PostBase, so that this can show a thread or a comment.
+  post?: PostBase
   onReply: () => void
   onOpen?: () => void
 }
 
-const ThreadCardReply = ({ thread, onReply, onOpen, loading }: Props) => {
+const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
   return (
-    <ThreadContainer key={thread?.id} activeOpacity={0.7} onPress={onOpen}>
+    <ThreadContainer activeOpacity={0.7} onPress={onOpen}>
       <ThreadHeader>
         <UserInfo>
-          <TextUsername value={thread?.user.name} />
-          <TextCreateDate value={thread?.createdAt} />
+          <TextUsername value={post?.user.name} />
+          <TextCreateDate value={post?.createdAt} postId={post?.id} />
         </UserInfo>
       </ThreadHeader>
 
-      <ThreadContent>{thread?.body}</ThreadContent>
+      <ThreadContent>{post?.body}</ThreadContent>
 
       <CardFooter.Footer>
         <CardFooter.Meta>
@@ -29,7 +30,7 @@ const ThreadCardReply = ({ thread, onReply, onOpen, loading }: Props) => {
             <CardFooter.MetaValue>Flag</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Reply</CardFooter.MetaValue>
+            <CardFooter.MetaValue>{post && post.n_replies > 0 ? `Reply [${post.n_replies}]` : 'Reply'}</CardFooter.MetaValue>
           </CardFooter.MetaItem>
           <CardFooter.MetaItem>
             <CardFooter.MetaValue>Edit</CardFooter.MetaValue>

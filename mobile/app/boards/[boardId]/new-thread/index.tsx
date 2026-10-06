@@ -65,7 +65,14 @@ export default function Search() {
   const onCreate = async (form: CreateThreadFormData) => {
     if (!board) throw new Error('No active board')
     setLoading(true)
-    dispatch(threadCreate({ ...form, boardId: board.id.toString() }))
+    try {
+      await dispatch(threadCreate({ ...form, boardId: board.id.toString() })).unwrap()
+    } catch (error) {
+      // Nothing reached the wallet, so no callback will arrive to stop the
+      // spinner. `.unwrap()` is what makes the rejection reach here.
+      console.error('on threadCreate', error)
+      setLoading(false)
+    }
   }
 
   return (

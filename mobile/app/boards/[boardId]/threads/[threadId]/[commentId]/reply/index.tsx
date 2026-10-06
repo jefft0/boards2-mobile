@@ -14,13 +14,15 @@ import { ThreadsReplyTemplate } from '@gno/components/templates/ThreadsReplyTemp
 import ReplyThreadForm, { CreateReplyThreadFormData } from '@gno/components/threads/ReplyThreadForm'
 import { useWalletFailure } from '@gno/hooks/use-wallet-failure'
 
+// Reply to a comment or reply. This matches the gnoweb render route
+// "{board}/{thread}/{reply}/reply".
 export default function Page() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const dispatch = useAppDispatch()
   const board = useAppSelector(selectThreadBoard)
   const signedTxFromWallet = useAppSelector(selectSignedTx)
-  const { threadId } = useLocalSearchParams()
+  const { threadId, commentId } = useLocalSearchParams<{ threadId: string; commentId: string }>()
   const currentPath = usePathname()
 
   // hook to handle the signed tx from the Gnokey and broadcast it
@@ -66,11 +68,11 @@ export default function Page() {
 
   return (
     <ThreadsReplyTemplate
-      breadcrumbItems={[...BREADCRUMBS, `${board?.name.toString()}`, `${threadId.toString()}`]}
+      breadcrumbItems={[...BREADCRUMBS, `${board?.name.toString()}`, threadId, commentId]}
       onBackPress={() => router.back()}
       title="Reply"
     >
-      <ReplyThreadForm onCancel={() => router.back()} onCreate={onCreate} loading={loading} />
+      <ReplyThreadForm onCancel={() => router.back()} onCreate={onCreate} loading={loading} isComment />
     </ThreadsReplyTemplate>
   )
 }

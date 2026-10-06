@@ -5,13 +5,14 @@ import {
   clearLinking,
   selectSignedTx,
   selectThreadBoard,
-  threadReplyAndRedirectToSign,
+  selectThreadToRepost,
+  threadRepostAndRedirectToSign,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
 import { BREADCRUMBS } from '@gno/constants/Constants'
 import { ThreadsReplyTemplate } from '@gno/components/templates/ThreadsReplyTemplate'
-import ReplyThreadForm, { CreateReplyThreadFormData } from '@gno/components/threads/ReplyThreadForm'
+import RepostThreadForm, { CreateRepostThreadFormData } from '@gno/components/threads/RepostThreadForm'
 import { useWalletFailure } from '@gno/hooks/use-wallet-failure'
 
 export default function Page() {
@@ -19,6 +20,7 @@ export default function Page() {
   const router = useRouter()
   const dispatch = useAppDispatch()
   const board = useAppSelector(selectThreadBoard)
+  const threadToRepost = useAppSelector(selectThreadToRepost)
   const signedTxFromWallet = useAppSelector(selectSignedTx)
   const { threadId } = useLocalSearchParams()
   const currentPath = usePathname()
@@ -37,7 +39,7 @@ export default function Page() {
           router.back()
         } catch (error) {
           // Stay put with the form still filled: going back would lose what was
-          // typed for a reply that was never created. `.unwrap()` is what makes the
+          // typed for a repost that was never created. `.unwrap()` is what makes the
           // rejection reach here — a plain dispatch resolves either way.
           console.error('on broadcastTxCommit', error)
           setLoading(false)
@@ -51,15 +53,22 @@ export default function Page() {
   // The wallet declined or failed: stop waiting. The snackbar says why.
   useWalletFailure(() => setLoading(false))
 
-  const onCreate = async (form: CreateReplyThreadFormData) => {
+  const onCreate = async (form: CreateRepostThreadFormData) => {
     if (!board) throw new Error('No active board')
     setLoading(true)
     try {
-      await dispatch(threadReplyAndRedirectToSign({ callbackPath: currentPath, replyBody: form.replyBody })).unwrap()
+      await dispatch(
+        threadRepostAndRedirectToSign({
+          callbackPath: currentPath,
+          destinationBoardId: form.destinationBoardId,
+          repostTitle: form.repostTitle,
+          repostBody: form.repostBody
+        })
+      ).unwrap()
     } catch (error) {
       // Nothing reached the wallet, so no callback will arrive to stop the
       // spinner. `.unwrap()` is what makes the rejection reach here.
-      console.error('on threadReplyAndRedirectToSign', error)
+      console.error('on threadRepostAndRedirectToSign', error)
       setLoading(false)
     }
   }
@@ -68,9 +77,14 @@ export default function Page() {
     <ThreadsReplyTemplate
       breadcrumbItems={[...BREADCRUMBS, `${board?.name.toString()}`, `${threadId.toString()}`]}
       onBackPress={() => router.back()}
-      title="Reply"
+      title="Repost"
     >
-      <ReplyThreadForm onCancel={() => router.back()} onCreate={onCreate} loading={loading} />
+      <RepostThreadForm
+        onCancel={() => router.back()}
+        onCreate={onCreate}
+        loading={loading}
+        initialTitle={threadToRepost?.title}
+      />
     </ThreadsReplyTemplate>
   )
 }

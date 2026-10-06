@@ -53,9 +53,11 @@ interface Props {
   onCreate: (form: CreateReplyThreadFormData) => void
   onCancel: () => void
   loading: boolean
+  // Whether the reply answers a comment or reply instead of the thread itself.
+  isComment?: boolean
 }
 
-export default function ReplyThreadForm({ onCreate, onCancel, loading }: Props) {
+export default function ReplyThreadForm({ onCreate, onCancel, loading, isComment }: Props) {
   const [replyBody, setReplyBody] = useState('')
 
   const handleCreate = () => {
@@ -79,7 +81,7 @@ export default function ReplyThreadForm({ onCreate, onCancel, loading }: Props) 
             textAlignVertical="top"
             style={styles.textArea}
           />
-          <HelperText>Write your reply to this thread</HelperText>
+          <HelperText>{isComment ? 'Write your reply to this comment' : 'Write your reply to this thread'}</HelperText>
         </FormGroup>
 
         <View style={{ flexGrow: 1 }} />

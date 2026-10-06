@@ -53,7 +53,9 @@ export const threadsSlice = createSlice({
     selectThreadBoard: (state: ThreadsState) => state.board,
     selectThreads: (state: ThreadsState) => state.threads,
     selectThreadLoading: (state: ThreadsState) => state.loading,
-    selectThreadById: (state: ThreadsState, id: number | string) => state.threads.find((thread) => thread.id === Number(id))
+    // Thread IDs restart on every board, so the board is part of the identity.
+    selectThreadById: (state: ThreadsState, boardId: number | string, id: number | string) =>
+      state.threads.find((thread) => thread.boardId === Number(boardId) && thread.id === Number(id))
   }
 })
 
@@ -77,7 +79,7 @@ export const loadThreads = createAppAsyncThunk<LoadResult | undefined, LoadThrea
     const userCache = thunkAPI.extra.userCache as UserCacheApi
 
     try {
-      const totalPosts = await countThreadPosts(userCache, gnonative, board.id)
+      const totalPosts = await countThreadPosts(gnonative, board.id)
       const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
       const postsRes = await fetchThreadPosts(userCache, gnonative, board.id, startIndex, totalPosts)
