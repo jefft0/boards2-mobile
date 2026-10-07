@@ -130,36 +130,93 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
   const userCache = thunkAPI.extra.userCache as UserCacheApi
 
-  const boardInfos = await gnonative.qEval(PACKAGE_PATH, `GetBoards(${startIndex},${endIndex - startIndex})`)
-  const boardCount = await gnonative.qEval(PACKAGE_PATH, `BoardCount()`)
-  const totalRegex = /^\((\d+) int\)/g
-  const totalMatch = totalRegex.exec(boardCount)
-  if (!totalMatch) throw new Error("Can't find total in BoardCount response")
-  const total = Number(totalMatch![1])
+  const boardInfos = await gnonative.qEvalJSON(PACKAGE_PATH, `GetBoards(${startIndex},${endIndex - startIndex})`)  
+  const boardCount = await gnonative.qEvalJSON(PACKAGE_PATH, `BoardCount()`)
+  const total = decodeIntTypedValue(boardCount.results[0])!
 
-  const boardListRegex = new RegExp(boardRegex.source, 'g')
   let boards = []
   let index = 0
-  let match
-  while ((match = boardListRegex.exec(boardInfos)) !== null) {
-    const boardId = Number(match[1])
-    const name = match[2]
+  for (const boardJSON of boardInfos.results[0].V.Base.List) {
+    const board = await decodeAminoJSON(gnonative, boardJSON)
+    const id = board.id
+    const name = board.name
     // TODO: aliases
-    const readOnly = match[3] === 'true'
-    const n_threads = Number(match[4])
-    const n_members = Number(match[5])
-    const creator = match[6]
+    const readOnly = board.readonly
+    const n_threads = board.threadCount
+    const n_members = board.memberCount
+    const creator = board.creator
     const creatorName = await userCache.getUser(creator)
-    const createdAtUnix = Number(match[7])
+    const createdAtUnix = board.createdAt
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[8])
+    const updatedAtUnix = board.updatedAt
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     boards.push({
       index,
-      board: { id: boardId, name, readOnly, n_threads, n_members, creator, creatorName, createdAt, updatedAt }
+      board: { id, name, readOnly, n_threads, n_members, creator, creatorName, createdAt, updatedAt }
     })
     ++index
   }
 
   return { n_boards: total, boards }
+}
+
+export async function decodeAminoJSON(gnonative: GnoNativeApi, aminoObject: any) : Promise<any> {
+  // TODO: Maintain a cache of fetched type definitions
+  const aminoType = await gnonative.qTypeJSON(aminoObject.T.ID)
+  const typeFields = aminoType.type.Base.Fields
+  const objectFields = aminoObject.V.Fields
+
+  const result: Record<string, any> = {}
+  for (const [i, obj] of objectFields.entries()) {
+    const fieldName = typeFields[i].Name
+    let value: any = null
+
+    if (obj.T['@type'] == '/gno.PrimitiveType') {
+      const n = decodeIntTypedValue(obj)
+      if (n !== undefined)
+        value = n
+      else if (obj.T.value == '4')
+        value = ('N' in obj)
+      else if (obj.T.value == '16')
+        value = obj.V.value
+    }
+    else if ('V' in obj && obj.V['@type'] == '/gno.StringValue')
+      value = obj.V.value
+
+    console.log("**************", fieldName, value)
+    result[fieldName] = value
+  }
+  return result
+}
+
+// The gno PrimitiveType bit flags (gnovm/pkg/gnolang/types.go) of the integer
+// types that occupy all 8 bytes of `N`, mapped to whether they are signed.
+// Narrower types (int8, int32, uint32, ...) are deliberately absent: they store
+// only their low bytes, so reading the full 8 would misread a negative int32 as
+// a large positive number.
+const eightByteIntTypes: Record<string, boolean> = {
+  '32': true, // IntType
+  '1024': true, // Int64Type
+  '2048': false, // UintType
+  '65536': false // Uint64Type
+}
+
+// decodeIntTypedValue reads an integer out of an Amino JSON gno.TypedValue, or
+// returns undefined if it does not hold a gno `int`, `int64`, `uint` or `uint64`.
+// Scalars live in the 8-byte `N` field, not `V`, and amino's `json:",omitempty"`
+// drops `N` entirely when every byte is zero — so a missing `N` means zero.
+// Values beyond Number.MAX_SAFE_INTEGER lose precision in the Number() cast.
+function decodeIntTypedValue(typedValue: any): number | undefined {
+  // Guard on the type so a value that is not one of these (where `N` is absent
+  // for a different reason) doesn't read as zero.
+  const signed = eightByteIntTypes[typedValue?.T?.value]
+  if (signed === undefined) {
+    return undefined
+  }
+  if (!typedValue.N) {
+    return 0
+  }
+  const bytes = Uint8Array.from(atob(typedValue.N), (c) => c.charCodeAt(0))
+  const view = new DataView(bytes.buffer)
+  return Number(signed ? view.getBigInt64(0, true) : view.getBigUint64(0, true))
 }

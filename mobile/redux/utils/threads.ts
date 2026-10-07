@@ -1,5 +1,5 @@
 import { PACKAGE_PATH } from '@gno/constants/Constants'
-import { boardRegex } from '../features/boardsSlice'
+import { boardRegex, decodeAminoJSON } from '../features/boardsSlice'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
@@ -113,32 +113,30 @@ export async function fetchComment(
 
 export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
   // Get the count from GetBoard, the same as done in qEvalGetPosts.
-  const boardInfo = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const match = boardRegex.exec(boardInfo)
-  if (!match) throw new Error("Can't find thread count in GetBoard response")
-  return Number(match[4])
+  const boardJSON = await gnonative.qEvalJSON(PACKAGE_PATH, `GetBoard(${boardId})`)
+  const board = await decodeAminoJSON(gnonative, boardJSON.results[0])
+  return Number(board.threadCount)
 }
 
 // Return a single thread, or undefined if the board or thread doesn't exist.
 export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
-  const threadInfo = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const match = threadRegex.exec(threadInfo)
-  if (!match) return undefined
+  const threadJSON = await gnonative.qEvalJSON(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  const thread = await decodeAminoJSON(gnonative, threadJSON.results[0])
 
-  const id = Number(match[1])
-  const originalBoardId = Number(match[2])
-  const originalThreadId = Number(match[3])
-  const threadBoardId = Number(match[4])
-  const title = match[5]
-  const body = match[6]
-  const hidden = match[7] === 'true'
-  const readOnly = match[8] === 'true'
-  const n_replies = Number(match[9])
-  const n_reposts = Number(match[10])
-  const creator = match[12]
-  const createdAtUnix = Number(match[13])
+  const id = thread.id
+  const originalBoardId = thread.originalBoardID
+  const originalThreadId = thread.originalThreadID
+  const threadBoardId = thread.boardID
+  const title = thread.title
+  const body = thread.body
+  const hidden = thread.hidden
+  const readOnly = thread.readonly
+  const n_replies = thread.commentCount
+  const n_reposts = thread.repostCount
+  const creator = thread.creator
+  const createdAtUnix = thread.createdAt
   const createdAt = new Date(createdAtUnix * 1000).toISOString()
-  const updatedAtUnix = Number(match[14])
+  const updatedAtUnix = thread.updatedAt
   const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
   return {
     id,
@@ -164,31 +162,27 @@ export async function qEvalGetPosts(
   startIndex: number,
   endIndex: number
 ): Promise<string> {
-  const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
-  const boardThreadCount = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const totalMatch = boardRegex.exec(boardThreadCount)
-  if (!totalMatch) throw new Error("Can't find thread count in GetBoard response")
-  const total = Number(totalMatch![4])
+  const threadInfos = await gnonative.qEvalJSON(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
+  const total = countThreadPosts(gnonative, boardId)
 
-  const postRegex = new RegExp(threadRegex.source, 'g')
   let posts = []
   let index = 0
-  let match
-  while ((match = postRegex.exec(postInfos)) !== null) {
-    const id = Number(match[1])
-    const originalBoardId = Number(match[2])
-    const originalThreadId = Number(match[3])
-    const boardId = Number(match[4])
-    const title = match[5]
-    const body = match[6]
-    const hidden = match[7] === 'true'
-    const readOnly = match[8] === 'true'
-    const n_replies = Number(match[9])
-    const n_reposts = Number(match[10])
-    const creator = match[12]
-    const createdAtUnix = Number(match[13])
+  for (const threadJSON of threadInfos.results[0].V.Base.List) {
+    const thread = await decodeAminoJSON(gnonative, threadJSON)
+    const id = thread.id
+    const originalBoardId = thread.originalBoardID
+    const originalThreadId = thread.originalThreadID
+    const boardId = thread.boardID
+    const title = thread.title
+    const body = thread.body
+    const hidden = thread.hidden
+    const readOnly = thread.readonly
+    const n_replies = thread.commentCount
+    const n_reposts = thread.repostCount
+    const creator = thread.creator
+    const createdAtUnix = thread.createdAt
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[14])
+    const updatedAtUnix = thread.updatedAt
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     posts.push({
       index,

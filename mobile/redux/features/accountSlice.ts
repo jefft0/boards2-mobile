@@ -62,11 +62,8 @@ export const loggedIn = createAppAsyncThunk<User, void, ThunkExtra>('account/log
 export async function getAccountName(bech32: string, gnonative: GnoNativeApi): Promise<string> {
   let name = bech32
   try {
-    const result = await gnonative.qEval('gno.land/r/sys/users', `ResolveAddress("${bech32}")`)
-    const match = result.match(/\("\w+" \.uverse\.address\),\("([^"]+)" string\)/)
-    if (match) {
-      name = match[1]
-    }
+    const result = await gnonative.qEvalJSON('gno.land/r/sys/users', `ResolveAddress("${bech32}").Name()`)
+    name = result.results[0].V.value
   } catch (error) {
     // Best-effort as well: the name falls back to the bech32 below, and
     // `gno.land/r/sys/users` is not deployed on every chain either.
