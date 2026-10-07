@@ -1,16 +1,10 @@
 import { PACKAGE_PATH } from '@gno/constants/Constants'
-import { boardRegex } from '../features/boardsSlice'
+import { gnoValuesToObject } from '@gno/redux'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
-import { GnoNativeApi } from '@gnolang/gnonative'
+import { GnoValue, GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
-// The capture groups follow the fields of hubexts.Thread.
-export const threadRegex =
-  /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\/v0\.Thread\)/
-// The capture groups follow the fields of hubexts.Comment.
-export const commentRegex =
-  /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\/v0\.Comment\)/
 
 // Return the user's top-level posts. (Like render args "board".)
 export async function fetchThreadPosts(
@@ -113,32 +107,30 @@ export async function fetchComment(
 
 export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
   // Get the count from GetBoard, the same as done in qEvalGetPosts.
-  const boardInfo = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const match = boardRegex.exec(boardInfo)
-  if (!match) throw new Error("Can't find thread count in GetBoard response")
-  return Number(match[4])
+  const boardJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoard(${boardId})`)
+  const board = await gnoValuesToObject(boardJSON.results[0].fields)
+  return Number(board.threadCount)
 }
 
 // Return a single thread, or undefined if the board or thread doesn't exist.
 export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
-  const threadInfo = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const match = threadRegex.exec(threadInfo)
-  if (!match) return undefined
+  const threadJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  const thread = await gnoValuesToObject(threadJSON.results[0].fields)
 
-  const id = Number(match[1])
-  const originalBoardId = Number(match[2])
-  const originalThreadId = Number(match[3])
-  const threadBoardId = Number(match[4])
-  const title = match[5]
-  const body = match[6]
-  const hidden = match[7] === 'true'
-  const readOnly = match[8] === 'true'
-  const n_replies = Number(match[9])
-  const n_reposts = Number(match[10])
-  const creator = match[12]
-  const createdAtUnix = Number(match[13])
+  const id = thread.id
+  const originalBoardId = thread.originalBoardID
+  const originalThreadId = thread.originalThreadID
+  const threadBoardId = thread.boardID
+  const title = thread.title
+  const body = thread.body
+  const hidden = thread.hidden
+  const readOnly = thread.readonly
+  const n_replies = thread.commentCount
+  const n_reposts = thread.repostCount
+  const creator = thread.creator
+  const createdAtUnix = thread.createdAt
   const createdAt = new Date(createdAtUnix * 1000).toISOString()
-  const updatedAtUnix = Number(match[14])
+  const updatedAtUnix = thread.updatedAt
   const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
   return {
     id,
@@ -164,31 +156,27 @@ export async function qEvalGetPosts(
   startIndex: number,
   endIndex: number
 ): Promise<string> {
-  const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
-  const boardThreadCount = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const totalMatch = boardRegex.exec(boardThreadCount)
-  if (!totalMatch) throw new Error("Can't find thread count in GetBoard response")
-  const total = Number(totalMatch![4])
+  const threadInfos = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
+  const total = countThreadPosts(gnonative, boardId)
 
-  const postRegex = new RegExp(threadRegex.source, 'g')
   let posts = []
   let index = 0
-  let match
-  while ((match = postRegex.exec(postInfos)) !== null) {
-    const id = Number(match[1])
-    const originalBoardId = Number(match[2])
-    const originalThreadId = Number(match[3])
-    const boardId = Number(match[4])
-    const title = match[5]
-    const body = match[6]
-    const hidden = match[7] === 'true'
-    const readOnly = match[8] === 'true'
-    const n_replies = Number(match[9])
-    const n_reposts = Number(match[10])
-    const creator = match[12]
-    const createdAtUnix = Number(match[13])
+  for (const threadJSON of threadInfos.results[0].elems) {
+    const thread = await gnoValuesToObject(threadJSON.fields)
+    const id = thread.id
+    const originalBoardId = thread.originalBoardID
+    const originalThreadId = thread.originalThreadID
+    const boardId = thread.boardID
+    const title = thread.title
+    const body = thread.body
+    const hidden = thread.hidden
+    const readOnly = thread.readonly
+    const n_replies = thread.commentCount
+    const n_reposts = thread.repostCount
+    const creator = thread.creator
+    const createdAtUnix = thread.createdAt
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[14])
+    const updatedAtUnix = thread.updatedAt
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     posts.push({
       index,
@@ -224,12 +212,12 @@ export async function qEvalGetComments(
   endIndex: number,
   total: number
 ): Promise<string> {
-  const commentInfos = await gnonative.qEval(
+  const commentInfos = await gnonative.qEvalJSONValues(
     PACKAGE_PATH,
     `GetComments(${boardId},${threadId},${startIndex},${endIndex - startIndex})`
   )
 
-  return encodeComments(total, parseComments(commentInfos))
+  return encodeComments(total, parseComments(commentInfos.results[0].elems))
 }
 
 // Return the direct replies of a comment or reply. `commentId` can be the ID of
@@ -243,48 +231,49 @@ export async function qEvalGetReplies(
   endIndex: number,
   total: number
 ): Promise<string> {
-  const replyInfos = await gnonative.qEval(
+  const replyInfos = await gnonative.qEvalJSONValues(
     PACKAGE_PATH,
     `GetReplies(${boardId},${threadId},${commentId},${startIndex},${endIndex - startIndex})`
   )
 
-  return encodeComments(total, parseComments(replyInfos))
+  return encodeComments(total, parseComments(replyInfos.results[0].elems))
 }
 
 // Return a single comment or reply, or undefined if it doesn't exist.
 export async function qEvalGetComment(gnonative: GnoNativeApi, boardId: number, threadId: number, commentId: number) {
-  const commentInfo = await gnonative.qEval(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
-  const match = commentRegex.exec(commentInfo)
-  if (!match) return undefined
-
-  return parseComment(match)
+  try {
+    const commentInfo = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
+    return parseComment(commentInfo.results[0].fields)
+  } catch (error) {
+    return undefined
+  }
 }
 
-// Parse every comment in a GetComments or GetReplies response.
-function parseComments(commentInfos: string) {
-  const commentListRegex = new RegExp(commentRegex.source, 'g')
+// Parse every comment in the "elems" array of a GetComments or GetReplies response.
+function parseComments(commentInfos: GnoValue[]) {
   let comments = []
-  let match
-  while ((match = commentListRegex.exec(commentInfos)) !== null) {
-    comments.push(parseComment(match))
+  for (const commentInfo of commentInfos) {
+    comments.push(parseComment(commentInfo.fields))
   }
 
   return comments
 }
 
-function parseComment(match: RegExpExecArray) {
-  const createdAtUnix = Number(match[10])
-  const updatedAtUnix = Number(match[11])
+// Return an object with the desired fields from a comment "fields" array
+function parseComment(commentValues: GnoValue[]) {
+  const comment = gnoValuesToObject(commentValues)
+  const createdAtUnix = comment.createdAt
+  const updatedAtUnix = comment.updatedAt
   return {
-    id: Number(match[1]),
-    boardId: Number(match[2]),
-    threadId: Number(match[3]),
-    parentId: Number(match[4]),
-    body: match[5],
-    hidden: match[6] === 'true',
-    n_replies: Number(match[7]),
-    n_flags: Number(match[8]),
-    creator: match[9],
+    id: comment.id,
+    boardId: comment.boardID,
+    threadId: comment.threadId,
+    parentId: comment.parentID,
+    body: comment.body,
+    hidden: comment.hidden,
+    n_replies: comment.replyCount,
+    n_flags: comment.flagCount,
+    creator: comment.creator,
     createdAt: new Date(createdAtUnix * 1000).toISOString(),
     updatedAt: new Date(updatedAtUnix * 1000).toISOString()
   }

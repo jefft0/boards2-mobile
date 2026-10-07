@@ -62,11 +62,8 @@ export const loggedIn = createAppAsyncThunk<User, void, ThunkExtra>('account/log
 export async function getAccountName(bech32: string, gnonative: GnoNativeApi): Promise<string> {
   let name = bech32
   try {
-    const result = await gnonative.qEval('gno.land/r/sys/users', `ResolveAddress("${bech32}")`)
-    const match = result.match(/\("\w+" \.uverse\.address\),\("([^"]+)" string\)/)
-    if (match) {
-      name = match[1]
-    }
+    const result = await gnonative.qEvalJSONValues('gno.land/r/sys/users', `ResolveAddress("${bech32}").Name()`)
+    name = result.results[0].scalar
   } catch (error) {
     // Best-effort as well: the name falls back to the bech32 below, and
     // `gno.land/r/sys/users` is not deployed on every chain either.
@@ -129,8 +126,8 @@ const loadBech32AvatarFromChain = async (bech32: string, thunkAPI: ThunkExtra) =
 
   try {
     console.log('Loading avatar for', bech32)
-    const response = await gnonative.qEval('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
-    return response.substring(2, response.length - '" string)'.length)
+    const response = await gnonative.qEvalJSONValues('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
+    return response.results[0].scalar
   } catch (error) {
     // Same as use-user-cache: expected wherever the profile realm is not
     // deployed, and the default is returned just below. console.warn raises a

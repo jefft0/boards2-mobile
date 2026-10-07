@@ -1,13 +1,10 @@
 import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { User } from '@gno/types'
-import { GnoNativeApi } from '@gnolang/gnonative'
+import { GnoValue, GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, selectAccount, RootState } from '@gno/redux'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
-
-export const boardRegex =
-  /\(struct{\((\d+) uint64\),\("([^"]+)" string\),\(nil \[\]string\),\((\w+) bool\),\((\d+) int\),\((\d+) int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\/v0\.Board\)/
 
 export interface BoardsState {
   boards: Board[]
@@ -106,9 +103,9 @@ export const getListedBoards = createAppAsyncThunk<BoardsResult | undefined, Boa
 // board, so callers can fall back to a placeholder.
 export async function maybeFetchBoardName(gnonative: GnoNativeApi, boardId: number): Promise<string | undefined> {
   try {
-    const boardInfo = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-    const match = boardRegex.exec(boardInfo)
-    return match ? match[2] : undefined
+    const boardInfo = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoard(${boardId})`)
+    const board = gnoValuesToObject(boardInfo.results[0].fields)
+    return board.name
   } catch (error) {
     console.log('Error in maybeFetchBoardName:', error)
     return undefined
@@ -117,8 +114,8 @@ export async function maybeFetchBoardName(gnonative: GnoNativeApi, boardId: numb
 
 async function checkBoardCreatePermission(gnonative: GnoNativeApi, address: string): Promise<boolean> {
   try {
-    const res = await gnonative.qEval(PACKAGE_PATH, `IsMember(0,"${address}")`)
-    return res === '(true bool)'
+    const res = await gnonative.qEvalJSONValues(PACKAGE_PATH, `IsMember(0,"${address}")`)
+    return res.results[0].scalar == 'true'
   } catch (error) {
     console.error('error in checkBoardCreatePermission:', error)
     return false
@@ -130,36 +127,54 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
   const userCache = thunkAPI.extra.userCache as UserCacheApi
 
-  const boardInfos = await gnonative.qEval(PACKAGE_PATH, `GetBoards(${startIndex},${endIndex - startIndex})`)
-  const boardCount = await gnonative.qEval(PACKAGE_PATH, `BoardCount()`)
-  const totalRegex = /^\((\d+) int\)/g
-  const totalMatch = totalRegex.exec(boardCount)
-  if (!totalMatch) throw new Error("Can't find total in BoardCount response")
-  const total = Number(totalMatch![1])
+  const boardInfos = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoards(${startIndex},${endIndex - startIndex})`)
+  const boardCount = await gnonative.qEvalJSONValues(PACKAGE_PATH, `BoardCount()`)
+  const total = Number(boardCount.results[0].scalar)
 
-  const boardListRegex = new RegExp(boardRegex.source, 'g')
   let boards = []
   let index = 0
-  let match
-  while ((match = boardListRegex.exec(boardInfos)) !== null) {
-    const boardId = Number(match[1])
-    const name = match[2]
+  for (const boardValue of boardInfos.results[0].elems) {
+    const board = gnoValuesToObject(boardValue.fields)
+    const id = board.id
+    const name = board.name
     // TODO: aliases
-    const readOnly = match[3] === 'true'
-    const n_threads = Number(match[4])
-    const n_members = Number(match[5])
-    const creator = match[6]
+    const readOnly = board.readonly
+    const n_threads = board.threadCount
+    const n_members = board.memberCount
+    const creator = board.creator
     const creatorName = await userCache.getUser(creator)
-    const createdAtUnix = Number(match[7])
+    const createdAtUnix = board.createdAt
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[8])
+    const updatedAtUnix = board.updatedAt
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     boards.push({
       index,
-      board: { id: boardId, name, readOnly, n_threads, n_members, creator, creatorName, createdAt, updatedAt }
+      board: { id, name, readOnly, n_threads, n_members, creator, creatorName, createdAt, updatedAt }
     })
     ++index
   }
 
   return { n_boards: total, boards }
+}
+
+// The fields of a GnoValue of a struct is an array of GnoValue, where
+// each has the field name and value. gnoValuesToObject constructs
+// a TypeScript object using the field name and converting the "scalar"
+// string into a native TypeScript value. If the kind is not recognized, value is null.
+export function gnoValuesToObject(values: GnoValue[]) : any {
+  const result: Record<string, any> = {}
+
+  for (const value of values) {
+    var v: any = null
+    if (value.kind == 'string')
+      v = value.scalar
+    else if (value.kind == 'number')
+      v = Number(value.scalar)
+    else if (value.kind == 'bool')
+      v = (value.scalar == 'true')
+
+    result[value.name] = v
+  }
+
+  return result
 }
