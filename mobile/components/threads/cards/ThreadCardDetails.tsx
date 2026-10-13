@@ -4,14 +4,17 @@ import ReplyIconButton from '../../button/ReplyIconButton'
 import RepostIconButton from '../../button/RepostIconButton'
 import { Spacer } from '@berty/gnonative-ui'
 import { TextUsername } from '../../text'
-import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
+import { ThreadContainer, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
 import TextCreateDate from '@gno/components/text/TextCreateDate'
 import RepostQuote from './RepostQuote'
-import HiddenNotice from './HiddenNotice'
+import PostBody from './PostBody'
 
 interface Props {
   loading?: boolean
   threadId: string
+  // The board of the post, needed to look up its original body when it is
+  // deleted, since a post ID is only unique within its board.
+  threadBoardId?: number
   threadTitle: string
   threadBody?: string
   // True when the realm hid the post, which it does for a flagged one.
@@ -23,6 +26,9 @@ interface Props {
   isRepost?: boolean
   threadOriginal?: ParentPost
   onReply: () => void
+  // True for a post the realm will not reply to: one it no longer holds, or
+  // one it has hidden.
+  replyDisabled?: boolean
   onOpen?: () => void
   onOpenOriginal?: () => void
   // Left out for a post the realm will not repost: a comment, or a repost itself.
@@ -31,6 +37,7 @@ interface Props {
 
 const ThreadCardDetails = ({
   threadId,
+  threadBoardId,
   threadTitle,
   threadBody,
   threadHidden,
@@ -41,6 +48,7 @@ const ThreadCardDetails = ({
   isRepost,
   threadOriginal,
   onReply,
+  replyDisabled,
   onOpen,
   onOpenOriginal,
   onRepost,
@@ -63,17 +71,14 @@ const ThreadCardDetails = ({
         </>
       ) : null}
 
-      {/* The notice comes before the empty-body check: a hidden post needs it
-          whether or not it has a body to reveal. */}
-      {threadHidden ? <HiddenNotice body={threadBody} /> : null}
-      {!threadHidden && threadBody ? <ThreadContent>{threadBody}</ThreadContent> : null}
+      <PostBody boardId={threadBoardId} postId={Number(threadId)} body={threadBody} hidden={threadHidden} />
 
       {isRepost && <RepostQuote original={threadOriginal} onOpen={onOpenOriginal} />}
 
       <CardFooter.Footer>
         <CardFooter.Meta>
           <CardFooter.MetaItem>
-            <ReplyIconButton onPress={onReply} count={threadReplyCount} loading={loading} />
+            <ReplyIconButton onPress={onReply} disabled={replyDisabled} count={threadReplyCount} loading={loading} />
           </CardFooter.MetaItem>
           {/* Only a thread can be reposted, so a caller showing a comment omits onRepost. */}
           {onRepost ? (

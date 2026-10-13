@@ -1,9 +1,9 @@
 import { PostBase } from '@gno/types'
 import CardFooter from '../../cards/CardFooter'
 import { TextUsername } from '../../text'
-import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
+import { ThreadContainer, ThreadHeader, UserInfo } from './atoms'
 import TextCreateDate from '../../text/TextCreateDate'
-import HiddenNotice from './HiddenNotice'
+import PostBody from './PostBody'
 
 interface Props {
   loading?: boolean
@@ -23,7 +23,7 @@ const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
         </UserInfo>
       </ThreadHeader>
 
-      {post?.hidden ? <HiddenNotice body={post.body} /> : <ThreadContent>{post?.body}</ThreadContent>}
+      <PostBody boardId={post?.boardId} postId={post?.id} body={post?.body} hidden={post?.hidden} />
 
       <CardFooter.Footer>
         <CardFooter.Meta>

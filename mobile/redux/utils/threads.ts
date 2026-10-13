@@ -1,4 +1,5 @@
-import { PACKAGE_PATH } from '@gno/constants/Constants'
+import { DELETED_POST_BODY, PACKAGE_PATH } from '@gno/constants/Constants'
+import { CreatedPost, fetchBlockTimes, fetchCreatedPosts, fetchDeletedPostIds } from '@gno/utils/indexer'
 import { gnoValuesToObject } from '../features/boardsSlice'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
@@ -111,6 +112,134 @@ export async function fetchComment(
   return convertToComment(comment, await userCache.getUser(comment.creator))
 }
 
+// Build the post a post the realm deleted outright was, from what the indexer
+// holds of it. Such a post had no replies, so it is a leaf and nothing of the
+// thread below it is missing. Only the date it was last updated is beyond
+// reach, being a date the realm wrote and dropped.
+async function toDeletedComment(
+  userCache: UserCacheApi,
+  boardId: number,
+  threadId: number,
+  id: number,
+  post: CreatedPost,
+  createdAt?: string
+): Promise<Comment> {
+  return {
+    user: await userCache.getUser(post.creator),
+    id,
+    boardId,
+    threadId,
+    // A post created as a reply to the thread itself has a parent of zero,
+    // while the app gives such a comment the thread as its parent.
+    parentId: post.parentId || threadId,
+    body: DELETED_POST_BODY,
+    hidden: false,
+    // Which tells this apart from a post the realm soft deleted, whose body it
+    // overwrote with the same text but which it still holds and still answers.
+    missing: true,
+    n_replies: 0,
+    n_flags: 0,
+    createdAt: createdAt || '',
+    updatedAt: ''
+  }
+}
+
+// Return the post the realm deleted outright under this ID, or undefined when
+// the indexer has no transaction creating it. The realm keeps nothing of such a
+// post, so a screen showing one has nothing to show without this.
+//
+// TODO: This asks the indexer whether a post was ever created under this ID,
+// not whether it was deleted, and takes the deletion from the realm having
+// nothing to return. That holds while only a deleted post goes missing. Read
+// the ReplyDeleted events as well, as addDeletedPosts does, to tell a deletion
+// from a post the realm withholds for another reason.
+export async function fetchDeletedPost(
+  userCache: UserCacheApi,
+  boardId: number,
+  threadId: number,
+  postId: number
+): Promise<Comment | undefined> {
+  try {
+    const post = (await fetchCreatedPosts(boardId, [postId])).get(postId)
+    if (!post) return undefined
+
+    const times = await fetchBlockTimes([post.blockHeight])
+    return await toDeletedComment(userCache, boardId, threadId, postId, post, times.get(post.blockHeight))
+  } catch (error) {
+    // Not an error: the screen shows what the realm holds either way, and the
+    // indexer serves only the chain it was hardwired for.
+    console.log('No deleted post', postId, 'of thread', threadId, '—', error)
+    return undefined
+  }
+}
+
+// Add a post for each one of this list the realm deleted outright, which it
+// does for a deleted post with no replies, so that a reader sees that something
+// was there. The realm keeps no trace of such a post, so both the fact of the
+// deletion and what the post held come from the indexer.
+//
+// `parentId` is the post the list answers: the thread for its top level
+// comments, or the comment or reply whose replies these are. `coversWholeList`
+// tells whether the page holds every post of the list.
+export async function addDeletedPosts(
+  userCache: UserCacheApi,
+  boardId: number,
+  threadId: number,
+  parentId: number,
+  comments: Comment[],
+  coversWholeList: boolean
+): Promise<Comment[]> {
+  try {
+    const deletedIds = await fetchDeletedPostIds(boardId, threadId)
+    // A soft deleted post is still on chain and already in the list, so only
+    // the ones missing from it were deleted outright.
+    const present = new Set(comments.map((comment) => comment.id))
+    let missing = deletedIds.filter((id) => !present.has(id))
+
+    if (!coversWholeList) {
+      // A post missing from a page of a longer list may just be on another
+      // page, so only fill the gaps inside the range this page covers.
+      if (comments.length === 0) return comments
+      const ids = comments.map((comment) => comment.id)
+      const first = Math.min(...ids)
+      const last = Math.max(...ids)
+      missing = missing.filter((id) => id > first && id < last)
+    }
+    if (missing.length === 0) return comments
+
+    const created = await fetchCreatedPosts(boardId, missing)
+    const own: { id: number; post: CreatedPost }[] = []
+    for (const id of missing) {
+      const post = created.get(id)
+      // The deletions cover the whole thread, so keep the ones this list owns.
+      // A post created as a reply to the thread itself has a parent of zero.
+      if (!post || (post.parentId || threadId) !== parentId) continue
+      own.push({ id, post })
+    }
+    if (own.length === 0) return comments
+
+    // The transaction that created a post does not hold the date it was given,
+    // which is the time of the block it is in, so ask for those blocks. All of
+    // them at once: a thread can have lost more than one post.
+    const times = await fetchBlockTimes(own.map(({ post }) => post.blockHeight))
+
+    const deleted: Comment[] = []
+    for (const { id, post } of own) {
+      deleted.push(await toDeletedComment(userCache, boardId, threadId, id, post, times.get(post.blockHeight)))
+    }
+
+    // The realm hands out IDs in order, so sorting by ID puts each post back
+    // where it was, newest first as the rest of the list is.
+    return [...comments, ...deleted].sort((a, b) => b.id - a.id)
+  } catch (error) {
+    // Not an error worth failing the screen for: the posts the realm still
+    // holds are shown either way, and the indexer is reachable on its own
+    // schedule. It also serves only the chain it was hardwired for.
+    console.log('No deleted posts for thread', threadId, '—', error)
+    return comments
+  }
+}
+
 export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
   // Get the count from GetBoard, the same as done in qEvalGetPosts.
   const boardJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoard(${boardId})`)
@@ -162,7 +291,10 @@ export async function qEvalGetPosts(
   startIndex: number,
   endIndex: number
 ): Promise<string> {
-  const threadInfos = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
+  const threadInfos = await gnonative.qEvalJSONValues(
+    PACKAGE_PATH,
+    `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`
+  )
   const total = countThreadPosts(gnonative, boardId)
 
   let posts = []

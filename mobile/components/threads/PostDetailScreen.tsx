@@ -91,6 +91,12 @@ const SendButtonText = styled.Text`
   font-size: 14px;
 `
 
+const ClosedNote = styled.Text`
+  flex: 1;
+  font-size: 14px;
+  color: #6b7280;
+`
+
 const SectionHeader = styled.View`
   background-color: #f5f5f5;
   padding: 12px 16px;
@@ -130,6 +136,11 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
   const head: PostBase | undefined = commentId ? comment : threadSummary
   // The realm refuses to repost a repost (boards.NewRepost), so don't offer it.
   const isRepost = !!threadSummary?.originalBoardId
+  // It also refuses a reply to a post it no longer holds, which CreateReply
+  // fails to find, or to one it has hidden. A post it soft deleted still takes
+  // replies, so showing the deleted notice is not on its own a reason to
+  // refuse. Unknown while the head is loading, which keeps the input in place.
+  const cannotReply = !!head && (head.hidden || !!head.missing)
 
   const dispatch = useAppDispatch()
   const router = useRouter()
@@ -162,14 +173,14 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
   }, [threadId, boardId, commentId, dispatch])
 
   const handleSendReply = () => {
-    if (head && replyText.trim()) {
+    if (head && !cannotReply && replyText.trim()) {
       dispatch(setReplyTarget(replyTarget))
       dispatch(threadReplyAndRedirectToSign({ replyBody: replyText, callbackPath }))
     }
   }
 
   const navigateToReplyScreen = () => {
-    if (!head) return
+    if (!head || cannotReply) return
     dispatch(setReplyTarget(replyTarget))
     router.push(
       commentId
@@ -230,6 +241,7 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
             <ThreadCardDetails
               loading={loading}
               threadId={commentId || threadId}
+              threadBoardId={Number(boardId)}
               threadTitle={threadSummary?.title || ''}
               threadBody={head?.body || ''}
               threadHidden={head?.hidden}
@@ -240,6 +252,7 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
               isRepost={isRepost}
               threadOriginal={threadSummary?.repost_parent}
               onReply={navigateToReplyScreen}
+              replyDisabled={cannotReply}
               onRepost={commentId || isRepost ? undefined : handleRepost}
               onOpenOriginal={() =>
                 router.push(`/boards/${threadSummary?.originalBoardId}/threads/${threadSummary?.originalThreadId}`)
@@ -268,16 +281,26 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
             ))}
           </ScrollView>
 
-          {/* Reply Input */}
-          <InputContainer>
-            <InputAvatar>
-              <SmallAvatarText>U</SmallAvatarText>
-            </InputAvatar>
-            <Input placeholder="Post your reply..." value={replyText} onChangeText={setReplyText} multiline maxLength={500} />
-            <SendButton onPress={handleSendReply} disabled={!replyText.trim()}>
-              <SendButtonText>Send</SendButtonText>
-            </SendButton>
-          </InputContainer>
+          {/* Reply Input, or why there is none */}
+          {cannotReply ? (
+            <InputContainer>
+              <ClosedNote>
+                {head?.hidden
+                  ? 'This post is hidden, so it cannot be answered'
+                  : 'This post has been deleted, so it cannot be answered'}
+              </ClosedNote>
+            </InputContainer>
+          ) : (
+            <InputContainer>
+              <InputAvatar>
+                <SmallAvatarText>U</SmallAvatarText>
+              </InputAvatar>
+              <Input placeholder="Post your reply..." value={replyText} onChangeText={setReplyText} multiline maxLength={500} />
+              <SendButton onPress={handleSendReply} disabled={!replyText.trim()}>
+                <SendButtonText>Send</SendButtonText>
+              </SendButton>
+            </InputContainer>
+          )}
         </KeyboardAvoidingView>
       </Container>
     </SafeAreaView>

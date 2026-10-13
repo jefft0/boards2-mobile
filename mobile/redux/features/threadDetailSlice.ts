@@ -3,7 +3,16 @@ import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Comment, Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice } from '@reduxjs/toolkit'
-import { ThunkExtra, fetchComment, fetchCommentReplies, fetchThread, fetchThreadComments, subtractOrZero } from '@gno/redux'
+import {
+  ThunkExtra,
+  addDeletedPosts,
+  fetchComment,
+  fetchCommentReplies,
+  fetchDeletedPost,
+  fetchThread,
+  fetchThreadComments,
+  subtractOrZero
+} from '@gno/redux'
 
 // What one detail screen shows: a thread with its comments, or a comment with
 // its replies.
@@ -102,8 +111,12 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
 
     try {
       if (commentId) {
-        // Show the comment and its replies.
-        const comment = await fetchComment(userCache, gnonative, boardId, threadId, commentId)
+        // Show the comment and its replies. The realm removes a deleted post
+        // that has no replies outright, so when it holds nothing under this ID
+        // fall back to what the indexer still has of it.
+        const comment =
+          (await fetchComment(userCache, gnonative, boardId, threadId, commentId)) ??
+          (await fetchDeletedPost(userCache, boardId, threadId, commentId))
         const totalPosts = comment?.n_replies ?? 0
         const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
@@ -122,7 +135,7 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
 
         return {
           comment,
-          replies: res.data,
+          replies: await addDeletedPosts(userCache, boardId, threadId, commentId, res.data, startIndex === 0),
           totalPosts
         }
       } else {
@@ -140,7 +153,8 @@ export const loadThreadDetail = createAppAsyncThunk<LoadThreadDetailResult | und
 
         return {
           thread,
-          replies: res.data,
+          // A top level comment answers the thread itself.
+          replies: await addDeletedPosts(userCache, boardId, threadId, threadId, res.data, startIndex === 0),
           totalPosts
         }
       }

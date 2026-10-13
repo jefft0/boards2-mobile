@@ -8,6 +8,10 @@ export type PostBase = {
   boardId: number
   body: string
   hidden: boolean
+  // True for a post the realm no longer holds, which it deletes outright when
+  // it has no replies. Such a post is shown from what the indexer kept of it,
+  // and the realm refuses a reply to it.
+  missing?: boolean
   n_replies: number
   createdAt: string
   updatedAt: string
