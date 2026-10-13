@@ -232,6 +232,7 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
               threadId={commentId || threadId}
               threadTitle={threadSummary?.title || ''}
               threadBody={head?.body || ''}
+              threadHidden={head?.hidden}
               threadReplyCount={head?.n_replies || 0}
               threadRepostCount={threadSummary?.n_reposts || 0}
               threadCreatorName={head?.user.name || ''}

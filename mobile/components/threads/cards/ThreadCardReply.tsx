@@ -3,6 +3,7 @@ import CardFooter from '../../cards/CardFooter'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
 import TextCreateDate from '../../text/TextCreateDate'
+import HiddenNotice from './HiddenNotice'
 
 interface Props {
   loading?: boolean
@@ -22,7 +23,7 @@ const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
         </UserInfo>
       </ThreadHeader>
 
-      <ThreadContent>{post?.body}</ThreadContent>
+      {post?.hidden ? <HiddenNotice body={post.body} /> : <ThreadContent>{post?.body}</ThreadContent>}
 
       <CardFooter.Footer>
         <CardFooter.Meta>

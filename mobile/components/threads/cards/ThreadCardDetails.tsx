@@ -7,12 +7,15 @@ import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
 import TextCreateDate from '@gno/components/text/TextCreateDate'
 import RepostQuote from './RepostQuote'
+import HiddenNotice from './HiddenNotice'
 
 interface Props {
   loading?: boolean
   threadId: string
   threadTitle: string
   threadBody?: string
+  // True when the realm hid the post, which it does for a flagged one.
+  threadHidden?: boolean
   threadReplyCount?: number
   threadRepostCount?: number
   threadCreatorName?: string
@@ -30,6 +33,7 @@ const ThreadCardDetails = ({
   threadId,
   threadTitle,
   threadBody,
+  threadHidden,
   threadReplyCount,
   threadRepostCount,
   threadCreatorName,
@@ -59,7 +63,10 @@ const ThreadCardDetails = ({
         </>
       ) : null}
 
-      {threadBody ? <ThreadContent>{threadBody}</ThreadContent> : null}
+      {/* The notice comes before the empty-body check: a hidden post needs it
+          whether or not it has a body to reveal. */}
+      {threadHidden ? <HiddenNotice body={threadBody} /> : null}
+      {!threadHidden && threadBody ? <ThreadContent>{threadBody}</ThreadContent> : null}
 
       {isRepost && <RepostQuote original={threadOriginal} onOpen={onOpenOriginal} />}
 
