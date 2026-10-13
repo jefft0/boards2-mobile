@@ -1,5 +1,5 @@
 import { PACKAGE_PATH } from '@gno/constants/Constants'
-import { boardRegex, decodeAminoJSON } from '../features/boardsSlice'
+import { gnoValuesToObject } from '../features/boardsSlice'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
@@ -113,15 +113,15 @@ export async function fetchComment(
 
 export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
   // Get the count from GetBoard, the same as done in qEvalGetPosts.
-  const boardJSON = await gnonative.qEvalJSON(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const board = await decodeAminoJSON(gnonative, boardJSON.results[0])
+  const boardJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoard(${boardId})`)
+  const board = await gnoValuesToObject(boardJSON.results[0].fields)
   return Number(board.threadCount)
 }
 
 // Return a single thread, or undefined if the board or thread doesn't exist.
 export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
-  const threadJSON = await gnonative.qEvalJSON(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const thread = await decodeAminoJSON(gnonative, threadJSON.results[0])
+  const threadJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  const thread = await gnoValuesToObject(threadJSON.results[0].fields)
 
   const id = thread.id
   const originalBoardId = thread.originalBoardID
@@ -162,13 +162,13 @@ export async function qEvalGetPosts(
   startIndex: number,
   endIndex: number
 ): Promise<string> {
-  const threadInfos = await gnonative.qEvalJSON(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
+  const threadInfos = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
   const total = countThreadPosts(gnonative, boardId)
 
   let posts = []
   let index = 0
-  for (const threadJSON of threadInfos.results[0].V.Base.List) {
-    const thread = await decodeAminoJSON(gnonative, threadJSON)
+  for (const threadJSON of threadInfos.results[0].elems) {
+    const thread = await gnoValuesToObject(threadJSON.fields)
     const id = thread.id
     const originalBoardId = thread.originalBoardID
     const originalThreadId = thread.originalThreadID

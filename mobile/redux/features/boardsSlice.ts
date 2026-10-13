@@ -1,7 +1,7 @@
 import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { User } from '@gno/types'
-import { GnoNativeApi } from '@gnolang/gnonative'
+import { GnoValue, GnoNativeApi } from '@gnolang/gnonative'
 import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, selectAccount, RootState } from '@gno/redux'
 import { PACKAGE_PATH } from '@gno/constants/Constants'
@@ -130,14 +130,14 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
   const userCache = thunkAPI.extra.userCache as UserCacheApi
 
-  const boardInfos = await gnonative.qEvalJSON(PACKAGE_PATH, `GetBoards(${startIndex},${endIndex - startIndex})`)  
-  const boardCount = await gnonative.qEvalJSON(PACKAGE_PATH, `BoardCount()`)
-  const total = decodeIntTypedValue(boardCount.results[0])!
+  const boardInfos = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoards(${startIndex},${endIndex - startIndex})`)
+  const boardCount = await gnonative.qEvalJSONValues(PACKAGE_PATH, `BoardCount()`)
+  const total = Number(boardCount.results[0].scalar)
 
   let boards = []
   let index = 0
-  for (const boardJSON of boardInfos.results[0].V.Base.List) {
-    const board = await decodeAminoJSON(gnonative, boardJSON)
+  for (const boardValue of boardInfos.results[0].elems) {
+    const board = gnoValuesToObject(boardValue.fields)
     const id = board.id
     const name = board.name
     // TODO: aliases
@@ -160,63 +160,20 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
   return { n_boards: total, boards }
 }
 
-export async function decodeAminoJSON(gnonative: GnoNativeApi, aminoObject: any) : Promise<any> {
-  // TODO: Maintain a cache of fetched type definitions
-  const aminoType = await gnonative.qTypeJSON(aminoObject.T.ID)
-  const typeFields = aminoType.type.Base.Fields
-  const objectFields = aminoObject.V.Fields
-
+export function gnoValuesToObject(values: GnoValue[]) : any {
   const result: Record<string, any> = {}
-  for (const [i, obj] of objectFields.entries()) {
-    const fieldName = typeFields[i].Name
-    let value: any = null
 
-    if (obj.T['@type'] == '/gno.PrimitiveType') {
-      const n = decodeIntTypedValue(obj)
-      if (n !== undefined)
-        value = n
-      else if (obj.T.value == '4')
-        value = ('N' in obj)
-      else if (obj.T.value == '16')
-        value = obj.V.value
-    }
-    else if ('V' in obj && obj.V['@type'] == '/gno.StringValue')
-      value = obj.V.value
+  for (const value of values) {
+    var v: any = null
+    if (value.kind == 'string')
+      v = value.scalar
+    else if (value.kind == 'number')
+      v = Number(value.scalar)
+    else if (value.kind == 'bool')
+      v = (value.scalar == 'true')
 
-    console.log("**************", fieldName, value)
-    result[fieldName] = value
+    result[value.name] = v
   }
+
   return result
-}
-
-// The gno PrimitiveType bit flags (gnovm/pkg/gnolang/types.go) of the integer
-// types that occupy all 8 bytes of `N`, mapped to whether they are signed.
-// Narrower types (int8, int32, uint32, ...) are deliberately absent: they store
-// only their low bytes, so reading the full 8 would misread a negative int32 as
-// a large positive number.
-const eightByteIntTypes: Record<string, boolean> = {
-  '32': true, // IntType
-  '1024': true, // Int64Type
-  '2048': false, // UintType
-  '65536': false // Uint64Type
-}
-
-// decodeIntTypedValue reads an integer out of an Amino JSON gno.TypedValue, or
-// returns undefined if it does not hold a gno `int`, `int64`, `uint` or `uint64`.
-// Scalars live in the 8-byte `N` field, not `V`, and amino's `json:",omitempty"`
-// drops `N` entirely when every byte is zero — so a missing `N` means zero.
-// Values beyond Number.MAX_SAFE_INTEGER lose precision in the Number() cast.
-function decodeIntTypedValue(typedValue: any): number | undefined {
-  // Guard on the type so a value that is not one of these (where `N` is absent
-  // for a different reason) doesn't read as zero.
-  const signed = eightByteIntTypes[typedValue?.T?.value]
-  if (signed === undefined) {
-    return undefined
-  }
-  if (!typedValue.N) {
-    return 0
-  }
-  const bytes = Uint8Array.from(atob(typedValue.N), (c) => c.charCodeAt(0))
-  const view = new DataView(bytes.buffer)
-  return Number(signed ? view.getBigInt64(0, true) : view.getBigUint64(0, true))
 }
