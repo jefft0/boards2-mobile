@@ -157,7 +157,7 @@ export async function qEvalGetPosts(
   endIndex: number
 ): Promise<string> {
   const threadInfos = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
-  const total = countThreadPosts(gnonative, boardId)
+  const total = await countThreadPosts(gnonative, boardId)
 
   let posts = []
   let index = 0
