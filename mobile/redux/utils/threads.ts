@@ -267,7 +267,7 @@ function parseComment(commentValues: GnoValue[]) {
   return {
     id: comment.id,
     boardId: comment.boardID,
-    threadId: comment.threadId,
+    threadId: comment.threadID,
     parentId: comment.parentID,
     body: comment.body,
     hidden: comment.hidden,
