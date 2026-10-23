@@ -115,6 +115,7 @@ export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number)
 // Return a single thread, or undefined if the board or thread doesn't exist.
 export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
   const threadJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  if (threadJSON.results[1].scalar != 'true') return undefined
   const thread = await gnoValuesToObject(threadJSON.results[0].fields)
 
   const id = thread.id
@@ -243,6 +244,7 @@ export async function qEvalGetReplies(
 export async function qEvalGetComment(gnonative: GnoNativeApi, boardId: number, threadId: number, commentId: number) {
   try {
     const commentInfo = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
+    if (commentInfo.results[1].scalar != 'true') return undefined
     return parseComment(commentInfo.results[0].fields)
   } catch (error) {
     return undefined
