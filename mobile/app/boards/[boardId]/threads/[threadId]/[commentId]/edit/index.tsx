@@ -62,15 +62,22 @@ export default function Page() {
   const onCreate = async (form: CreateReplyThreadFormData) => {
     if (!board) throw new Error('No active board')
     setLoading(true)
-    dispatch(
-      editReplyAndRedirectToSign({
-        boardId: Number(boardId),
-        threadId: Number(threadId),
-        replyId: Number(commentId),
-        replyBody: form.replyBody,
-        callbackPath: currentPath
-      })
-    )
+    try {
+      await dispatch(
+        editReplyAndRedirectToSign({
+          boardId: Number(boardId),
+          threadId: Number(threadId),
+          replyId: Number(commentId),
+          replyBody: form.replyBody,
+          callbackPath: currentPath
+        })
+      ).unwrap()
+    } catch (error) {
+      // Nothing reached the wallet, so no callback will arrive to stop the
+      // spinner. `.unwrap()` is what makes the rejection reach here.
+      console.error('on editReplyAndRedirectToSign', error)
+      setLoading(false)
+    }
   }
 
   // The body comes from the card that offered Edit. A stale one from an earlier

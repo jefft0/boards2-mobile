@@ -112,20 +112,16 @@ interface EditReplyRequestParams {
 export const editReplyAndRedirectToSign = createAppAsyncThunk<void, EditReplyRequestParams, ThunkExtra>(
   'threadReply/EditReply',
   async (props, thunkAPI) => {
-    try {
-      const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
+    const callerAddressBech32 = selectAccount(thunkAPI.getState() as RootState)?.bech32 as string
 
-      const { boardId, threadId, replyId, replyBody, callbackPath } = props
+    const { boardId, threadId, replyId, replyBody, callbackPath } = props
 
-      const fnc = 'EditReply'
-      const gasFee = '1000000ugnot'
-      const gasWanted = BigInt(50000000)
-      const args: string[] = [String(boardId), String(threadId), String(replyId), replyBody]
-      const reason = 'Edit a message'
+    const fnc = 'EditReply'
+    const gasFee = '1000000ugnot'
+    const gasWanted = BigInt(50000000)
+    const args: string[] = [String(boardId), String(threadId), String(replyId), replyBody]
+    const reason = 'Edit a message'
 
-      await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
-    } catch (error) {
-      console.error('Error in editReplyAndRedirectToSign thunk:', error)
-    }
+    await makeCallTx({ fnc, args, gasFee, gasWanted, callerAddressBech32, reason, callbackPath }, thunkAPI.extra.gnonative)
   }
 )
