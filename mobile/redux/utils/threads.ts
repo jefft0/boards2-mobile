@@ -347,7 +347,7 @@ function convertToPost(jsonPost: any, creator: User): Post {
       name: creator.name,
       address: creator.address,
       avatar: creator.avatar,
-      bech32: ''
+      bech32: creator.bech32
     },
     id: jsonPost.id,
     originalBoardId: jsonPost.originalBoardId,
@@ -373,7 +373,7 @@ function convertToComment(jsonComment: any, creator: User): Comment {
       name: creator.name,
       address: creator.address,
       avatar: creator.avatar,
-      bech32: ''
+      bech32: creator.bech32
     },
     id: jsonComment.id,
     boardId: jsonComment.boardId,

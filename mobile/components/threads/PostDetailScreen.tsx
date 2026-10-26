@@ -1,12 +1,14 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { ScrollView, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native'
+import { Alert, ScrollView, KeyboardAvoidingView, Platform, RefreshControl } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
 import styled from 'styled-components/native'
 import {
   broadcastTxCommit,
   clearLinking,
+  deleteReplyAndRedirectToSign,
   detailKey,
   loadThreadDetail,
+  selectAccount,
   selectCommentDetail,
   selectSignedTx,
   selectThreadBoard,
@@ -15,6 +17,7 @@ import {
   selectThreadDetailLoading,
   selectThreadReplies,
   setReplyTarget,
+  setReplyToEdit,
   setThreadToRepost,
   threadReplyAndRedirectToSign,
   useAppDispatch,
@@ -119,6 +122,7 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
   const replies = useAppSelector((state) => selectThreadReplies(state, key))
   const loading = useAppSelector((state) => selectThreadDetailLoading(state, key))
   const board = useAppSelector(selectThreadBoard)
+  const account = useAppSelector(selectAccount)
   const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   // Use the cache to avoid name flashes when refreshing. It misses for a thread
@@ -176,6 +180,33 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
         ? `/boards/${boardId}/threads/${threadId}/${commentId}/reply`
         : `/boards/${boardId}/threads/${threadId}/reply?title=${threadSummary?.title || ''}`
     )
+  }
+
+  // This app cannot tell in advance if Delete is allowed. Must attempt to broadcast.
+  const handleDelete = (replyId: number) => {
+    Alert.alert('Delete reply?', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: () =>
+          dispatch(
+            deleteReplyAndRedirectToSign({
+              boardId: Number(boardId),
+              threadId: Number(threadId),
+              replyId,
+              callbackPath
+            })
+          )
+      }
+    ])
+  }
+
+  // The edit screen opens the same form the reply was written in, filled with
+  // the body we already hold here so it does not have to refetch the post.
+  const handleEdit = (reply: PostBase) => {
+    dispatch(setReplyToEdit(reply))
+    router.push(`/boards/${boardId}/threads/${threadId}/${reply.id}/edit`)
   }
 
   const handleRepost = () => {
@@ -263,6 +294,10 @@ export default function PostDetailScreen({ boardId, threadId, commentId }: Props
                 post={reply}
                 onReply={() => {}}
                 onOpen={() => router.push(`/boards/${boardId}/threads/${threadId}/${reply.id}`)}
+                onDelete={() => handleDelete(reply.id)}
+                onEdit={() => handleEdit(reply)}
+                // The realm only allows edits by the author
+                canEdit={!!account?.bech32 && account.bech32 === reply.user.bech32}
               />
             ))}
           </ScrollView>

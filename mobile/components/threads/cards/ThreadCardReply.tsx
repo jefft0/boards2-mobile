@@ -1,5 +1,8 @@
 import { PostBase } from '@gno/types'
+import { TouchableOpacity } from 'react-native'
+import { useTheme } from 'styled-components/native'
 import CardFooter from '../../cards/CardFooter'
+import Icons from '../../icons'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo } from './atoms'
 import TextCreateDate from '../../text/TextCreateDate'
@@ -10,9 +13,16 @@ interface Props {
   post?: PostBase
   onReply: () => void
   onOpen?: () => void
+  onDelete?: () => void
+  onEdit?: () => void
+  // The realm lets only a reply's own creator edit it, so the control is hidden
+  // for everyone else rather than offering an action that cannot succeed.
+  canEdit?: boolean
 }
 
-const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
+const ThreadCardReply = ({ post, onReply, onOpen, onDelete, onEdit, canEdit = true, loading }: Props) => {
+  const theme = useTheme()
+
   return (
     <ThreadContainer activeOpacity={0.7} onPress={onOpen}>
       <ThreadHeader>
@@ -26,18 +36,27 @@ const ThreadCardReply = ({ post, onReply, onOpen, loading }: Props) => {
 
       <CardFooter.Footer>
         <CardFooter.Meta>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Flag</CardFooter.MetaValue>
+          <CardFooter.MetaItem accessibilityLabel="Flag">
+            <Icons.Flag size={16} color={theme.text.textMuted} />
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>{post && post.n_replies > 0 ? `Reply [${post.n_replies}]` : 'Reply'}</CardFooter.MetaValue>
+          <CardFooter.MetaItem accessibilityLabel="Reply">
+            <Icons.Reply size={16} color={theme.text.textMuted} />
+            {post && post.n_replies > 0 ? <CardFooter.MetaValue>{` [${post.n_replies}]`}</CardFooter.MetaValue> : null}
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Edit</CardFooter.MetaValue>
-          </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <CardFooter.MetaValue>Delete</CardFooter.MetaValue>
-          </CardFooter.MetaItem>
+          {onDelete ? (
+            <CardFooter.MetaItem>
+              <TouchableOpacity onPress={onDelete} accessibilityRole="button" accessibilityLabel="Delete">
+                <Icons.Trash size={16} color={theme.text.textMuted} />
+              </TouchableOpacity>
+            </CardFooter.MetaItem>
+          ) : null}
+          {onEdit && canEdit ? (
+            <CardFooter.MetaItem>
+              <TouchableOpacity onPress={onEdit} accessibilityRole="button" accessibilityLabel="Edit">
+                <Icons.Edit size={16} color={theme.text.textMuted} />
+              </TouchableOpacity>
+            </CardFooter.MetaItem>
+          ) : null}
         </CardFooter.Meta>
       </CardFooter.Footer>
     </ThreadContainer>
