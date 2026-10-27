@@ -1,4 +1,4 @@
-import { Image, View, StyleSheet } from 'react-native'
+import { Image, View, StyleSheet, TouchableOpacity } from 'react-native'
 import {
   clearLinking,
   loggedIn,
@@ -6,24 +6,29 @@ import {
   selectAccount,
   selectBech32AddressSelected,
   selectLoginLoading,
-  selectRemoteURL,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
 import { useEffect } from 'react'
 import { useRouter } from 'expo-router'
+import { useSafeAreaInsets } from 'react-native-safe-area-context'
+import { useTheme } from 'styled-components/native'
 import { HomeLayout, Button, Ruller, Text } from '@berty/gnonative-ui'
+import Icons from '@gno/components/icons'
 
 export default function Root() {
   const dispatch = useAppDispatch()
   const route = useRouter()
+  const insets = useSafeAreaInsets()
+  const theme = useTheme()
   const bech32AddressSelected = useAppSelector(selectBech32AddressSelected)
-  const remoteURL = useAppSelector(selectRemoteURL)
   const account = useAppSelector(selectAccount)
   const loading = useAppSelector(selectLoginLoading)
 
   useEffect(() => {
-    if (loading || !bech32AddressSelected || !remoteURL) return
+    // The `connect` callback returns the address, not a remote URL — boards2
+    // knows its own network — so login gates on the address alone.
+    if (loading || !bech32AddressSelected) return
     console.log('bech32AddressSelected on index', bech32AddressSelected)
 
     dispatch(loggedIn())
@@ -46,7 +51,21 @@ export default function Root() {
 
   return (
     <HomeLayout
-      header={null}
+      // `connect` names the network the wallet should switch to, so it has to be
+      // selectable before signing in — the profile screen is behind the guard.
+      header={
+        // HomeLayout renders the header outside the Content view that paints the
+        // page, and insets only its footer, so this clears the status bar and
+        // paints its own background — otherwise the window colour (#F2F2F2)
+        // shows through and seams against the content below (#FDFDFD).
+        <View style={[styles.headerRow, { paddingTop: insets.top + 8, backgroundColor: theme.colors.background }]}>
+          <TouchableOpacity onPress={() => route.navigate('/network')} hitSlop={12} accessibilityLabel="Network settings">
+            {/* 28 rather than the default 24: it is alone in the header,
+                against a 120dp logo and a large title. */}
+            <Icons.Network size={28} />
+          </TouchableOpacity>
+        </View>
+      }
       footer={
         <View style={styles.footerContainer}>
           <Text.Body_Bold>Sign in using Gnokey Mobile:</Text.Body_Bold>
@@ -79,6 +98,13 @@ export default function Root() {
 }
 
 const styles = StyleSheet.create({
+  headerRow: {
+    width: '100%',
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    paddingHorizontal: 16,
+    paddingTop: 8 // overridden with the safe-area inset at the call site
+  },
   footerContainer: {
     gap: 12,
     width: '100%',

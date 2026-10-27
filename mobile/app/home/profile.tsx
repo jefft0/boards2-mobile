@@ -1,5 +1,5 @@
 import { ScrollView, StyleSheet, View } from 'react-native'
-import { useNavigation } from 'expo-router'
+import { useNavigation, useRouter } from 'expo-router'
 import { useEffect, useState } from 'react'
 import { useGnoNativeContext } from '@gnolang/gnonative'
 import {
@@ -8,7 +8,7 @@ import {
   logedOut,
   reloadAvatar,
   selectAccount,
-  selectQueryParamsTxJsonSigned,
+  selectSignedTx,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
@@ -28,8 +28,9 @@ export default function Page() {
   const account = useAppSelector(selectAccount)
   const { gnonative } = useGnoNativeContext()
   const navigation = useNavigation()
+  const router = useRouter()
   const dispatch = useAppDispatch()
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   const userCache = useUserCache()
 
@@ -88,10 +89,8 @@ export default function Page() {
 
   useEffect(() => {
     ;(async () => {
-      if (txJsonSigned) {
-        console.log('txJsonSigned: ', txJsonSigned)
-
-        const signedTx = decodeURIComponent(txJsonSigned as string)
+      if (signedTxFromWallet) {
+        const signedTx = signedTxFromWallet as string // opaque base64 amino-binary; broadcast unmodified
         try {
           await dispatch(broadcastTxCommit(signedTx)).unwrap()
         } catch (error) {
@@ -108,7 +107,7 @@ export default function Page() {
       }
     })()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txJsonSigned])
+  }, [signedTxFromWallet])
 
   return (
     <>
@@ -126,6 +125,12 @@ export default function Page() {
               <Text.Body>{remote}</Text.Body>
               <View></View>
             </>
+            <Spacer space={16} />
+            {/* Same page the sign-in screen links to, rather than a second copy
+                of the picker that would have to be kept in step with it. */}
+            <Button onPress={() => router.navigate('/network')} color="secondary">
+              Change network
+            </Button>
             <Spacer space={24} />
             <Layout.Footer>
               <ProgressViewModal visible={modalVisible} onRequestClose={() => setModalVisible(false)} />

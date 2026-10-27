@@ -1,7 +1,8 @@
 import { PACKAGE_PATH } from '@gno/constants/Constants'
+import { gnoValuesToObject } from '@gno/redux'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
-import { ParentPost, Post, ThreadPosts, User } from '@gno/types'
-import { GnoNativeApi } from '@gnolang/gnonative'
+import { Comment, Post, ThreadComments, ThreadPosts, User } from '@gno/types'
+import { GnoValue, GnoNativeApi } from '@gnolang/gnonative'
 
 export const subtractOrZero = (a: number, b: number) => Math.max(0, a - b)
 
@@ -14,28 +15,140 @@ export async function fetchThreadPosts(
   endIndex: number
 ): Promise<ThreadPosts> {
   const result = await qEvalGetPosts(gnonative, boardId, startIndex, endIndex)
-  const json = await enrichData(userCache, gnonative, result)
-  return json
+  const json = await enrichData(userCache, result)
+  return { ...json, data: await addRepostOriginals(userCache, gnonative, json.data) }
 }
 
-// Return the "comment" posts in a specific thread.
+// A repost's own title and body are usually empty, so attach the thread it was
+// reposted from as repost_parent and let the caller show that summary instead.
+async function addRepostOriginals(userCache: UserCacheApi, gnonative: GnoNativeApi, posts: Post[]): Promise<Post[]> {
+  const keyOf = (post: Post) => `${post.originalBoardId}/${post.originalThreadId}`
+  const reposts = posts.filter((post) => post.originalBoardId)
+  if (reposts.length === 0) return posts
+
+  // Fetch each original once, however many reposts of it the page holds, and all
+  // of them at the same time: one page can hold a screenful of reposts.
+  const keys = [...new Set(reposts.map(keyOf))]
+  const fetched = await Promise.all(
+    keys.map((key) => {
+      const [originalBoardId, originalThreadId] = key.split('/').map(Number)
+      return fetchThread(userCache, gnonative, originalBoardId, originalThreadId)
+    })
+  )
+  const originals = new Map(keys.map((key, i) => [key, fetched[i]]))
+
+  return posts.map((post) => (post.originalBoardId ? { ...post, repost_parent: originals.get(keyOf(post)) } : post))
+}
+
+// Return a single top-level post, or undefined if the board or thread is gone.
+export async function fetchThread(
+  userCache: UserCacheApi,
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number
+): Promise<Post | undefined> {
+  const thread = await qEvalGetThread(gnonative, boardId, threadId)
+  if (!thread) return undefined
+
+  const post = convertToPost(thread, await userCache.getUser(thread.creator))
+  if (!post.originalBoardId) return post
+
+  // The realm refuses to repost a repost, so this recurses only once.
+  return {
+    ...post,
+    repost_parent: await fetchThread(userCache, gnonative, post.originalBoardId, post.originalThreadId)
+  }
+}
+
+// Return the top level comments of a specific thread. `total` is the thread's
+// comment count, which the caller already read from the thread it fetched.
 export async function fetchThreadComments(
   userCache: UserCacheApi,
   gnonative: GnoNativeApi,
   boardId: number,
   threadId: number,
   startIndex: number,
-  endIndex: number
-): Promise<ThreadPosts> {
-  const result = await qEvalGetComments(gnonative, boardId, threadId, startIndex, endIndex)
-  const json = await enrichData(userCache, gnonative, result)
-  return json
+  endIndex: number,
+  total: number
+): Promise<ThreadComments> {
+  const result = await qEvalGetComments(gnonative, boardId, threadId, startIndex, endIndex, total)
+  return await enrichComments(userCache, result)
 }
 
-export async function countThreadPosts(userCache: UserCacheApi, gnonative: GnoNativeApi, boardId: number): Promise<number> {
-  const result = await qEvalGetPosts(gnonative, boardId, 0, 0)
-  const { n_posts } = await enrichData(userCache, gnonative, result)
-  return n_posts
+// Return the direct replies of a comment or reply. `total` is the reply count of
+// the comment the caller fetched.
+export async function fetchCommentReplies(
+  userCache: UserCacheApi,
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number,
+  commentId: number,
+  startIndex: number,
+  endIndex: number,
+  total: number
+): Promise<ThreadComments> {
+  const result = await qEvalGetReplies(gnonative, boardId, threadId, commentId, startIndex, endIndex, total)
+  return await enrichComments(userCache, result)
+}
+
+// Return a single comment or reply, or undefined if it is gone.
+export async function fetchComment(
+  userCache: UserCacheApi,
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number,
+  commentId: number
+): Promise<Comment | undefined> {
+  const comment = await qEvalGetComment(gnonative, boardId, threadId, commentId)
+  if (!comment) return undefined
+
+  return convertToComment(comment, await userCache.getUser(comment.creator))
+}
+
+export async function countThreadPosts(gnonative: GnoNativeApi, boardId: number): Promise<number> {
+  // Get the count from GetBoard, the same as done in qEvalGetPosts.
+  const boardJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetBoard(${boardId})`)
+  const board = await gnoValuesToObject(boardJSON.results[0].fields)
+  return Number(board.threadCount)
+}
+
+// Return a single thread, or undefined if the board or thread doesn't exist.
+export async function qEvalGetThread(gnonative: GnoNativeApi, boardId: number, threadId: number) {
+  const threadJSON = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
+  if (threadJSON.results[1].scalar !== 'true') return undefined
+  const thread = await gnoValuesToObject(threadJSON.results[0].fields)
+
+  const id = thread.id
+  const originalBoardId = thread.originalBoardID
+  const originalThreadId = thread.originalThreadID
+  const threadBoardId = thread.boardID
+  const title = thread.title
+  const body = thread.body
+  const hidden = thread.hidden
+  const readOnly = thread.readonly
+  const n_replies = thread.commentCount
+  const n_reposts = thread.repostCount
+  const creator = thread.creator
+  const createdAtUnix = thread.createdAt
+  const createdAt = new Date(createdAtUnix * 1000).toISOString()
+  const updatedAtUnix = thread.updatedAt
+  const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
+  return {
+    id,
+    originalBoardId,
+    originalThreadId,
+    boardId: threadBoardId,
+    title,
+    body,
+    hidden,
+    readOnly,
+    n_replies,
+    n_reposts,
+    n_gnods: 0,
+    creator,
+    createdAt,
+    updatedAt
+  }
 }
 
 export async function qEvalGetPosts(
@@ -44,33 +157,30 @@ export async function qEvalGetPosts(
   startIndex: number,
   endIndex: number
 ): Promise<string> {
-  const postInfos = await gnonative.qEval(PACKAGE_PATH, `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`)
-  const boardThreadCount = await gnonative.qEval(PACKAGE_PATH, `GetBoard(${boardId})`)
-  const totalRegex =
-    /\(struct{\(\d+ uint64\),\("[^"]+" string\),\(nil \[\]string\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\("\w+" \.uverse\.address\),\(\d+ int64\),\(\d+ int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Board\)/g
-  const totalMatch = totalRegex.exec(boardThreadCount)
-  if (!totalMatch) throw new Error("Can't find thread count in GetBoard response")
-  const total = Number(totalMatch![1])
+  const threadInfos = await gnonative.qEvalJSONValues(
+    PACKAGE_PATH,
+    `GetThreads(${boardId},${startIndex},${endIndex - startIndex})`
+  )
+  const total = await countThreadPosts(gnonative, boardId)
 
-  const postRegex =
-    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\("([^"]*)" string\),\((\w+) bool\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
   let posts = []
   let index = 0
-  let match
-  while ((match = postRegex.exec(postInfos)) !== null) {
-    const id = Number(match[1])
-    const originalBoardId = Number(match[2])
-    const originalThreadId = Number(match[3])
-    const boardId = Number(match[4])
-    const title = match[5]
-    const body = match[6]
-    const hidden = match[7] === 'true'
-    const readOnly = match[8] === 'true'
-    const n_replies = Number(match[9])
-    const creator = match[10]
-    const createdAtUnix = Number(match[11])
+  for (const threadJSON of threadInfos.results[0].elems) {
+    const thread = await gnoValuesToObject(threadJSON.fields)
+    const id = thread.id
+    const originalBoardId = thread.originalBoardID
+    const originalThreadId = thread.originalThreadID
+    const boardId = thread.boardID
+    const title = thread.title
+    const body = thread.body
+    const hidden = thread.hidden
+    const readOnly = thread.readonly
+    const n_replies = thread.commentCount
+    const n_reposts = thread.repostCount
+    const creator = thread.creator
+    const createdAtUnix = thread.createdAt
     const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[12])
+    const updatedAtUnix = thread.updatedAt
     const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
     posts.push({
       index,
@@ -84,6 +194,7 @@ export async function qEvalGetPosts(
         hidden,
         readOnly,
         n_replies,
+        n_reposts,
         n_gnods: 0,
         creator,
         createdAt,
@@ -102,95 +213,129 @@ export async function qEvalGetComments(
   boardId: number,
   threadId: number,
   startIndex: number,
-  endIndex: number
+  endIndex: number,
+  total: number
 ): Promise<string> {
-  const commentInfos = await gnonative.qEval(
+  const commentInfos = await gnonative.qEvalJSONValues(
     PACKAGE_PATH,
     `GetComments(${boardId},${threadId},${startIndex},${endIndex - startIndex})`
   )
-  const threadCommentCount = await gnonative.qEval(PACKAGE_PATH, `GetThread(${boardId},${threadId})`)
-  const totalRegex =
-    /\(struct{\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\(\d+ uint64\),\("[^"]+" string\),\("[^"]+" string\),\(\w+ bool\),\(\w+ bool\),\((\d+) int\),\(\d+ int\),\(\d+ int\),\("\w+" \.uverse\.address\),\(\d+ int64\),\(\d+ int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Thread\)/g
-  const totalMatch = totalRegex.exec(threadCommentCount)
-  if (!totalMatch) throw new Error("Can't find comment count in GetThread response")
-  const total = Number(totalMatch![1])
 
-  const commentRegex =
-    /\(struct{\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\((\d+) uint64\),\("([^"]*)" string\),\((\w+) bool\),\((\d+) int\),\(\d+ int\),\("(\w+)" \.uverse\.address\),\((\d+) int64\),\((\d+) int64\)} gno\.land\/p\/\w+\/boards\/exts\/hub\.Comment\)/g
+  return encodeComments(total, parseComments(commentInfos.results[0].elems))
+}
+
+// Return the direct replies of a comment or reply. `commentId` can be the ID of
+// a top level comment or of a nested reply.
+export async function qEvalGetReplies(
+  gnonative: GnoNativeApi,
+  boardId: number,
+  threadId: number,
+  commentId: number,
+  startIndex: number,
+  endIndex: number,
+  total: number
+): Promise<string> {
+  const replyInfos = await gnonative.qEvalJSONValues(
+    PACKAGE_PATH,
+    `GetReplies(${boardId},${threadId},${commentId},${startIndex},${endIndex - startIndex})`
+  )
+
+  return encodeComments(total, parseComments(replyInfos.results[0].elems))
+}
+
+// Return a single comment or reply, or undefined if it doesn't exist.
+export async function qEvalGetComment(gnonative: GnoNativeApi, boardId: number, threadId: number, commentId: number) {
+  try {
+    const commentInfo = await gnonative.qEvalJSONValues(PACKAGE_PATH, `GetComment(${boardId},${threadId},${commentId})`)
+    if (commentInfo.results[1].scalar !== 'true') return undefined
+    return parseComment(commentInfo.results[0].fields)
+  } catch {
+    return undefined
+  }
+}
+
+// Parse every comment in the "elems" array of a GetComments or GetReplies response.
+function parseComments(commentInfos: GnoValue[]) {
   let comments = []
-  let index = 0
-  let match
-  while ((match = commentRegex.exec(commentInfos)) !== null) {
-    const id = Number(match[1])
-    const boardId = Number(match[2])
-    const originalThreadId = Number(match[3])
-    const originalBoardId = Number(match[4])
-    const title = ''
-    const body = match[5]
-    const hidden = match[6] === 'true'
-    const readOnly = false
-    const n_replies = Number(match[7])
-    const creator = match[8]
-    const createdAtUnix = Number(match[9])
-    const createdAt = new Date(createdAtUnix * 1000).toISOString()
-    const updatedAtUnix = Number(match[10])
-    const updatedAt = new Date(updatedAtUnix * 1000).toISOString()
-    comments.push({
-      index,
-      post: {
-        id,
-        originalBoardId,
-        originalThreadId,
-        boardId,
-        title,
-        body,
-        hidden,
-        readOnly,
-        n_replies,
-        n_gnods: 0,
-        creator,
-        createdAt,
-        updatedAt
-      }
-    })
-    ++index
+  for (const commentInfo of commentInfos) {
+    comments.push(parseComment(commentInfo.fields))
   }
 
-  let data = { n_threads: total, posts: comments }
+  return comments
+}
+
+// Return an object with the desired fields from a comment "fields" array
+function parseComment(commentValues: GnoValue[]) {
+  const comment = gnoValuesToObject(commentValues)
+  const createdAtUnix = comment.createdAt
+  const updatedAtUnix = comment.updatedAt
+  return {
+    id: comment.id,
+    boardId: comment.boardID,
+    threadId: comment.threadID,
+    parentId: comment.parentID,
+    body: comment.body,
+    hidden: comment.hidden,
+    n_replies: comment.replyCount,
+    n_flags: comment.flagCount,
+    creator: comment.creator,
+    createdAt: new Date(createdAtUnix * 1000).toISOString(),
+    updatedAt: new Date(updatedAtUnix * 1000).toISOString()
+  }
+}
+
+// Encode comments the way enrichComments decodes them.
+function encodeComments(total: number, comments: ReturnType<typeof parseComment>[]) {
+  const data = { n_comments: total, comments }
   return '(' + JSON.stringify(JSON.stringify(data)) + ' string)'
 }
 
-export async function enrichData(userCache: UserCacheApi, gnonative: GnoNativeApi, result: string, nHomePosts?: number) {
-  const jsonResult = toJson(result)
-  // If isThread then jsonResult is {n_threads: number, posts: array<{index: number, post: Post}>} from GetPosts.
-  const isThread = 'n_threads' in jsonResult
-  const jsonPosts = isThread ? jsonResult.posts : jsonResult
-  const n_posts = isThread ? jsonResult.n_threads : nHomePosts
-
+export async function enrichData(userCache: UserCacheApi, result: string): Promise<ThreadPosts> {
+  const jsonResult = toJson<GetPostsJson>(result)
   const posts: Post[] = []
 
-  for (const jsonPost of jsonPosts) {
-    const post = isThread ? jsonPost.post : jsonPost
+  for (const jsonPost of jsonResult.posts) {
+    const post = jsonPost.post
     const creator = await userCache.getUser(post.creator)
-
-    let repost_parent: Post | undefined
-
-    if (post.repost_user && post.parent_id) {
-      const parent_user = await userCache.getUser(post.repost_user as string)
-      const repost = await fetchParentPost(gnonative, post.parent_id, post.repost_user as string)
-      repost_parent = convertToPost(repost, parent_user)
-    }
-
-    posts.push(convertToPost(post, creator, repost_parent))
+    posts.push(convertToPost(post, creator))
   }
 
   return {
     data: posts.reverse(),
-    n_posts
+    n_posts: jsonResult.n_threads
   }
 }
 
-const toJson = (data?: string) => {
+// The Comment counterpart of enrichData. A Comment is never a repost, so this
+// only has to attach the creator of each comment.
+export async function enrichComments(userCache: UserCacheApi, result: string): Promise<ThreadComments> {
+  const jsonResult = toJson<GetCommentsJson>(result)
+  const comments: Comment[] = []
+
+  for (const jsonComment of jsonResult.comments) {
+    const creator = await userCache.getUser(jsonComment.creator)
+    comments.push(convertToComment(jsonComment, creator))
+  }
+
+  return {
+    data: comments.reverse(),
+    n_posts: jsonResult.n_comments
+  }
+}
+
+// The JSON that qEvalGetPosts encodes and enrichData decodes.
+type GetPostsJson = {
+  n_threads: number
+  posts: { index: number; post: any }[]
+}
+
+// The JSON that qEvalGetComments encodes and enrichComments decodes.
+type GetCommentsJson = {
+  n_comments: number
+  comments: any[]
+}
+
+const toJson = <T = any>(data?: string): T => {
   if (!data || !(data.startsWith('(') && data.endsWith(' string)'))) throw new Error('Malformed GetPosts response')
   const quoted = data.substring(1, data.length - ' string)'.length)
   const json = JSON.parse(quoted)
@@ -199,20 +344,13 @@ const toJson = (data?: string) => {
   return jsonPosts
 }
 
-async function fetchParentPost(gnonative: GnoNativeApi, postId: number, address: string) {
-  const payload = `[]UserAndPostID{{\"${address}\", ${postId}},}`
-  const result = await gnonative.qEval('gno.land/r/berty/social', `GetJsonTopPostsByID(${payload})`)
-  const jsonResult = toJson(result)
-  return jsonResult[0]
-}
-
-function convertToPost(jsonPost: any, creator: User, repost_parent?: ParentPost): Post {
+function convertToPost(jsonPost: any, creator: User): Post {
   const post: Post = {
     user: {
       name: creator.name,
       address: creator.address,
       avatar: creator.avatar,
-      bech32: ''
+      bech32: creator.bech32
     },
     id: jsonPost.id,
     originalBoardId: jsonPost.originalBoardId,
@@ -223,11 +361,34 @@ function convertToPost(jsonPost: any, creator: User, repost_parent?: ParentPost)
     hidden: jsonPost.hidden,
     readOnly: jsonPost.readOnly,
     n_replies: jsonPost.n_replies,
+    n_reposts: jsonPost.n_reposts,
     n_gnods: jsonPost.n_gnods,
     createdAt: jsonPost.createdAt,
-    updatedAt: jsonPost.updatedAt,
-    repost_parent
+    updatedAt: jsonPost.updatedAt
   }
 
   return post
+}
+
+function convertToComment(jsonComment: any, creator: User): Comment {
+  const comment: Comment = {
+    user: {
+      name: creator.name,
+      address: creator.address,
+      avatar: creator.avatar,
+      bech32: creator.bech32
+    },
+    id: jsonComment.id,
+    boardId: jsonComment.boardId,
+    threadId: jsonComment.threadId,
+    parentId: jsonComment.parentId,
+    body: jsonComment.body,
+    hidden: jsonComment.hidden,
+    n_replies: jsonComment.n_replies,
+    n_flags: jsonComment.n_flags,
+    createdAt: jsonComment.createdAt,
+    updatedAt: jsonComment.updatedAt
+  }
+
+  return comment
 }

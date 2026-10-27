@@ -1,48 +1,47 @@
-import { Post } from '@gno/types'
-import { useTheme } from 'styled-components/native'
+import { ParentPost } from '@gno/types'
 import CardFooter from '../../cards/CardFooter'
-import GnodLikeButton from '../../button/GnodLikeButton'
-import { useState } from 'react'
 import ReplyIconButton from '../../button/ReplyIconButton'
+import RepostIconButton from '../../button/RepostIconButton'
 import { Spacer } from '@berty/gnonative-ui'
 import { TextUsername } from '../../text'
 import { ThreadContainer, ThreadContent, ThreadHeader, UserInfo, ThreadTitle } from './atoms'
 import TextCreateDate from '@gno/components/text/TextCreateDate'
+import RepostQuote from './RepostQuote'
 
 interface Props {
   loading?: boolean
-  thread?: Post
   threadId: string
   threadTitle: string
   threadBody?: string
   threadReplyCount?: number
+  threadRepostCount?: number
   threadCreatorName?: string
   threadCreatedAt?: string
+  isRepost?: boolean
+  threadOriginal?: ParentPost
   onReply: () => void
   onOpen?: () => void
+  onOpenOriginal?: () => void
+  // Left out for a post the realm will not repost: a comment, or a repost itself.
+  onRepost?: () => void
 }
 
 const ThreadCardDetails = ({
-  thread,
   threadId,
   threadTitle,
   threadBody,
   threadReplyCount,
+  threadRepostCount,
   threadCreatorName,
   threadCreatedAt,
+  isRepost,
+  threadOriginal,
   onReply,
   onOpen,
+  onOpenOriginal,
+  onRepost,
   loading
 }: Props) => {
-  const theme = useTheme()
-  const [likes, setLikes] = useState(0)
-  const [isLiked, setIsLiked] = useState(false)
-
-  const handleLike = (liked: boolean) => {
-    setIsLiked(liked)
-    setLikes((prev) => (liked ? prev + 1 : prev - 1))
-  }
-
   return (
     <ThreadContainer key={threadId} activeOpacity={0.7} onPress={onOpen}>
       <ThreadHeader>
@@ -52,27 +51,29 @@ const ThreadCardDetails = ({
         </UserInfo>
       </ThreadHeader>
 
-      <ThreadTitle>{threadTitle}</ThreadTitle>
-      <Spacer space={8} />
+      {/* A repost's own title and body are optional. */}
+      {threadTitle ? (
+        <>
+          <ThreadTitle>{threadTitle}</ThreadTitle>
+          <Spacer space={8} />
+        </>
+      ) : null}
 
-      <ThreadContent>{threadBody}</ThreadContent>
+      {threadBody ? <ThreadContent>{threadBody}</ThreadContent> : null}
+
+      {isRepost && <RepostQuote original={threadOriginal} onOpen={onOpenOriginal} />}
 
       <CardFooter.Footer>
         <CardFooter.Meta>
           <CardFooter.MetaItem>
             <ReplyIconButton onPress={onReply} count={threadReplyCount} loading={loading} />
           </CardFooter.MetaItem>
-          <CardFooter.MetaItem>
-            <GnodLikeButton
-              loading={loading}
-              isLiked={isLiked}
-              onPress={handleLike}
-              size={16}
-              likedColor={theme.colors.primary}
-              unlikedColor="#9ca3af"
-              gnodCount={likes}
-            />
-          </CardFooter.MetaItem>
+          {/* Only a thread can be reposted, so a caller showing a comment omits onRepost. */}
+          {onRepost ? (
+            <CardFooter.MetaItem>
+              <RepostIconButton onPress={onRepost} count={threadRepostCount} loading={loading} />
+            </CardFooter.MetaItem>
+          ) : null}
         </CardFooter.Meta>
       </CardFooter.Footer>
     </ThreadContainer>

@@ -9,10 +9,14 @@ import {
   threadsSlice,
   boardsCreateSlice,
   threadReplySlice,
+  threadRepostSlice,
   threadsCreateSlice,
-  threadDetailSlice
+  threadDetailSlice,
+  feedbackSlice,
+  switchNetwork
 } from './features'
 import { GnoNativeApi, useGnoNativeContext } from '@gnolang/gnonative'
+import { errorReporter } from './middleware/error-reporter'
 import { useUserCache } from '@gno/hooks/use-user-cache'
 
 interface Props {
@@ -26,16 +30,29 @@ export interface ThunkExtra {
   }
 }
 
+/**
+ * Clears a slice when the network changes (see `switchNetwork`): passing
+ * `undefined` makes the wrapped reducer return its initial state. Applied where
+ * each slice is registered, since an unwrapped one silently keeps another
+ * chain's data and surfaces as wrong content rather than as an error.
+ */
+const resetOnNetworkSwitch =
+  <S, A extends { type: string }>(sliceReducer: (state: S | undefined, action: A) => S) =>
+  (state: S | undefined, action: A): S =>
+    sliceReducer(action.type === switchNetwork.fulfilled.type ? undefined : state, action)
+
 const reducer = {
-  [accountSlice.reducerPath]: accountSlice.reducer,
-  [profileSlice.reducerPath]: profileSlice.reducer,
-  [linkingSlice.reducerPath]: linkingSlice.reducer,
-  [threadsSlice.reducerPath]: threadsSlice.reducer,
-  [boardsSlice.reducerPath]: boardsSlice.reducer,
-  [boardsCreateSlice.reducerPath]: boardsCreateSlice.reducer,
-  [threadReplySlice.reducerPath]: threadReplySlice.reducer,
-  [threadsCreateSlice.reducerPath]: threadsCreateSlice.reducer,
-  [threadDetailSlice.reducerPath]: threadDetailSlice.reducer
+  [accountSlice.reducerPath]: resetOnNetworkSwitch(accountSlice.reducer),
+  [profileSlice.reducerPath]: resetOnNetworkSwitch(profileSlice.reducer),
+  [linkingSlice.reducerPath]: resetOnNetworkSwitch(linkingSlice.reducer),
+  [threadsSlice.reducerPath]: resetOnNetworkSwitch(threadsSlice.reducer),
+  [boardsSlice.reducerPath]: resetOnNetworkSwitch(boardsSlice.reducer),
+  [boardsCreateSlice.reducerPath]: resetOnNetworkSwitch(boardsCreateSlice.reducer),
+  [threadReplySlice.reducerPath]: resetOnNetworkSwitch(threadReplySlice.reducer),
+  [threadRepostSlice.reducerPath]: resetOnNetworkSwitch(threadRepostSlice.reducer),
+  [threadsCreateSlice.reducerPath]: resetOnNetworkSwitch(threadsCreateSlice.reducer),
+  [threadDetailSlice.reducerPath]: resetOnNetworkSwitch(threadDetailSlice.reducer),
+  [feedbackSlice.reducerPath]: resetOnNetworkSwitch(feedbackSlice.reducer)
 }
 
 export type RootState = typeof reducer
@@ -63,7 +80,7 @@ const ReduxProvider: React.FC<Props> = ({ children }) => {
               userCache
             }
           }
-        })
+        }).concat(errorReporter)
     })
     setStore(storeInstance)
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -61,7 +61,7 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
   const [threadBody, setThreadBody] = useState('')
 
   const handleCreate = () => {
-    if (threadName.trim()) {
+    if (threadName.trim() && threadBody.trim()) {
       onCreate({ threadName, threadBody } as CreateThreadFormData)
     }
   }
@@ -70,21 +70,21 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
     <>
       <Container>
         <FormGroup>
-          <GnoText.Label>Thread Name *</GnoText.Label>
+          <GnoText.Label>Thread Title *</GnoText.Label>
           <Input
             value={threadName}
             onChangeText={setThreadName}
-            placeholder="Enter thread name"
+            placeholder="Enter thread title"
             placeholderTextColor="#9ca3af"
             autoCapitalize="none"
             autoComplete="off"
             autoCorrect={false}
           />
-          <HelperText>Choose a descriptive name for your thread</HelperText>
+          <HelperText>Choose a descriptive title for your thread</HelperText>
         </FormGroup>
 
         <FormGroup>
-          <GnoText.Label>Thread Body</GnoText.Label>
+          <GnoText.Label>Thread Body *</GnoText.Label>
           <Input
             value={threadBody}
             onChangeText={setThreadBody}
@@ -101,7 +101,12 @@ export default function CreateThreadForm({ onCreate, onCancel, loading }: Props)
         <View style={{ flexGrow: 1 }} />
 
         <ButtonContainer>
-          <Button onPress={handleCreate} disabled={!threadName.trim() || loading} color="tertirary" activeOpacity={0.8}>
+          <Button
+            onPress={handleCreate}
+            disabled={!threadName.trim() || !threadBody.trim() || loading}
+            color="tertirary"
+            activeOpacity={0.8}
+          >
             {loading ? 'Loading' : 'Create Thread'}
           </Button>
           <Button onPress={onCancel} color="secondary" activeOpacity={0.8}>

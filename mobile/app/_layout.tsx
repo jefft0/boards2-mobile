@@ -1,16 +1,24 @@
 import { Stack } from 'expo-router'
+import { StatusBar } from 'expo-status-bar'
 
 import { Guard } from '@gno/components/auth/guard'
 import { GnoNativeProvider } from '@gnolang/gnonative'
 import { ReduxProvider } from '@gno/redux'
 import { LinkingProvider } from '@gno/provider/linking-provider'
+import { getActiveNetwork } from '@gno/utils/network-store'
+import ErrorSnackbar from '@gno/components/feedback/ErrorSnackbar'
 import { ThemeProvider, DefaultTheme } from '@berty/gnonative-ui'
+
+// Read once, before the first render: gnonative is configured from this. A later
+// switch goes through `switchNetwork`, which calls setRemote/setChainID itself
+// rather than waiting for a restart.
+const activeNetwork = getActiveNetwork()
 
 const gnoDefaultConfig = {
   // @ts-ignore
-  remote: '', // It will be set dynamically from linking state
+  remote: activeNetwork.rpc,
   // @ts-ignore
-  chain_id: '' // It will be set dynamically from linking state
+  chain_id: activeNetwork.chainId
 }
 
 const theme: DefaultTheme = {
@@ -117,6 +125,9 @@ export default function AppLayout() {
         <LinkingProvider>
           <ThemeProvider theme={theme}>
             <Guard>
+              {/* Every screen in this app paints a light background, so the
+                  system's light status-bar icons were invisible against it. */}
+              <StatusBar style="dark" />
               <Stack
                 screenOptions={{
                   headerShown: false,
@@ -124,6 +135,10 @@ export default function AppLayout() {
                   headerBackVisible: false
                 }}
               />
+              {/* Outside the Stack so a failure reported during a navigation —
+                  or after the wallet relaunched us — still has somewhere to
+                  show. */}
+              <ErrorSnackbar />
             </Guard>
           </ThemeProvider>
         </LinkingProvider>

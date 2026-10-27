@@ -4,7 +4,7 @@ import styled from 'styled-components/native'
 export const ThreadContent = styled(Text.Body)`
   font-size: 15px;
   padding-bottom: 12px;
-  color: #6b7280;
+  color: #000000;
 `
 
 export const ThreadContainer = styled.TouchableOpacity`
@@ -13,6 +13,18 @@ export const ThreadContainer = styled.TouchableOpacity`
   border-bottom-width: 1px;
   border-bottom-color: #f3f4f6;
   active-opacity: 0.7;
+`
+
+export const QuotedThread = styled.TouchableOpacity`
+  border-left-width: 3px;
+  border-left-color: #e5e7eb;
+  padding-left: 12px;
+`
+
+export const RepostNote = styled(Text.Body)`
+  font-size: 13px;
+  padding-bottom: 4px;
+  color: #9ca3af;
 `
 
 export const ThreadHeader = styled.View`

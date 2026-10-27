@@ -1,7 +1,8 @@
+import { createAppAsyncThunk } from '../utils/async-thunk'
 import { UserCacheApi } from '@gno/hooks/use-user-cache'
 import { Post } from '@gno/types'
 import { GnoNativeApi } from '@gnolang/gnonative'
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, Board } from '@gno/redux'
 import { countThreadPosts, fetchThreadPosts, subtractOrZero } from '@gno/redux'
 
@@ -52,7 +53,9 @@ export const threadsSlice = createSlice({
     selectThreadBoard: (state: ThreadsState) => state.board,
     selectThreads: (state: ThreadsState) => state.threads,
     selectThreadLoading: (state: ThreadsState) => state.loading,
-    selectThreadById: (state: ThreadsState, id: number | string) => state.threads.find((thread) => thread.id === Number(id))
+    // Thread IDs restart on every board, so the board is part of the identity.
+    selectThreadById: (state: ThreadsState, boardId: number | string, id: number | string) =>
+      state.threads.find((thread) => thread.boardId === Number(boardId) && thread.id === Number(id))
   }
 })
 
@@ -69,14 +72,14 @@ type LoadThreadsRequest = {
   board: Board
 }
 
-export const loadThreads = createAsyncThunk<LoadResult | undefined, LoadThreadsRequest, ThunkExtra>(
+export const loadThreads = createAppAsyncThunk<LoadResult | undefined, LoadThreadsRequest, ThunkExtra>(
   'threads/loadThreads',
   async ({ board }, thunkAPI) => {
     const gnonative = thunkAPI.extra.gnonative as GnoNativeApi
     const userCache = thunkAPI.extra.userCache as UserCacheApi
 
     try {
-      const totalPosts = await countThreadPosts(userCache, gnonative, board.id)
+      const totalPosts = await countThreadPosts(gnonative, board.id)
       const startIndex = subtractOrZero(totalPosts, PAGE_SIZE)
 
       const postsRes = await fetchThreadPosts(userCache, gnonative, board.id, startIndex, totalPosts)

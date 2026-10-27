@@ -1,5 +1,6 @@
+import { createAppAsyncThunk } from '../utils/async-thunk'
 import { Post } from '@gno/types'
-import { createAsyncThunk, createSlice } from '@reduxjs/toolkit'
+import { createSlice } from '@reduxjs/toolkit'
 import { ThunkExtra, Board, makeCallTx, selectAccount, RootState } from '@gno/redux'
 
 interface ThreadsState {
@@ -36,7 +37,7 @@ export type ThreadCreateParams = {
   threadBody: string
 }
 
-export const threadCreate = createAsyncThunk<void, ThreadCreateParams, ThunkExtra>(
+export const threadCreate = createAppAsyncThunk<void, ThreadCreateParams, ThunkExtra>(
   'threadsCreate/threadCreate',
   async (props, thunkAPI) => {
     const { boardId, threadName, threadBody } = props

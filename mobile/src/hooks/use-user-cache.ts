@@ -21,8 +21,21 @@ export const useUserCache = () => {
     }
 
     let name = await getAccountName(bech32, gnonative)
-    const response = await gnonative.qEval('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
-    const bech32Image = response.substring(2, response.length - '" string)'.length)
+
+    let bech32Image = DEFAULT_AVATAR
+    try {
+      const response = await gnonative.qEvalJSONValues(
+        'gno.land/r/demo/profile',
+        `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`
+      )
+      bech32Image = response.results[0].scalar
+    } catch (error) {
+      // Not an error: the avatar is best-effort and falls back below.
+      // `gno.land/r/demo/profile` is not deployed on every chain — a local
+      // gnodev usually lacks it — and console.error would raise a LogBox on
+      // every render.
+      console.log('No avatar for', bech32, '— using the default:', error)
+    }
 
     const user = {
       name: name,
@@ -30,7 +43,7 @@ export const useUserCache = () => {
       pubKey: '',
       address: await gnonative.addressFromBech32(bech32),
       avatar: bech32Image,
-      bech32: ''
+      bech32
     }
 
     usersCache.set(bech32, user)

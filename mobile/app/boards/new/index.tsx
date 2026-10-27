@@ -5,7 +5,7 @@ import {
   broadcastTxCommit,
   clearLinking,
   createBoard,
-  selectQueryParamsTxJsonSigned,
+  selectSignedTx,
   useAppDispatch,
   useAppSelector
 } from '@gno/redux'
@@ -16,28 +16,31 @@ export default function Search() {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
   const dispatch = useAppDispatch()
-  const txJsonSigned = useAppSelector(selectQueryParamsTxJsonSigned)
+  const signedTxFromWallet = useAppSelector(selectSignedTx)
 
   // hook to handle the signed tx from Gnokey and broadcast it
   useEffect(() => {
     const handleSignedTx = async () => {
-      if (txJsonSigned) {
-        const signedTx = decodeURIComponent(txJsonSigned as string)
-        console.log('signedTx: ', signedTx)
+      if (signedTxFromWallet) {
+        const signedTx = signedTxFromWallet as string // opaque base64 amino-binary; broadcast unmodified
 
         try {
           setLoading(true)
           await dispatch(clearLinking())
-          await dispatch(broadcastTxCommit(signedTx))
+          await dispatch(broadcastTxCommit(signedTx)).unwrap()
           router.back()
         } catch (error) {
+          // Stay put with the form still filled: going back would lose what was
+          // typed for a board that was never created. `.unwrap()` is what makes the
+          // rejection reach here — a plain dispatch resolves either way.
           console.error('on broadcastTxCommit', error)
+          setLoading(false)
         }
       }
     }
     handleSignedTx()
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [txJsonSigned])
+  }, [signedTxFromWallet])
 
   const onCreate = async (board: BoardCreationData) => {
     dispatch(createBoard(board))
