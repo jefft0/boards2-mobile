@@ -126,7 +126,10 @@ const loadBech32AvatarFromChain = async (bech32: string, thunkAPI: ThunkExtra) =
 
   try {
     console.log('Loading avatar for', bech32)
-    const response = await gnonative.qEvalJSONValues('gno.land/r/demo/profile', `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`)
+    const response = await gnonative.qEvalJSONValues(
+      'gno.land/r/demo/profile',
+      `GetStringField("${bech32}","Avatar", "${DEFAULT_AVATAR}")`
+    )
     return response.results[0].scalar
   } catch (error) {
     // Same as use-user-cache: expected wherever the profile realm is not

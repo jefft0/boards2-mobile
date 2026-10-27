@@ -115,7 +115,7 @@ export async function maybeFetchBoardName(gnonative: GnoNativeApi, boardId: numb
 async function checkBoardCreatePermission(gnonative: GnoNativeApi, address: string): Promise<boolean> {
   try {
     const res = await gnonative.qEvalJSONValues(PACKAGE_PATH, `IsMember(0,"${address}")`)
-    return res.results[0].scalar == 'true'
+    return res.results[0].scalar === 'true'
   } catch (error) {
     console.error('error in checkBoardCreatePermission:', error)
     return false
@@ -161,17 +161,14 @@ async function listBoards(thunkAPI: ThunkExtra, startIndex: number, endIndex: nu
 // each has the field name and value. gnoValuesToObject constructs
 // a TypeScript object using the field name and converting the "scalar"
 // string into a native TypeScript value. If the kind is not recognized, value is null.
-export function gnoValuesToObject(values: GnoValue[]) : any {
+export function gnoValuesToObject(values: GnoValue[]): any {
   const result: Record<string, any> = {}
 
   for (const value of values) {
-    var v: any = null
-    if (value.kind == 'string')
-      v = value.scalar
-    else if (value.kind == 'number')
-      v = Number(value.scalar)
-    else if (value.kind == 'bool')
-      v = (value.scalar == 'true')
+    let v: any = null
+    if (value.kind === 'string') v = value.scalar
+    else if (value.kind === 'number') v = Number(value.scalar)
+    else if (value.kind === 'bool') v = value.scalar === 'true'
 
     result[value.name] = v
   }
